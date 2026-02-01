@@ -2,6 +2,7 @@ import { PDFDocument, StandardFonts, rgb, PDFFont, PDFPage } from 'pdf-lib';
 import { Navmc10274Data, BoxBoundary } from '@/types/navmc';
 import { ParagraphData } from '@/types';
 import { generateCitation } from '@/lib/paragraph-formatter';
+import { getBasePath } from '@/lib/path-utils';
 
 // --- Configuration & Constants ---
 
@@ -64,10 +65,11 @@ const PAGE3_CONTENT_BOX: BoxBoundary = {
  * Loads the PDF templates from the public folder.
  */
 async function loadTemplates() {
+  const basePath = getBasePath();
   const [page1Bytes, page2Bytes, page3Bytes] = await Promise.all([
-    fetch('/templates/navmc10274/page1.pdf').then((res) => res.arrayBuffer()),
-    fetch('/templates/navmc10274/page2.pdf').then((res) => res.arrayBuffer()),
-    fetch('/templates/navmc10274/page3.pdf').then((res) => res.arrayBuffer()),
+    fetch(`${basePath}/templates/navmc10274/page1.pdf`).then((res) => res.arrayBuffer()),
+    fetch(`${basePath}/templates/navmc10274/page2.pdf`).then((res) => res.arrayBuffer()),
+    fetch(`${basePath}/templates/navmc10274/page3.pdf`).then((res) => res.arrayBuffer()),
   ]);
   return { page1Bytes, page2Bytes, page3Bytes };
 }
