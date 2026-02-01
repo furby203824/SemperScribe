@@ -255,7 +255,7 @@ export function SignaturePlacementModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>Place Signature Fields</DialogTitle>
           <DialogDescription>
@@ -310,7 +310,7 @@ export function SignaturePlacementModal({
         </div>
 
         {/* PDF preview with overlay */}
-        <div className="flex-1 flex items-center justify-center bg-muted/30 rounded-lg p-4 min-h-[500px] overflow-auto border border-border">
+        <div className="flex-1 flex items-center justify-center bg-muted/30 rounded-lg p-4 overflow-auto border border-border max-h-[60vh]">
           <div
             ref={containerRef}
             className="relative cursor-crosshair shadow-lg"
