@@ -50,12 +50,9 @@ const getFont = (font: 'times' | 'courier') => {
   return font === 'courier' ? 'Courier New' : 'Times New Roman';
 };
 
-const getHexColor = (colorName?: string) => {
-  switch (colorName) {
-    case 'blue': return "0000FF";
-    case 'red': return "FF0000";
-    default: return "000000";
-  }
+// Get header color based on user selection (black or blue only)
+const getHeaderColor = (colorName?: string) => {
+  return colorName === 'blue' ? "002D72" : "000000"; // Navy blue or black
 };
 
 // Helper to create empty lines - Matches legacy app behavior
@@ -72,7 +69,7 @@ export async function generateDocxBlob(
   paragraphs: ParagraphData[]
 ): Promise<Blob> {
   const font = getFont(formData.bodyFont);
-  const color = getHexColor(formData.accentColor);
+  const headerColor = getHeaderColor(formData.accentColor);
   const sealBuffer = await getDoDSealBufferSync(formData.headerType as 'USMC' | 'DON');
   const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin';
 
@@ -104,7 +101,7 @@ export async function generateDocxBlob(
     : 'DEPARTMENT OF THE NAVY';
     
   letterheadParagraphs.push(new Paragraph({
-    children: [new TextRun({ text: headerText, font: 'Times New Roman', bold: true, size: 20, color })], // Size 20 (10pt) per legacy
+    children: [new TextRun({ text: headerText, font: 'Times New Roman', bold: true, size: 20, color: headerColor })], // Size 20 (10pt) per legacy
     alignment: AlignmentType.CENTER,
     spacing: { after: 0 },
   }));
@@ -113,7 +110,7 @@ export async function generateDocxBlob(
   [formData.line1, formData.line2, formData.line3].forEach(line => {
     if (line) {
       letterheadParagraphs.push(new Paragraph({
-        children: [new TextRun({ text: line, font: 'Times New Roman', size: 16, color })], // Size 16 (8pt) per legacy
+        children: [new TextRun({ text: line, font: 'Times New Roman', size: 16, color: headerColor })], // Size 16 (8pt) per legacy
         alignment: AlignmentType.CENTER,
         spacing: { after: 0 },
       }));

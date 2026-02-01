@@ -41,9 +41,10 @@ interface NavalLetterPDFProps {
   paragraphs: ParagraphData[];
 }
 
-const createStyles = (bodyFont: 'times' | 'courier', headerType: 'USMC' | 'DON') => {
+const createStyles = (bodyFont: 'times' | 'courier', accentColor?: string) => {
   const fontFamily = getPDFBodyFont(bodyFont);
-  const headerColor = headerType === 'DON' ? PDF_COLORS.don : PDF_COLORS.usmc;
+  // Use user-selected color for header (blue or black)
+  const headerColor = accentColor === 'blue' ? '#002D72' : '#000000';
 
   return StyleSheet.create({
     page: {
@@ -330,7 +331,7 @@ export function NavalLetterPDF({
 }: NavalLetterPDFProps) {
   const styles = createStyles(
     formData.bodyFont || 'times',
-    formData.headerType as 'USMC' | 'DON'
+    formData.accentColor
   );
 
   const sealDataUrl = getPDFSealDataUrl(formData.headerType as 'USMC' | 'DON');

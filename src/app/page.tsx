@@ -753,8 +753,8 @@ function NavalLetterGeneratorInner() {
         <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Header Type</label>
-            <Select 
-              value={formData.headerType} 
+            <Select
+              value={formData.headerType}
               onValueChange={(val: any) => setFormData(prev => ({ ...prev, headerType: val }))}
             >
               <SelectTrigger className="bg-background border-input">
@@ -765,12 +765,13 @@ function NavalLetterGeneratorInner() {
                 <SelectItem value="DON">Department of the Navy</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">Changes header title text</p>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Font</label>
-            <Select 
-              value={formData.bodyFont} 
+            <label className="text-sm font-medium text-foreground">Body Font</label>
+            <Select
+              value={formData.bodyFont}
               onValueChange={(val: any) => setFormData(prev => ({ ...prev, bodyFont: val }))}
             >
               <SelectTrigger className="bg-background border-input">
@@ -781,23 +782,24 @@ function NavalLetterGeneratorInner() {
                 <SelectItem value="courier">Courier New</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">Font for document body</p>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Color</label>
-            <Select 
-              value={formData.accentColor || 'black'} 
+            <label className="text-sm font-medium text-foreground">Header Color</label>
+            <Select
+              value={formData.accentColor || 'black'}
               onValueChange={(val: any) => setFormData(prev => ({ ...prev, accentColor: val }))}
             >
               <SelectTrigger className="bg-background border-input">
                 <SelectValue placeholder="Select Color" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="black">Black (Standard)</SelectItem>
+                <SelectItem value="black">Black</SelectItem>
                 <SelectItem value="blue">Blue</SelectItem>
-                <SelectItem value="red">Red</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">Color of header text only</p>
           </div>
         </div>
       )}
