@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { 
-  FileText, 
-  Anchor, 
-  BookOpen, 
-  PenTool, 
-  Info, 
+import {
+  FileText,
+  Anchor,
+  BookOpen,
+  PenTool,
+  Info,
   ChevronRight,
   ChevronDown,
   MessageSquare,
   ShieldAlert,
   AlertTriangle,
-  Scale
+  Scale,
+  Mail,
+  ScrollText,
+  ClipboardList
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -24,6 +27,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { DISCLAIMERS } from '@/lib/security-utils';
 
 interface SidebarProps {
@@ -45,34 +54,78 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
         {/* Document Type Selector */}
         <div className="p-4 border-b border-border">
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Document Type</h3>
-          <div className="space-y-1">
-            <DocumentTypeButton 
-              active={documentType === 'basic'} 
-              onClick={() => onDocumentTypeChange('basic')}
-              label="Standard Naval Letter"
-            />
-            <DocumentTypeButton 
-              active={documentType === 'mco'} 
-              onClick={() => onDocumentTypeChange('mco')}
-              label="Marine Corps Order"
-              isSpecial
-            />
-            <DocumentTypeButton 
-              active={documentType === 'bulletin'} 
-              onClick={() => onDocumentTypeChange('bulletin')}
-              label="Marine Corps Bulletin"
-            />
-             <DocumentTypeButton 
-              active={documentType === 'aa-form'} 
-              onClick={() => onDocumentTypeChange('aa-form')}
-              label="AA Form (NAVMC 10274)"
-            />
-             <DocumentTypeButton 
-              active={documentType === 'endorsement'} 
-              onClick={() => onDocumentTypeChange('endorsement')}
-              label="Endorsement"
-            />
-          </div>
+          <Accordion
+            type="multiple"
+            defaultValue={["standard-letter", "directives", "forms"]}
+            className="w-full"
+          >
+            {/* Standard Letter Group */}
+            <AccordionItem value="standard-letter" className="border-none">
+              <AccordionTrigger className="py-2 text-sm font-semibold text-foreground hover:no-underline">
+                <span className="flex items-center">
+                  <Mail className="w-4 h-4 mr-2 text-primary" />
+                  Standard Letter
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-2">
+                <div className="space-y-1 pl-2">
+                  <DocumentTypeButton
+                    active={documentType === 'basic'}
+                    onClick={() => onDocumentTypeChange('basic')}
+                    label="Basic Letter"
+                  />
+                  <DocumentTypeButton
+                    active={documentType === 'endorsement'}
+                    onClick={() => onDocumentTypeChange('endorsement')}
+                    label="Endorsement"
+                  />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Directives Group */}
+            <AccordionItem value="directives" className="border-none">
+              <AccordionTrigger className="py-2 text-sm font-semibold text-foreground hover:no-underline">
+                <span className="flex items-center">
+                  <ScrollText className="w-4 h-4 mr-2 text-primary" />
+                  Directives
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-2">
+                <div className="space-y-1 pl-2">
+                  <DocumentTypeButton
+                    active={documentType === 'mco'}
+                    onClick={() => onDocumentTypeChange('mco')}
+                    label="Marine Corps Order"
+                  />
+                  <DocumentTypeButton
+                    active={documentType === 'bulletin'}
+                    onClick={() => onDocumentTypeChange('bulletin')}
+                    label="Marine Corps Bulletin"
+                  />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Forms Group */}
+            <AccordionItem value="forms" className="border-none">
+              <AccordionTrigger className="py-2 text-sm font-semibold text-foreground hover:no-underline">
+                <span className="flex items-center">
+                  <ClipboardList className="w-4 h-4 mr-2 text-primary" />
+                  Forms
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-2">
+                <div className="space-y-1 pl-2">
+                  <DocumentTypeButton
+                    active={documentType === 'aa-form'}
+                    onClick={() => onDocumentTypeChange('aa-form')}
+                    label="AA Form (NAVMC 10274)"
+                  />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
 
         {/* Document Structure */}
