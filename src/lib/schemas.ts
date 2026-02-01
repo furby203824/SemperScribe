@@ -378,6 +378,110 @@ export const Page11Definition: DocumentTypeDefinition = {
   ]
 };
 
+// 7. AMHS Message
+export const AMHSSchema = z.object({
+  documentType: z.literal('amhs'),
+  amhsMessageType: z.enum(['GENADMIN', 'MARADMIN', 'ALMAR']),
+  amhsClassification: z.enum(['UNCLASSIFIED', 'CONFIDENTIAL', 'SECRET', 'TOP SECRET']),
+  amhsPrecedence: z.enum(['ROUTINE', 'PRIORITY', 'IMMEDIATE', 'FLASH']),
+  amhsDtg: z.string().min(1, "DTG is required"),
+  amhsOfficeCode: z.string().optional(),
+  originatorCode: z.string().min(1, "Originator (FROM) is required"), // Reusing originatorCode for "FROM" field
+  subj: z.string().min(1, "Subject is required"),
+  amhsPocs: z.array(z.string()).optional(),
+});
+
+export const AMHSDefinition: DocumentTypeDefinition = {
+  id: 'amhs',
+  name: 'AMHS Message',
+  description: 'Automated Message Handling System (GENADMIN/MARADMIN)',
+  icon: '📡',
+  schema: AMHSSchema,
+  sections: [
+    {
+      id: 'classification',
+      title: 'Message Type & Classification',
+      fields: [
+        {
+          name: 'amhsMessageType',
+          label: 'Message Type',
+          type: 'select',
+          options: [
+            { label: 'GENADMIN', value: 'GENADMIN' },
+            { label: 'MARADMIN', value: 'MARADMIN' },
+            { label: 'ALMAR', value: 'ALMAR' }
+          ],
+          defaultValue: 'GENADMIN',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'amhsClassification',
+          label: 'Classification',
+          type: 'select',
+          options: [
+            { label: 'UNCLASSIFIED', value: 'UNCLASSIFIED' },
+            { label: 'CONFIDENTIAL', value: 'CONFIDENTIAL' },
+            { label: 'SECRET', value: 'SECRET' },
+            { label: 'TOP SECRET', value: 'TOP SECRET' }
+          ],
+          defaultValue: 'UNCLASSIFIED',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'amhsPrecedence',
+          label: 'Precedence',
+          type: 'select',
+          options: [
+            { label: 'ROUTINE (R)', value: 'ROUTINE' },
+            { label: 'PRIORITY (P)', value: 'PRIORITY' },
+            { label: 'IMMEDIATE (O)', value: 'IMMEDIATE' },
+            { label: 'FLASH (Z)', value: 'FLASH' }
+          ],
+          defaultValue: 'ROUTINE',
+          className: 'md:col-span-1'
+        }
+      ]
+    },
+    {
+      id: 'header',
+      title: 'Message Header',
+      fields: [
+        {
+          name: 'amhsDtg',
+          label: 'Date-Time Group (DTG)',
+          type: 'text',
+          placeholder: 'DDHHMMZMMMYY',
+          required: true,
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'amhsOfficeCode',
+          label: 'Office Code (Optional)',
+          type: 'text',
+          placeholder: 'MRA MM',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'originatorCode', // Mapped to "FROM"
+          label: 'Originator (FROM)',
+          type: 'text',
+          placeholder: 'CMC WASHINGTON DC',
+          required: true,
+          className: 'col-span-full'
+        },
+        {
+          name: 'subj',
+          label: 'Subject (SUBJ)',
+          type: 'text',
+          placeholder: 'SUBJECT LINE (ALL CAPS)',
+          required: true,
+          className: 'col-span-full'
+        }
+      ]
+    }
+  ]
+};
+
 // Registry of all document types
 export const DOCUMENT_TYPES: Record<string, DocumentTypeDefinition> = {
   basic: BasicLetterDefinition,
@@ -385,5 +489,6 @@ export const DOCUMENT_TYPES: Record<string, DocumentTypeDefinition> = {
   'aa-form': AAFormDefinition,
   mco: MCODefinition,
   bulletin: BulletinDefinition,
-  page11: Page11Definition
+  page11: Page11Definition,
+  amhs: AMHSDefinition
 };

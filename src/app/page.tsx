@@ -36,6 +36,7 @@ import { getBasePath } from '@/lib/path-utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DynamicForm } from '@/components/ui/DynamicForm';
 import { DOCUMENT_TYPES } from '@/lib/schemas';
+import { AMHSEditor } from '@/components/amhs/AMHSEditor';
 
 // Inner component that uses useSearchParams (requires Suspense boundary)
 function NavalLetterGeneratorInner() {
@@ -1003,9 +1004,17 @@ function NavalLetterGeneratorInner() {
         </div>
       </div>
 
-      {/* Header Settings (Hidden for AA Form and Page 11) */}
-      {formData.documentType !== 'aa-form' && formData.documentType !== 'page11' && (
-        <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* AMHS Editor - Exclusive View */}
+      {formData.documentType === 'amhs' ? (
+        <AMHSEditor 
+          formData={formData} 
+          onUpdate={(data) => setFormData(prev => ({ ...prev, ...data }))} 
+        />
+      ) : (
+        <>
+          {/* Header Settings (Hidden for AA Form, Page 11, and AMHS) */}
+          {formData.documentType !== 'aa-form' && formData.documentType !== 'page11' && (
+            <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Header Type</label>
             <Select
@@ -1288,6 +1297,9 @@ function NavalLetterGeneratorInner() {
           </p>
         </CardContent>
       </Card>
+
+      </>
+      )}
 
       {/* Signature Placement Modal */}
       <SignaturePlacementModal

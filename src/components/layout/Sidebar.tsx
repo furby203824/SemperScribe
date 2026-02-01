@@ -131,6 +131,20 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
               </AccordionContent>
             </AccordionItem>
           </Accordion>
+
+          {/* AMHS - Single Item Group */}
+          <div className="border-none mt-1">
+            <button
+              onClick={() => onDocumentTypeChange('amhs')}
+              className={cn(
+                "w-full flex items-center py-2 text-sm font-semibold hover:no-underline transition-all text-left",
+                documentType === 'amhs' ? "text-primary" : "text-foreground hover:text-primary/80"
+              )}
+            >
+              <MessageSquare className="w-4 h-4 mr-2 text-primary" />
+              AMHS Message
+            </button>
+          </div>
         </div>
 
         {/* Document Structure */}

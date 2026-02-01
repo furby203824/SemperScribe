@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { FileText, FileSignature, ClipboardList, ScrollText, AlertCircle, Building2, Type, FileCheck } from 'lucide-react';
+import { FileText, FileSignature, ClipboardList, ScrollText, AlertCircle, Building2, Type, FileCheck, MessageSquare } from 'lucide-react';
 
 interface DocumentTypeSectionProps {
   formData: FormData;
@@ -189,10 +189,28 @@ export function DocumentTypeSection({
             />
           </div>
         </div>
+
+        {/* Message Traffic Section */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">
+            Message Traffic
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <DocumentTypeCard
+              type="amhs"
+              icon={<MessageSquare className="w-10 h-10" />}
+              title="AMHS Message"
+              description="Automated Message Handling System format for official organizational messages."
+              note="→ For official traffic"
+              isActive={formData.documentType === 'amhs'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'amhs' }))}
+            />
+          </div>
+        </div>
       </section>
 
       {/* Header Type & Body Font - Only for Letters */}
-      {formData.documentType !== 'aa-form' && formData.documentType !== 'page11' && (
+      {formData.documentType !== 'aa-form' && formData.documentType !== 'page11' && formData.documentType !== 'amhs' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-border/50">
           <Card className="border-border shadow-md bg-card">
             <CardHeader className="py-3 px-4 border-b border-border bg-secondary text-primary-foreground rounded-t-lg">

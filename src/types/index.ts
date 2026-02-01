@@ -32,7 +32,7 @@ export interface DistributionData {
 }
 
 export interface FormData {
-  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11';
+  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs';
   endorsementLevel: EndorsementLevel;
   basicLetterReference: string;
   basicLetterSsic?: string;
@@ -72,6 +72,17 @@ export interface FormData {
   edipi?: string;
   remarksLeft?: string;
   remarksRight?: string;
+
+  // AMHS specific fields
+  amhsMessageType?: 'GENADMIN' | 'MARADMIN' | 'ALMAR';
+  amhsClassification?: 'UNCLASSIFIED' | 'CONFIDENTIAL' | 'SECRET' | 'TOP SECRET';
+  amhsPrecedence?: 'ROUTINE' | 'PRIORITY' | 'IMMEDIATE' | 'FLASH';
+  amhsDtg?: string;
+  amhsOfficeCode?: string;
+  amhsNarrative?: string;
+  amhsTextBody?: string;
+  amhsReferences?: AMHSReference[];
+  amhsPocs?: string[];
 }
 
 export interface SavedLetter extends FormData {
@@ -82,6 +93,14 @@ export interface SavedLetter extends FormData {
   enclosures: string[];
   copyTos: string[];
   paragraphs: ParagraphData[];
+}
+
+export interface AMHSReference {
+  id: string;
+  letter: string;
+  type: string;
+  docId: string;
+  title: string;
 }
 
 export interface ValidationState {
