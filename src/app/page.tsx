@@ -30,6 +30,7 @@ import { createFormattedParagraph } from '@/lib/paragraph-formatter';
 import { DOC_SETTINGS } from '@/lib/doc-settings';
 import { generateNavmc10274 } from '@/services/pdf/navmc10274Generator';
 import { openBlobInNewTab } from '@/lib/blob-utils';
+import { getBasePath } from '@/lib/path-utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DynamicForm } from '@/components/ui/DynamicForm';
 import { DOCUMENT_TYPES } from '@/lib/schemas';
@@ -680,11 +681,14 @@ function NavalLetterGeneratorInner() {
 
   const handleLoadTemplateUrl = async (url: string) => {
       try {
-          const res = await fetch(url);
+          // Prepend basePath to template URL for correct path resolution
+          const basePath = getBasePath();
+          const fullUrl = url.startsWith('/') ? `${basePath}${url}` : url;
+          const res = await fetch(fullUrl);
           if (!res.ok) throw new Error(`Failed to load template: ${res.statusText}`);
           const data = await res.json();
           handleImport(data);
-          debugUserAction('Load Template', { url });
+          debugUserAction('Load Template', { url: fullUrl });
       } catch (error) {
           console.error('Template load failed', error);
           alert('Failed to load template. Please try again.');
