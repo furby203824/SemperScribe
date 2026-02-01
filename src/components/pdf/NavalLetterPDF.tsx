@@ -431,29 +431,26 @@ export function NavalLetterPDF({
         {/* One empty line after letterhead */}
         <View style={styles.emptyLine} />
 
-        {/* SSIC Block and Endorsement ID Line Container */}
-        <View style={{ flexDirection: 'row', marginBottom: PDF_SPACING.sectionGap }}>
-           {/* Endorsement Identification Line - Absolute Left */}
-           {isEndorsement && formData.endorsementLevel && formData.basicLetterReference && (
-             <View style={{ position: 'absolute', left: 0, top: 0, width: PDF_INDENTS.ssicBlock }}>
-                <Text style={styles.addressLine}>
-                  {`${formData.endorsementLevel} ENDORSEMENT on ${formData.basicLetterReference}`}
-                </Text>
-             </View>
-           )}
-
-           {/* SSIC Block - Standard Position */}
-           <View style={{ marginLeft: PDF_INDENTS.ssicBlock }}>
-              {formData.documentType === 'bulletin' && formData.cancellationDate && (
-                 <Text style={styles.addressLine}>
-                   Canc: {formatCancellationDate(formData.cancellationDate)}
-                 </Text>
-              )}
-              <Text style={styles.addressLine}>{formData.ssic || ''}</Text>
-              <Text style={styles.addressLine}>{formData.originatorCode || ''}</Text>
-              <Text style={styles.addressLine}>{formattedDate}</Text>
-           </View>
+        {/* SSIC Block */}
+        <View style={styles.addressBlock}>
+          {formData.documentType === 'bulletin' && formData.cancellationDate && (
+            <Text style={styles.addressLine}>
+              Canc: {formatCancellationDate(formData.cancellationDate)}
+            </Text>
+          )}
+          <Text style={styles.addressLine}>{formData.ssic || ''}</Text>
+          <Text style={styles.addressLine}>{formData.originatorCode || ''}</Text>
+          <Text style={styles.addressLine}>{formattedDate}</Text>
         </View>
+
+        {/* Endorsement Identification Line - Between date and From */}
+        {isEndorsement && formData.endorsementLevel && formData.basicLetterReference && (
+          <View style={{ marginBottom: PDF_SPACING.sectionGap }}>
+            <Text style={styles.addressLine}>
+              {`${formData.endorsementLevel} ENDORSEMENT on ${formData.basicLetterReference}`}
+            </Text>
+          </View>
+        )}
 
         {/* From/To/Via */}
         <View style={styles.fromToSection}>

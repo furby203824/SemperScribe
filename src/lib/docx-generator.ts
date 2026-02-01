@@ -130,66 +130,25 @@ export async function generateDocxBlob(
 
   const ssicParagraphs: (Paragraph | Table)[] = [];
 
-  // Check for Endorsement to align side-by-side
-  if (formData.documentType === 'endorsement' && formData.endorsementLevel && formData.basicLetterReference) {
-      const endorsementText = `${formData.endorsementLevel} ENDORSEMENT on ${formData.basicLetterReference}`;
-      
-      // Use a table to place Endorsement (Left) and SSIC (Right) on the same line level
-      // Col 1: Endorsement text (Width up to SSIC indent)
-      // Col 2: SSIC text (Starts at SSIC indent)
-      const table = new Table({
-          width: { size: 100, type: WidthType.PERCENTAGE },
-          borders: {
-              top: { style: BorderStyle.NONE, size: 0, color: "auto" },
-              bottom: { style: BorderStyle.NONE, size: 0, color: "auto" },
-              left: { style: BorderStyle.NONE, size: 0, color: "auto" },
-              right: { style: BorderStyle.NONE, size: 0, color: "auto" },
-              insideHorizontal: { style: BorderStyle.NONE, size: 0, color: "auto" },
-              insideVertical: { style: BorderStyle.NONE, size: 0, color: "auto" },
-          },
-          rows: [
-              new TableRow({
-                  children: [
-                      // Left Cell: Endorsement Line
-                      new TableCell({
-                          width: { size: 7920, type: WidthType.DXA }, // 5.5 inches fixed width
-                          children: [
-                              new Paragraph({
-                                  children: [new TextRun({ text: endorsementText, font, size: FONT_SIZE_BODY })],
-                                  alignment: AlignmentType.LEFT,
-                              })
-                          ],
-                          verticalAlign: "top",
-                      }),
-                      // Right Cell: SSIC Block
-                      new TableCell({
-                          width: { size: 100 - (7920 / 9360 * 100), type: WidthType.PERCENTAGE }, // Remaining width
-                          children: ssicBlock.map(line => new Paragraph({
-                              children: [new TextRun({ text: line, font, size: FONT_SIZE_BODY })],
-                              alignment: AlignmentType.LEFT,
-                          })),
-                          verticalAlign: "top",
-                      })
-                  ]
-              })
-          ]
-      });
-       ssicParagraphs.push(table);
-       // Empty line handled by main sequence
-   } else {
-      // Standard Stacked SSIC Block
-      const ssicPars = ssicBlock.map(line => new Paragraph({
-        children: [new TextRun({ text: line, font, size: FONT_SIZE_BODY })],
-        alignment: AlignmentType.LEFT, // Legacy uses Left alignment with indent
-        indent: { left: 7920 }, // 5.5 inches
-        spacing: { after: 0 }
-      }));
-      ssicParagraphs.push(...ssicPars);
-  }
+  // Standard Stacked SSIC Block (same for all document types)
+  const ssicPars = ssicBlock.map(line => new Paragraph({
+    children: [new TextRun({ text: line, font, size: FONT_SIZE_BODY })],
+    alignment: AlignmentType.LEFT,
+    indent: { left: 7920 }, // 5.5 inches
+    spacing: { after: 0 }
+  }));
+  ssicParagraphs.push(...ssicPars);
 
-  // --- Endorsement Identification Line (Only if NOT handled above) ---
+  // --- Endorsement Identification Line (between date and From) ---
   const endorsementParagraphs: Paragraph[] = [];
-  // Logic moved inside SSIC block generation to ensure alignment
+  if (formData.documentType === 'endorsement' && formData.endorsementLevel && formData.basicLetterReference) {
+    const endorsementText = `${formData.endorsementLevel} ENDORSEMENT on ${formData.basicLetterReference}`;
+    endorsementParagraphs.push(new Paragraph({
+      children: [new TextRun({ text: endorsementText, font, size: FONT_SIZE_BODY })],
+      alignment: AlignmentType.LEFT,
+      spacing: { after: 0 }
+    }));
+  }
   
   // --- From/To/Via ---
   const addressParagraphs: Paragraph[] = [];
