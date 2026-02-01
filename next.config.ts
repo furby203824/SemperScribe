@@ -1,14 +1,14 @@
 import type {NextConfig} from 'next';
 
 const isProd = process.env.NODE_ENV === 'production';
-const basePath = isProd ? '/naval-letter-formatter' : '';
+const basePath = isProd ? '/SemperScribe' : '';
 
 console.log(`[NextConfig] Environment: ${process.env.NODE_ENV}`);
 console.log(`[NextConfig] BasePath: '${basePath}'`);
 
 const nextConfig: NextConfig = {
   basePath,
-  assetPrefix: isProd ? '/naval-letter-formatter/' : undefined,
+  assetPrefix: isProd ? '/SemperScribe/' : undefined,
   output: isProd ? 'export' : undefined,
   trailingSlash: true,
   typescript: {
