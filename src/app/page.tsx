@@ -37,6 +37,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DynamicForm } from '@/components/ui/DynamicForm';
 import { DOCUMENT_TYPES } from '@/lib/schemas';
 import { AMHSEditor } from '@/components/amhs/AMHSEditor';
+import { AMHSPreview } from '@/components/amhs/AMHSPreview';
 
 // Inner component that uses useSearchParams (requires Suspense boundary)
 function NavalLetterGeneratorInner() {
@@ -988,6 +989,14 @@ function NavalLetterGeneratorInner() {
       currentUnitName={currentUnitName}
       onExportNldp={handleExportNldp}
       onUpdatePreview={handleUpdatePreview}
+      customRightPanel={
+        formData.documentType === 'amhs' ? (
+          <AMHSPreview 
+            formData={formData} 
+            references={formData.amhsReferences || []} 
+          />
+        ) : undefined
+      }
     >
       {/* Document Type Header */}
       <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6 flex items-center gap-4">

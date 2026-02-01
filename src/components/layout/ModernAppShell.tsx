@@ -127,13 +127,17 @@ export function ModernAppShell({
           </div>
         </main>
 
-        {/* Right Pane: Live Preview */}
+        {/* Right Pane: Live Preview or Custom Panel */}
         {showPreview && (
-          <LivePreview 
-            previewUrl={previewUrl}
-            isLoading={isGeneratingPreview}
-            onUpdatePreview={onUpdatePreview}
-          />
+          customRightPanel ? (
+            customRightPanel
+          ) : (
+            <LivePreview 
+              previewUrl={previewUrl}
+              isLoading={isGeneratingPreview}
+              onUpdatePreview={onUpdatePreview}
+            />
+          )
         )}
       </div>
     </div>
