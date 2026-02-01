@@ -858,22 +858,12 @@ function NavalLetterGeneratorInner() {
         </div>
       )}
 
-      <UnitInfoSection 
+      <UnitInfoSection
         formData={formData}
         setFormData={setFormData}
         setCurrentUnitCode={setCurrentUnitCode}
         setCurrentUnitName={setCurrentUnitName}
       />
-
-      {/* Dynamic Header Form based on Document Type */}
-      <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6">
-        <DynamicForm 
-          key={`${formData.documentType}-${formKey}`} // Force re-render when type changes or data is imported
-          documentType={DOCUMENT_TYPES[formData.documentType] || DOCUMENT_TYPES['basic']}
-          onSubmit={handleDynamicFormSubmit}
-          defaultValues={formData}
-        />
-      </div>
 
       {/* Endorsement-Specific Fields */}
       {formData.documentType === 'endorsement' && (
@@ -1005,6 +995,16 @@ function NavalLetterGeneratorInner() {
           </CardContent>
         </Card>
       )}
+
+      {/* Dynamic Header Form based on Document Type */}
+      <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6">
+        <DynamicForm 
+          key={`${formData.documentType}-${formKey}`} // Force re-render when type changes or data is imported
+          documentType={DOCUMENT_TYPES[formData.documentType] || DOCUMENT_TYPES['basic']}
+          onSubmit={handleDynamicFormSubmit}
+          defaultValues={formData}
+        />
+      </div>
 
       {/* Legacy Sections wrapped to fit layout */}
       <ViaSection vias={vias} setVias={setVias} />
