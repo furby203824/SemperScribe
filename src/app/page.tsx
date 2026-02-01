@@ -638,8 +638,45 @@ function NavalLetterGeneratorInner() {
 
   const generateDocument = async (format: 'docx' | 'pdf') => {
     if (format === 'pdf') {
-       // PDF generation logic (download)
-       await downloadPDF(formData, vias, references, enclosures, copyTos, paragraphs);
+      // Check if this is an AA Form
+      if (formData.documentType === 'aa-form') {
+        try {
+          // Map formData to Navmc10274Data
+          const aaFormData = {
+            actionNo: formData.actionNo || '',
+            ssic: formData.ssic || '',
+            date: formData.date || '',
+            from: formData.from || '',
+            orgStation: formData.orgStation || '',
+            to: formData.to || '',
+            via: vias.filter(v => v.trim()).join('\n'),
+            subject: formData.subj || '',
+            reference: references.filter(r => r.trim()).join('\n'),
+            enclosure: enclosures.filter(e => e.trim()).join('\n'),
+            supplementalInfo: paragraphs.map(p => p.content).join('\n'),
+            supplementalInfoParagraphs: paragraphs,
+            copyTo: copyTos.filter(c => c.trim()).join('\n'),
+            signature: formData.sig || '',
+          };
+
+          const pdfBytes = await generateNavmc10274(aaFormData);
+          const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `NAVMC_10274_${formData.ssic || 'AA_Form'}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error('Error generating AA Form PDF:', error);
+          alert('Failed to generate AA Form PDF. Please check the console for details.');
+        }
+      } else {
+        // Standard letter PDF generation
+        await downloadPDF(formData, vias, references, enclosures, copyTos, paragraphs);
+      }
     } else {
        try {
          const blob = await generateDocxBlob(formData, vias, references, enclosures, copyTos, paragraphs);
