@@ -216,17 +216,17 @@ function DocumentTypeButton({ active, onClick, label, isSpecial }: { active: boo
       className={cn(
         "w-full text-left flex items-center px-2 py-1.5 text-sm font-medium rounded-md group transition-colors",
         active 
-          ? "text-primary-foreground bg-primary/20 border border-primary/40 shadow-sm" 
-          : "text-white/70 hover:bg-white/10 hover:text-white border border-transparent"
+          ? "text-primary bg-primary/10 border border-primary/20 shadow-sm" 
+          : "text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
       )}
     >
       <span className={cn(
         "w-4 h-4 rounded-full border mr-2 flex items-center justify-center transition-colors",
         active 
-          ? "border-primary-foreground bg-primary" 
-          : "border-white/30 group-hover:border-white/50"
+          ? "border-primary bg-primary text-primary-foreground" 
+          : "border-muted-foreground/30 group-hover:border-muted-foreground/50"
       )}>
-        {active && <span className="w-1.5 h-1.5 rounded-full bg-white"></span>}
+        {active && <span className="w-1.5 h-1.5 rounded-full bg-background"></span>}
       </span>
       {label}
     </button>
@@ -238,11 +238,11 @@ function StructureItem({ icon, label, href, isSubItem }: { icon?: React.ReactNod
     <a 
       href={href} 
       className={cn(
-        "flex items-center px-2 py-1.5 text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white rounded-md group transition-colors",
-        isSubItem && "pl-8 border-l-2 border-transparent hover:border-white/30"
+        "flex items-center px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground rounded-md group transition-colors",
+        isSubItem && "pl-8 border-l-2 border-transparent hover:border-muted-foreground/30"
       )}
     >
-      {icon && <span className="text-white/50 group-hover:text-white mr-2">{icon}</span>}
+      {icon && <span className="text-muted-foreground/70 group-hover:text-foreground mr-2">{icon}</span>}
       {label}
     </a>
   );
