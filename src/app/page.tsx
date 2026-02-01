@@ -579,8 +579,34 @@ function NavalLetterGeneratorInner() {
   // Signature placement workflow handlers
   const handleOpenSignaturePlacement = async () => {
     try {
-      // Generate base PDF for preview
-      const blob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphs);
+      let blob: Blob;
+
+      // Generate appropriate PDF based on document type
+      if (formData.documentType === 'aa-form') {
+        // Generate AA Form PDF
+        const aaFormData = {
+          actionNo: formData.actionNo || '',
+          ssic: formData.ssic || '',
+          date: formData.date || '',
+          from: formData.from || '',
+          orgStation: formData.orgStation || '',
+          to: formData.to || '',
+          via: vias.filter(v => v.trim()).join('\n'),
+          subject: formData.subj || '',
+          reference: references.filter(r => r.trim()).join('\n'),
+          enclosure: enclosures.filter(e => e.trim()).join('\n'),
+          supplementalInfo: paragraphs.map(p => p.content).join('\n'),
+          supplementalInfoParagraphs: paragraphs,
+          copyTo: copyTos.filter(c => c.trim()).join('\n'),
+          signature: formData.sig || '',
+        };
+        const pdfBytes = await generateNavmc10274(aaFormData);
+        blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      } else {
+        // Generate standard letter PDF
+        blob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphs);
+      }
+
       const pageCount = await getPDFPageCount(blob);
       setSignaturePdfBlob(blob);
       setSignaturePdfPageCount(pageCount);
@@ -595,8 +621,33 @@ function NavalLetterGeneratorInner() {
     try {
       setShowSignatureModal(false);
 
-      // Generate base PDF
-      const baseBlob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphs);
+      let baseBlob: Blob;
+
+      // Generate appropriate PDF based on document type
+      if (formData.documentType === 'aa-form') {
+        // Generate AA Form PDF
+        const aaFormData = {
+          actionNo: formData.actionNo || '',
+          ssic: formData.ssic || '',
+          date: formData.date || '',
+          from: formData.from || '',
+          orgStation: formData.orgStation || '',
+          to: formData.to || '',
+          via: vias.filter(v => v.trim()).join('\n'),
+          subject: formData.subj || '',
+          reference: references.filter(r => r.trim()).join('\n'),
+          enclosure: enclosures.filter(e => e.trim()).join('\n'),
+          supplementalInfo: paragraphs.map(p => p.content).join('\n'),
+          supplementalInfoParagraphs: paragraphs,
+          copyTo: copyTos.filter(c => c.trim()).join('\n'),
+          signature: formData.sig || '',
+        };
+        const pdfBytes = await generateNavmc10274(aaFormData);
+        baseBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+      } else {
+        // Generate standard letter PDF
+        baseBlob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphs);
+      }
 
       // Convert SignaturePositions to ManualSignaturePositions
       const manualPositions: ManualSignaturePosition[] = positions.map(pos => ({
@@ -611,9 +662,14 @@ function NavalLetterGeneratorInner() {
       const signedBlob = await addMultipleSignaturesToBlob(baseBlob, manualPositions);
 
       // Download the PDF
-      const filename = formData.documentType === 'endorsement'
-        ? `${formData.endorsementLevel}_ENDORSEMENT_on_${formData.subj || 'letter'}_Page${formData.startingPageNumber}.pdf`
-        : `${formData.subj || 'NavalLetter'}.pdf`;
+      let filename: string;
+      if (formData.documentType === 'aa-form') {
+        filename = `NAVMC_10274_${formData.ssic || 'AA_Form'}.pdf`;
+      } else if (formData.documentType === 'endorsement') {
+        filename = `${formData.endorsementLevel}_ENDORSEMENT_on_${formData.subj || 'letter'}_Page${formData.startingPageNumber}.pdf`;
+      } else {
+        filename = `${formData.subj || 'NavalLetter'}.pdf`;
+      }
 
       const url = window.URL.createObjectURL(signedBlob);
       const link = document.createElement('a');
@@ -1111,32 +1167,30 @@ function NavalLetterGeneratorInner() {
       />
 
       {/* Digital Signature Section */}
-      {formData.documentType !== 'aa-form' && (
-        <Card className="shadow-sm border-border mb-6 border-l-4 border-l-primary">
-          <CardHeader className="pb-3 bg-secondary text-secondary-foreground rounded-t-lg">
-            <CardTitle className="flex items-center text-lg font-semibold font-headline tracking-wide">
-              <FileSignature className="mr-2 h-5 w-5 text-primary-foreground" />
-              Digital Signature Field
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-4">
-            <p className="text-sm text-muted-foreground">
-              Add a digital signature field to your PDF for CAC/PKI signing in Adobe Reader.
-            </p>
-            <button
-              type="button"
-              onClick={handleOpenSignaturePlacement}
-              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            >
-              <FileSignature className="mr-2 h-4 w-4" />
-              Place Signature Field & Download PDF
-            </button>
-            <p className="text-xs text-muted-foreground italic">
-              This will generate a PDF preview where you can draw the signature box location.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      <Card className="shadow-sm border-border mb-6 border-l-4 border-l-primary">
+        <CardHeader className="pb-3 bg-secondary text-secondary-foreground rounded-t-lg">
+          <CardTitle className="flex items-center text-lg font-semibold font-headline tracking-wide">
+            <FileSignature className="mr-2 h-5 w-5 text-primary-foreground" />
+            Digital Signature Field
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 pt-4">
+          <p className="text-sm text-muted-foreground">
+            Add a digital signature field to your PDF for CAC/PKI signing in Adobe Reader.
+          </p>
+          <button
+            type="button"
+            onClick={handleOpenSignaturePlacement}
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <FileSignature className="mr-2 h-4 w-4" />
+            Place Signature Field & Download PDF
+          </button>
+          <p className="text-xs text-muted-foreground italic">
+            This will generate a PDF preview where you can draw the signature box location.
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Signature Placement Modal */}
       <SignaturePlacementModal
