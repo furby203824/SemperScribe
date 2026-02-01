@@ -21,8 +21,9 @@ import { getTodaysDate } from '@/lib/date-utils';
 import { getMCOParagraphs, getMCBulParagraphs } from '@/lib/naval-format-utils';
 import { validateSSIC, validateSubject, validateFromTo } from '@/lib/validation-utils';
 import { loadSavedLetters, saveLetterToStorage, findLetterById } from '@/lib/storage-utils';
-import { generateBasePDFBlob } from '@/lib/pdf-generator';
+import { generateBasePDFBlob, generatePDFBlob, getPDFPageCount, addSignatureToBlob, ManualSignaturePosition } from '@/lib/pdf-generator';
 import { generateDocxBlob } from '@/lib/docx-generator';
+import { SignaturePlacementModal, SignaturePosition } from '@/components/SignaturePlacementModal';
 import { configureConsole, logError, debugUserAction, debugFormChange } from '@/lib/console-utils';
 import { getDoDSealBufferSync } from '@/lib/dod-seal';
 import { createFormattedParagraph } from '@/lib/paragraph-formatter';
@@ -98,6 +99,12 @@ function NavalLetterGeneratorInner() {
 
   // Key to force form remount on import
   const [formKey, setFormKey] = useState(0);
+
+  // Signature placement state
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [signaturePdfBlob, setSignaturePdfBlob] = useState<Blob | null>(null);
+  const [signaturePdfPageCount, setSignaturePdfPageCount] = useState(1);
+  const [signaturePosition, setSignaturePosition] = useState<ManualSignaturePosition | null>(null);
 
   // Refs
   const activeVoiceInputRef = useRef<number | null>(null);
@@ -544,9 +551,16 @@ function NavalLetterGeneratorInner() {
     }
   };
 
-  const downloadPDF = async (formData: FormData, vias: string[], references: string[], enclosures: string[], copyTos: string[], paragraphs: ParagraphData[]) => {
+  const downloadPDF = async (formData: FormData, vias: string[], references: string[], enclosures: string[], copyTos: string[], paragraphs: ParagraphData[], withSignature?: ManualSignaturePosition) => {
     try {
-      const blob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphs);
+      let blob: Blob;
+      if (withSignature) {
+        // Generate PDF with signature field at specified position
+        blob = await generatePDFBlob(formData, vias, references, enclosures, copyTos, paragraphs, withSignature);
+      } else {
+        // Generate base PDF without signature field
+        blob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphs);
+      }
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -559,6 +573,46 @@ function NavalLetterGeneratorInner() {
       console.error('Error generating PDF:', error);
       alert('Failed to generate PDF. Please check the console for details.');
     }
+  };
+
+  // Signature placement workflow handlers
+  const handleOpenSignaturePlacement = async () => {
+    try {
+      // Generate base PDF for preview
+      const blob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphs);
+      const pageCount = await getPDFPageCount(blob);
+      setSignaturePdfBlob(blob);
+      setSignaturePdfPageCount(pageCount);
+      setShowSignatureModal(true);
+    } catch (error) {
+      console.error('Error preparing signature placement:', error);
+      alert('Failed to prepare PDF for signature placement.');
+    }
+  };
+
+  const handleSignatureConfirm = async (position: SignaturePosition) => {
+    try {
+      setShowSignatureModal(false);
+      // Convert SignaturePosition to ManualSignaturePosition
+      const manualPosition: ManualSignaturePosition = {
+        pageIndex: position.page - 1, // Convert 1-indexed to 0-indexed
+        x: position.x,
+        y: position.y,
+        width: position.width,
+        height: position.height
+      };
+      // Download PDF with signature field
+      await downloadPDF(formData, vias, references, enclosures, copyTos, paragraphs, manualPosition);
+      setSignaturePdfBlob(null);
+    } catch (error) {
+      console.error('Error adding signature:', error);
+      alert('Failed to add signature field to PDF.');
+    }
+  };
+
+  const handleSignatureCancel = () => {
+    setShowSignatureModal(false);
+    setSignaturePdfBlob(null);
   };
 
   const generateDocument = async (format: 'docx' | 'pdf') => {
@@ -988,11 +1042,48 @@ function NavalLetterGeneratorInner() {
         removeParagraph={removeParagraph}
       />
 
-      <ClosingBlockSection 
+      <ClosingBlockSection
         formData={formData}
         setFormData={setFormData}
         copyTos={copyTos}
         setCopyTos={setCopyTos}
+      />
+
+      {/* Digital Signature Section */}
+      {formData.documentType !== 'aa-form' && (
+        <Card className="shadow-sm border-border mb-6 border-l-4 border-l-primary">
+          <CardHeader className="pb-3 bg-secondary text-secondary-foreground rounded-t-lg">
+            <CardTitle className="flex items-center text-lg font-semibold font-headline tracking-wide">
+              <FileSignature className="mr-2 h-5 w-5 text-primary-foreground" />
+              Digital Signature Field
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-4">
+            <p className="text-sm text-muted-foreground">
+              Add a digital signature field to your PDF for CAC/PKI signing in Adobe Reader.
+            </p>
+            <button
+              type="button"
+              onClick={handleOpenSignaturePlacement}
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <FileSignature className="mr-2 h-4 w-4" />
+              Place Signature Field & Download PDF
+            </button>
+            <p className="text-xs text-muted-foreground italic">
+              This will generate a PDF preview where you can draw the signature box location.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Signature Placement Modal */}
+      <SignaturePlacementModal
+        open={showSignatureModal}
+        onClose={handleSignatureCancel}
+        onConfirm={handleSignatureConfirm}
+        pdfBlob={signaturePdfBlob}
+        totalPages={signaturePdfPageCount}
       />
     </ModernAppShell>
   );
