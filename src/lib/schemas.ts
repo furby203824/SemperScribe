@@ -153,32 +153,9 @@ export const EndorsementDefinition: DocumentTypeDefinition = {
   icon: '📝',
   schema: EndorsementSchema,
   sections: [
-    {
-      id: 'endorsement-details',
-      title: 'Endorsement Details',
-      fields: [
-        {
-          name: 'endorsementLevel',
-          label: 'Endorsement Level',
-          type: 'select',
-          options: [
-            { label: 'First', value: 'FIRST' },
-            { label: 'Second', value: 'SECOND' },
-            { label: 'Third', value: 'THIRD' },
-            { label: 'Fourth', value: 'FOURTH' },
-            { label: 'Fifth', value: 'FIFTH' },
-            { label: 'Sixth', value: 'SIXTH' },
-            { label: 'Seventh', value: 'SEVENTH' },
-            { label: 'Eighth', value: 'EIGHTH' },
-            { label: 'Ninth', value: 'NINTH' },
-            { label: 'Tenth', value: 'TENTH' },
-          ],
-          required: true,
-          className: 'md:col-span-1'
-        }
-      ]
-    },
-    ...BasicLetterDefinition.sections // Reuse basic sections
+    // Endorsement-specific fields are handled in page.tsx custom section
+    // Only include basic letter sections here
+    ...BasicLetterDefinition.sections
   ]
 };
 
