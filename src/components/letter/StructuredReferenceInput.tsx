@@ -23,7 +23,9 @@ export function StructuredReferenceInput({ formData, setFormData }: StructuredRe
   const generateReferenceString = (who: string, type: string, ssic: string, date: string): string => {
     if (!who || !type || !date) return '';
     const ssicPart = ssic ? ` ${ssic}` : '';
-    return `${who}'s ${type}${ssicPart} dtd ${date}`;
+    // Format the date to naval format (D Mmm YY)
+    const formattedDate = parseAndFormatDate(date);
+    return `${who}'s ${type}${ssicPart} dtd ${formattedDate}`;
   };
 
   const updateReference = (field: 'who' | 'type' | 'ssic' | 'date', value: string) => {
@@ -42,16 +44,6 @@ export function StructuredReferenceInput({ formData, setFormData }: StructuredRe
       referenceDate: newDate,
       basicLetterReference: fullReference
     }));
-  };
-
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = parseAndFormatDate(e.target.value);
-    updateReference('date', formatted);
-  };
-
-  const handleDateBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    const formatted = parseAndFormatDate(e.target.value);
-    updateReference('date', formatted);
   };
 
   return (
@@ -127,14 +119,19 @@ export function StructuredReferenceInput({ formData, setFormData }: StructuredRe
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold uppercase text-muted-foreground">Date</Label>
             <Input
-              type="text"
+              type="date"
               value={formData.referenceDate}
-              onChange={handleDateChange}
-              onBlur={handleDateBlur}
-              placeholder="D Mmm YY"
+              onChange={(e) => updateReference('date', e.target.value)}
               className="h-9"
             />
-            <p className="text-[10px] text-muted-foreground">Date of basic letter</p>
+            {formData.referenceDate && (
+              <p className="text-[10px] text-muted-foreground">
+                Will display as: <span className="font-semibold">{parseAndFormatDate(formData.referenceDate)}</span>
+              </p>
+            )}
+            {!formData.referenceDate && (
+              <p className="text-[10px] text-muted-foreground">Date of basic letter</p>
+            )}
           </div>
         </div>
 
