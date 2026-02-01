@@ -46,7 +46,7 @@ export function ViaSection({ vias, setVias }: ViaSectionProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-6">
+        <div className="flex gap-6 pt-2">
           <RadioGroup 
             defaultValue={showVia ? 'yes' : 'no'} 
             value={showVia ? 'yes' : 'no'}

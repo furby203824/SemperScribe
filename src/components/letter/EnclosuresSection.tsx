@@ -65,7 +65,7 @@ export function EnclosuresSection({ enclosures, setEnclosures, formData, setForm
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-6">
+        <div className="flex gap-6 pt-2">
           <RadioGroup 
             defaultValue={showEncl ? 'yes' : 'no'} 
             value={showEncl ? 'yes' : 'no'}
