@@ -11,7 +11,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Move, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, Move, Download, Trash2 } from "lucide-react";
 
 // Dynamically import react-pdf to avoid SSR issues
 const Document = dynamic(() => import("react-pdf").then((mod) => mod.Document), { ssr: false });
@@ -39,7 +39,7 @@ export interface SignaturePosition {
 interface SignaturePlacementModalProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: (position: SignaturePosition) => void;
+  onConfirm: (positions: SignaturePosition[]) => void;
   pdfBlob: Blob | null;
   totalPages: number;
 }
@@ -54,7 +54,8 @@ export function SignaturePlacementModal({
   const [currentPage, setCurrentPage] = useState(1);
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
-  const [rect, setRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [currentRect, setCurrentRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [signatureBoxes, setSignatureBoxes] = useState<SignaturePosition[]>([]);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pageSize, setPageSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
@@ -73,7 +74,8 @@ export function SignaturePlacementModal({
   useEffect(() => {
     if (open) {
       setCurrentPage(totalPages); // Start on last page (where signature usually is)
-      setRect(null);
+      setCurrentRect(null);
+      setSignatureBoxes([]);
       setIsDrawing(false);
     }
   }, [open, totalPages]);
@@ -82,6 +84,9 @@ export function SignaturePlacementModal({
   const onPageLoadSuccess = useCallback(({ width, height }: { width: number; height: number }) => {
     setPageSize({ width, height });
   }, []);
+
+  // Get boxes for current page
+  const currentPageBoxes = signatureBoxes.filter(box => box.page === currentPage);
 
   // Draw the rectangle overlay
   const drawOverlay = useCallback(() => {
@@ -98,16 +103,16 @@ export function SignaturePlacementModal({
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (rect) {
-      // Scale from PDF points to rendered pixels
-      const scaleX = pageSize.width / PDF_WIDTH;
-      const scaleY = pageSize.height / PDF_HEIGHT;
+    // Scale factors
+    const scaleX = pageSize.width / PDF_WIDTH;
+    const scaleY = pageSize.height / PDF_HEIGHT;
 
-      const scaledX = rect.x * scaleX;
-      // Convert from PDF coords (bottom-up) to screen coords (top-down)
-      const scaledY = (PDF_HEIGHT - rect.y - rect.height) * scaleY;
-      const scaledWidth = rect.width * scaleX;
-      const scaledHeight = rect.height * scaleY;
+    // Draw all saved boxes for current page
+    currentPageBoxes.forEach((box, index) => {
+      const scaledX = box.x * scaleX;
+      const scaledY = (PDF_HEIGHT - box.y - box.height) * scaleY;
+      const scaledWidth = box.width * scaleX;
+      const scaledHeight = box.height * scaleY;
 
       // Draw semi-transparent fill
       ctx.fillStyle = "rgba(59, 130, 246, 0.2)";
@@ -119,14 +124,36 @@ export function SignaturePlacementModal({
       ctx.setLineDash([5, 5]);
       ctx.strokeRect(scaledX, scaledY, scaledWidth, scaledHeight);
 
-      // Draw "SIGN HERE" text
+      // Draw label
       ctx.fillStyle = "#3b82f6";
-      ctx.font = "bold 14px sans-serif";
+      ctx.font = "bold 12px sans-serif";
       ctx.textAlign = "center";
       ctx.setLineDash([]);
-      ctx.fillText("SIGN HERE", scaledX + scaledWidth / 2, scaledY + scaledHeight / 2 + 5);
+      ctx.fillText(`SIGN ${index + 1}`, scaledX + scaledWidth / 2, scaledY + scaledHeight / 2 + 4);
+    });
+
+    // Draw current rectangle being drawn
+    if (currentRect) {
+      const scaledX = currentRect.x * scaleX;
+      const scaledY = (PDF_HEIGHT - currentRect.y - currentRect.height) * scaleY;
+      const scaledWidth = currentRect.width * scaleX;
+      const scaledHeight = currentRect.height * scaleY;
+
+      ctx.fillStyle = "rgba(34, 197, 94, 0.2)";
+      ctx.fillRect(scaledX, scaledY, scaledWidth, scaledHeight);
+
+      ctx.strokeStyle = "#22c55e";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      ctx.strokeRect(scaledX, scaledY, scaledWidth, scaledHeight);
+
+      ctx.fillStyle = "#22c55e";
+      ctx.font = "bold 12px sans-serif";
+      ctx.textAlign = "center";
+      ctx.setLineDash([]);
+      ctx.fillText("NEW", scaledX + scaledWidth / 2, scaledY + scaledHeight / 2 + 4);
     }
-  }, [rect, pageSize]);
+  }, [currentRect, currentPageBoxes, pageSize]);
 
   // Redraw overlay when rect or size changes
   useEffect(() => {
@@ -138,22 +165,18 @@ export function SignaturePlacementModal({
     const container = containerRef.current;
     if (!container || pageSize.width === 0) return { x: 0, y: 0 };
 
-    // Find the react-pdf page element
     const pageElement = container.querySelector(".react-pdf__Page__canvas") as HTMLElement;
     if (!pageElement) return { x: 0, y: 0 };
 
     const pageRect = pageElement.getBoundingClientRect();
 
-    // Get relative position within the page
     const relX = screenX - pageRect.left;
     const relY = screenY - pageRect.top;
 
-    // Scale to PDF dimensions
     const scaleX = PDF_WIDTH / pageRect.width;
     const scaleY = PDF_HEIGHT / pageRect.height;
 
     const pdfX = relX * scaleX;
-    // PDF coordinates are from bottom, screen coords are from top
     const pdfY = PDF_HEIGHT - (relY * scaleY);
 
     return { x: pdfX, y: pdfY };
@@ -164,7 +187,7 @@ export function SignaturePlacementModal({
     if (coords.x === 0 && coords.y === 0) return;
     setStartPoint(coords);
     setIsDrawing(true);
-    setRect(null);
+    setCurrentRect(null);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -172,81 +195,119 @@ export function SignaturePlacementModal({
 
     const coords = screenToPdfCoords(e.clientX, e.clientY);
 
-    // Calculate rectangle - y should be the bottom edge (smaller Y value in PDF coords)
     const x = Math.min(startPoint.x, coords.x);
     const y = Math.min(startPoint.y, coords.y);
     const width = Math.abs(coords.x - startPoint.x);
     const height = Math.abs(coords.y - startPoint.y);
 
-    setRect({ x, y, width, height });
+    setCurrentRect({ x, y, width, height });
   };
 
   const handleMouseUp = () => {
+    // If we have a valid rectangle, add it to the list
+    if (currentRect && currentRect.width > 10 && currentRect.height > 10) {
+      setSignatureBoxes(prev => [...prev, {
+        page: currentPage,
+        x: currentRect.x,
+        y: currentRect.y,
+        width: currentRect.width,
+        height: currentRect.height,
+      }]);
+    }
     setIsDrawing(false);
     setStartPoint(null);
+    setCurrentRect(null);
+  };
+
+  const handleRemoveBox = (index: number) => {
+    // Find the actual index in signatureBoxes array
+    const boxesToRemove = signatureBoxes.filter(box => box.page === currentPage);
+    const boxToRemove = boxesToRemove[index];
+    setSignatureBoxes(prev => prev.filter(box => box !== boxToRemove));
+  };
+
+  const handleClearCurrentPage = () => {
+    setSignatureBoxes(prev => prev.filter(box => box.page !== currentPage));
   };
 
   const handleConfirm = () => {
-    if (rect && rect.width > 10 && rect.height > 10) {
-      onConfirm({
-        page: currentPage,
-        x: rect.x,
-        y: rect.y,
-        width: rect.width,
-        height: rect.height,
-      });
+    if (signatureBoxes.length > 0) {
+      onConfirm(signatureBoxes);
     }
   };
 
   const goToPrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
-      setRect(null);
+      setCurrentRect(null);
     }
   };
 
   const goToNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
-      setRect(null);
+      setCurrentRect(null);
     }
   };
+
+  // Count total boxes across all pages
+  const totalBoxes = signatureBoxes.length;
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Place Signature Field</DialogTitle>
+          <DialogTitle>Place Signature Fields</DialogTitle>
           <DialogDescription>
-            Draw a rectangle where you want the signature field to appear.
-            Click and drag to create the signature box.
+            Draw rectangles where you want signature fields. You can add multiple signature boxes on any page.
           </DialogDescription>
         </DialogHeader>
 
-        {/* Page navigation */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-4 py-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToPrevPage}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToNextPage}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+        {/* Page navigation and box count */}
+        <div className="flex items-center justify-between py-2">
+          <div className="flex items-center gap-2">
+            {totalPages > 1 && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToPrevPage}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToNextPage}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </>
+            )}
           </div>
-        )}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              {totalBoxes} signature field{totalBoxes !== 1 ? 's' : ''} total
+              {currentPageBoxes.length > 0 && ` (${currentPageBoxes.length} on this page)`}
+            </span>
+            {currentPageBoxes.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearCurrentPage}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Clear Page
+              </Button>
+            )}
+          </div>
+        </div>
 
         {/* PDF preview with overlay */}
         <div className="flex-1 flex items-center justify-center bg-muted/30 rounded-lg p-4 min-h-[500px] overflow-auto border border-border">
@@ -281,17 +342,37 @@ export function SignaturePlacementModal({
               style={{ width: pageSize.width, height: pageSize.height }}
             />
 
-            {/* Instructions overlay when no rect drawn */}
-            {!rect && !isDrawing && pageSize.width > 0 && (
+            {/* Instructions overlay when no boxes drawn on this page */}
+            {currentPageBoxes.length === 0 && !currentRect && !isDrawing && pageSize.width > 0 && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="bg-card/95 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 border border-border">
                   <Move className="h-5 w-5 text-primary" />
-                  <span className="text-sm text-card-foreground">Click and drag to draw signature area</span>
+                  <span className="text-sm text-card-foreground">Click and drag to draw signature areas</span>
                 </div>
               </div>
             )}
           </div>
         </div>
+
+        {/* List of boxes on current page */}
+        {currentPageBoxes.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-2">
+            {currentPageBoxes.map((_, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded text-sm"
+              >
+                <span>Signature {index + 1}</span>
+                <button
+                  onClick={() => handleRemoveBox(index)}
+                  className="hover:bg-primary/20 rounded p-0.5"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose}>
@@ -299,10 +380,10 @@ export function SignaturePlacementModal({
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={!rect || rect.width < 10 || rect.height < 10}
+            disabled={signatureBoxes.length === 0}
           >
             <Download className="mr-2 h-4 w-4" />
-            Save & Download PDF
+            Save & Download PDF ({totalBoxes} field{totalBoxes !== 1 ? 's' : ''})
           </Button>
         </DialogFooter>
       </DialogContent>

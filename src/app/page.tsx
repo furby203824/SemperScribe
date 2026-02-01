@@ -21,7 +21,7 @@ import { getTodaysDate } from '@/lib/date-utils';
 import { getMCOParagraphs, getMCBulParagraphs } from '@/lib/naval-format-utils';
 import { validateSSIC, validateSubject, validateFromTo } from '@/lib/validation-utils';
 import { loadSavedLetters, saveLetterToStorage, findLetterById } from '@/lib/storage-utils';
-import { generateBasePDFBlob, generatePDFBlob, getPDFPageCount, addSignatureToBlob, ManualSignaturePosition } from '@/lib/pdf-generator';
+import { generateBasePDFBlob, generatePDFBlob, getPDFPageCount, addMultipleSignaturesToBlob, ManualSignaturePosition } from '@/lib/pdf-generator';
 import { generateDocxBlob } from '@/lib/docx-generator';
 import { SignaturePlacementModal, SignaturePosition } from '@/components/SignaturePlacementModal';
 import { configureConsole, logError, debugUserAction, debugFormChange } from '@/lib/console-utils';
@@ -591,23 +591,43 @@ function NavalLetterGeneratorInner() {
     }
   };
 
-  const handleSignatureConfirm = async (position: SignaturePosition) => {
+  const handleSignatureConfirm = async (positions: SignaturePosition[]) => {
     try {
       setShowSignatureModal(false);
-      // Convert SignaturePosition to ManualSignaturePosition
-      const manualPosition: ManualSignaturePosition = {
-        pageIndex: position.page - 1, // Convert 1-indexed to 0-indexed
-        x: position.x,
-        y: position.y,
-        width: position.width,
-        height: position.height
-      };
-      // Download PDF with signature field
-      await downloadPDF(formData, vias, references, enclosures, copyTos, paragraphs, manualPosition);
+
+      // Generate base PDF
+      const baseBlob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphs);
+
+      // Convert SignaturePositions to ManualSignaturePositions
+      const manualPositions: ManualSignaturePosition[] = positions.map(pos => ({
+        page: pos.page,
+        x: pos.x,
+        y: pos.y,
+        width: pos.width,
+        height: pos.height
+      }));
+
+      // Add all signature fields
+      const signedBlob = await addMultipleSignaturesToBlob(baseBlob, manualPositions);
+
+      // Download the PDF
+      const filename = formData.documentType === 'endorsement'
+        ? `${formData.endorsementLevel}_ENDORSEMENT_on_${formData.subj || 'letter'}_Page${formData.startingPageNumber}.pdf`
+        : `${formData.subj || 'NavalLetter'}.pdf`;
+
+      const url = window.URL.createObjectURL(signedBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
       setSignaturePdfBlob(null);
     } catch (error) {
       console.error('Error adding signature:', error);
-      alert('Failed to add signature field to PDF.');
+      alert('Failed to add signature fields to PDF.');
     }
   };
 
