@@ -1,5 +1,4 @@
 import React from 'react';
-import Image from 'next/image';
 import { Sidebar } from './Sidebar';
 import { LivePreview } from './LivePreview';
 import { HeaderActions } from './HeaderActions';
@@ -7,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { Settings, FileText, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ParagraphData, SavedLetter } from '@/types';
+import { getBasePath } from '@/lib/path-utils';
 
 interface ModernAppShellProps {
   children: React.ReactNode;
@@ -51,6 +51,13 @@ export function ModernAppShell({
   onUpdatePreview
 }: ModernAppShellProps) {
   const [showPreview, setShowPreview] = React.useState(true);
+  const [logoSrc, setLogoSrc] = React.useState('/logo.png');
+
+  React.useEffect(() => {
+    // Get basePath on client-side for proper logo loading
+    const basePath = getBasePath();
+    setLogoSrc(`${basePath}/logo.png`);
+  }, []);
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground font-sans overflow-hidden">
@@ -59,12 +66,12 @@ export function ModernAppShell({
         <div className="flex items-center space-x-4">
           <div className="flex items-center gap-3">
             <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-primary/50 shadow-sm bg-white/10">
-              <Image 
-                src="/logo.png" 
-                alt="USMC Seal" 
-                width={40} 
-                height={40} 
-                className="object-cover"
+              <img
+                src={logoSrc}
+                alt="USMC Seal"
+                width={40}
+                height={40}
+                className="object-cover w-full h-full"
               />
             </div>
             
