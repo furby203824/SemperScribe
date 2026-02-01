@@ -45,7 +45,7 @@ export async function generateBasePDFBlob(
     paragraphs,
   });
 
-  return pdf(document).toBlob();
+  return pdf(document as any).toBlob();
 }
 
 /**
@@ -98,7 +98,7 @@ export async function generatePDFBlob(
   });
 
   // Generate initial PDF blob
-  const initialBlob = await pdf(document).toBlob();
+  const initialBlob = await pdf(document as any).toBlob();
 
   // Try to add digital signature field for CAC signing
   try {

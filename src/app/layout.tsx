@@ -1,7 +1,8 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import { FeedbackButton } from "@/components/FeedbackButton";
+import { DisclaimerModal } from "@/components/DisclaimerModal";
+
 // Remove Vercel Analytics since we're deploying to GitHub Pages
 // import { Analytics } from '@vercel/analytics/next';
 
@@ -21,11 +22,14 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
       </head>
-      <body className="font-body antialiased">
-        {children}
+      <body className="font-body antialiased flex flex-col min-h-screen">
+        <main className="flex-1">
+          {children}
+        </main>
+        <DisclaimerModal />
         <Toaster />
-        <FeedbackButton />
         {/* Analytics removed for GitHub Pages deployment */}
       </body>
     </html>

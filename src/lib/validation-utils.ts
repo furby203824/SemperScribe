@@ -60,9 +60,5 @@ export function validateFromTo(value: string): ValidationResult {
     return { isValid: false, message: '' };
   }
 
-  if (value.trim().length < 5) {
-    return { isValid: false, message: 'Please enter a complete From/To address' };
-  }
-
   return { isValid: true, message: 'Valid format' };
 }

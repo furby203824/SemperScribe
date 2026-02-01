@@ -5,7 +5,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Book, Plus, Trash2, AlertTriangle, Bookmark } from 'lucide-react';
 import { FormData } from '@/types';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface ReferencesSectionProps {
   references: string[];
@@ -21,13 +28,23 @@ export function ReferencesSection({ references, setReferences, formData, setForm
     setShowRef(references.some(r => r.trim() !== ''));
   }, [references]);
 
-  const addItem = useCallback(() => setReferences(r => [...r, '']), [setReferences]);
-  const removeItem = useCallback((index: number) => setReferences(r => r.filter((_, i) => i !== index)), [setReferences]);
-  const updateItem = useCallback((index: number, value: string) => setReferences(r => r.map((item, i) => i === index ? value : item)), [setReferences]);
+  const addItem = useCallback(() => setReferences([...references, '']), [references, setReferences]);
+  const removeItem = useCallback((index: number) => setReferences(references.filter((_, i) => i !== index)), [references, setReferences]);
+  const updateItem = useCallback((index: number, value: string) => setReferences(references.map((item, i) => i === index ? value : item)), [references, setReferences]);
 
   const getReferenceLetter = (index: number, startingLevel: string): string => {
     const startCharCode = startingLevel.charCodeAt(0);
     return String.fromCharCode(startCharCode + index);
+  };
+
+  const handleRadioChange = (value: string) => {
+    if (value === 'yes') {
+      setShowRef(true);
+      if (references.length === 0) setReferences(['']);
+    } else {
+      setShowRef(false);
+      setReferences(['']);
+    }
   };
 
   const generateReferenceOptions = () => {
@@ -38,98 +55,102 @@ export function ReferencesSection({ references, setReferences, formData, setForm
   };
 
   return (
-    <Card className="mb-6">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center text-lg font-semibold">
-          <i className="fas fa-book mr-2"></i>
+    <Card className="shadow-sm border-border mb-6 border-l-4 border-l-primary">
+      <CardHeader className="pb-3 bg-secondary text-secondary-foreground rounded-t-lg">
+        <CardTitle className="flex items-center text-lg font-semibold font-headline tracking-wide">
+          <Book className="mr-2 h-5 w-5 text-primary-foreground" />
           References
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-6">
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="radio"
-              name="ifRef"
-              value="yes"
-              checked={showRef}
-              onChange={() => setShowRef(true)}
-              className="mr-2 scale-125"
-            />
-            <span className="text-base">Yes</span>
-          </label>
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="radio"
-              name="ifRef"
-              value="no"
-              checked={!showRef}
-              onChange={() => { setShowRef(false); setReferences(['']); }}
-              className="mr-2 scale-125"
-            />
-            <span className="text-base">No</span>
-          </label>
+          <RadioGroup 
+            defaultValue={showRef ? 'yes' : 'no'} 
+            value={showRef ? 'yes' : 'no'}
+            onValueChange={handleRadioChange}
+            className="flex flex-row gap-6"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="yes" id="ref-yes" />
+              <Label htmlFor="ref-yes" className="cursor-pointer">Yes</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="no" id="ref-no" />
+              <Label htmlFor="ref-no" className="cursor-pointer">No</Label>
+            </div>
+          </RadioGroup>
         </div>
 
         {showRef && (
-          <div className="space-y-4">
+          <div className="space-y-4 pt-2">
             {formData.documentType === 'endorsement' && (
               <>
-                <div className="mt-2 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-r-lg mb-4">
-                  <div className="flex">
-                    <div className="py-1"><i className="fas fa-exclamation-triangle fa-lg mr-3"></i></div>
-                    <div>
-                      <p className="font-bold">Endorsement Reference Rules</p>
-                      <p className="text-sm">Only add NEW references not mentioned in the basic letter or previous endorsements. Continue the lettering sequence from the last reference.</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="input-group">
-                  <span className="input-group-text">Starting Reference:</span>
-                  <select
-                    className="form-control"
+                <Alert variant="default" className="border-l-4 border-l-yellow-500 bg-yellow-50/50">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                  <AlertTitle className="text-yellow-800 font-semibold ml-2">Endorsement Reference Rules</AlertTitle>
+                  <AlertDescription className="text-yellow-700 ml-2">
+                    Only add NEW references not mentioned in the basic letter or previous endorsements. Continue the lettering sequence from the last reference.
+                  </AlertDescription>
+                </Alert>
+
+                <div className="flex items-center gap-3">
+                  <Label className="whitespace-nowrap">Starting Reference:</Label>
+                  <Select
                     value={formData.startingReferenceLevel}
-                    onChange={(e) => setFormData({ ...formData, startingReferenceLevel: e.target.value })}
+                    onValueChange={(val) => setFormData({ ...formData, startingReferenceLevel: val })}
                   >
-                    {generateReferenceOptions().map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                  </select>
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="Select starting letter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {generateReferenceOptions().map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </>
             )}
-            <label className="block font-semibold mb-2">
-              <i className="fas fa-bookmark mr-2"></i>
+            
+            <Label className="font-semibold mb-2 flex items-center">
+              <Bookmark className="mr-2 h-4 w-4" />
               Enter Reference(s):
-            </label>
+            </Label>
+            
             {references.map((ref, index) => (
-              <div key={`ref-${index}-${ref.substring(0, 20)}`} className="flex w-full">
-                <span className="flex min-w-[60px] items-center justify-center flex-shrink-0 rounded-l-lg border-2 border-[#b8860b] bg-gradient-to-br from-[#b8860b] to-[#ffd700] text-center font-semibold text-white">
+              <div key={`ref-${index}`} className="flex w-full gap-2 items-center">
+                <span className="flex h-10 w-12 items-center justify-center flex-shrink-0 rounded-md bg-secondary text-primary-foreground border border-secondary font-medium shadow-sm">
                   ({getReferenceLetter(index, formData.startingReferenceLevel)})
                 </span>
-                <input
-                  className="flex-1 min-w-0 px-4 py-3 text-base border-2 border-l-0 border-gray-300 bg-gray-50 transition-all focus:border-[#b8860b] focus:bg-white focus:ring-2 focus:ring-[#b8860b]/10 focus:outline-none"
+                <Input
+                  className="flex-1 border-input focus-visible:ring-primary"
                   type="text"
-                  placeholder="📚 Enter reference information (e.g., NAVADMIN 123/24, OPNAVINST 5000.1)"
+                  placeholder="Enter reference information (e.g., NAVADMIN 123/24, OPNAVINST 5000.1)"
                   value={ref}
                   onChange={(e) => updateItem(index, e.target.value)}
                 />
                 {index === references.length - 1 ? (
-                  <button
-                    className="flex-shrink-0 rounded-r-lg border-2 border-[#b8860b] bg-gradient-to-br from-[#b8860b] to-[#ffd700] px-4 py-2 font-semibold text-white transition-all hover:from-[#ffd700] hover:to-[#b8860b] hover:-translate-y-px"
-                    type="button"
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="flex-shrink-0 border-primary/20 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
                     onClick={addItem}
+                    title="Add Reference"
                   >
-                    <i className="fas fa-plus mr-1"></i>
-                    Add
-                  </button>
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 ) : (
-                  <button
-                    className="flex-shrink-0 rounded-r-lg bg-gradient-to-r from-red-600 to-red-500 px-4 py-2 font-semibold text-white transition-all hover:from-red-700 hover:to-red-600"
-                    type="button"
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="flex-shrink-0 border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
                     onClick={() => removeItem(index)}
+                    title="Remove Reference"
                   >
-                    <i className="fas fa-trash mr-1"></i>
-                    Remove
-                  </button>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 )}
               </div>
             ))}

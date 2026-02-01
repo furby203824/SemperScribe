@@ -8,29 +8,37 @@ import React from 'react';
 import { parseAndFormatDate } from '@/lib/date-utils';
 import { REFERENCE_TYPES, COMMON_ORIGINATORS } from '@/lib/constants';
 import { FormData } from '@/types';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Info } from 'lucide-react';
 
 export interface StructuredReferenceInputProps {
-  formData: Pick<FormData, 'referenceWho' | 'referenceType' | 'referenceDate' | 'basicLetterReference' | 'endorsementLevel'>;
+  formData: Pick<FormData, 'referenceWho' | 'referenceType' | 'referenceDate' | 'basicLetterReference' | 'endorsementLevel' | 'basicLetterSsic'>;
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
 }
 
 export function StructuredReferenceInput({ formData, setFormData }: StructuredReferenceInputProps) {
-  const generateReferenceString = (who: string, type: string, date: string): string => {
+  const generateReferenceString = (who: string, type: string, ssic: string, date: string): string => {
     if (!who || !type || !date) return '';
-    return `${who}'s ${type} dtd ${date}`;
+    const ssicPart = ssic ? ` ${ssic}` : '';
+    return `${who}'s ${type}${ssicPart} dtd ${date}`;
   };
 
-  const updateReference = (field: 'who' | 'type' | 'date', value: string) => {
+  const updateReference = (field: 'who' | 'type' | 'ssic' | 'date', value: string) => {
     const newWho = field === 'who' ? value : formData.referenceWho;
     const newType = field === 'type' ? value : formData.referenceType;
+    const newSsic = field === 'ssic' ? value : (formData.basicLetterSsic || '');
     const newDate = field === 'date' ? value : formData.referenceDate;
 
-    const fullReference = generateReferenceString(newWho, newType, newDate);
+    const fullReference = generateReferenceString(newWho, newType, newSsic, newDate);
 
     setFormData((prev: FormData) => ({
       ...prev,
       referenceWho: newWho,
       referenceType: newType,
+      basicLetterSsic: newSsic,
       referenceDate: newDate,
       basicLetterReference: fullReference
     }));
@@ -47,93 +55,109 @@ export function StructuredReferenceInput({ formData, setFormData }: StructuredRe
   };
 
   return (
-    <div className="sri-container">
-      <div className="sri-header">
-        Basic Letter Reference Components
-      </div>
+    <Card className="border-border shadow-md bg-card">
+      <CardHeader className="py-3 px-4 border-b border-border bg-secondary text-primary-foreground rounded-t-lg">
+        <CardTitle className="text-sm font-bold flex items-center gap-2 tracking-wide">
+          <Info className="w-4 h-4 text-primary-foreground" />
+          Basic Letter Reference Components
+        </CardTitle>
+      </CardHeader>
 
-      <div className="sri-body">
-        <div className="sri-info-box">
-          <div className="sri-info-row">
-            <span className="sri-info-label">Format:</span>
-            <span className="sri-info-text">on [who]'s [type] dtd [date]</span>
+      <CardContent className="p-4 space-y-4">
+        <div className="text-xs text-muted-foreground bg-accent/5 p-3 rounded-md border border-border/50">
+          <div className="flex gap-2 mb-1">
+            <span className="font-semibold">Format:</span>
+            <span>on [who]'s [type] [ssic] dtd [date]</span>
           </div>
-          <div className="sri-info-row">
-            <span className="sri-info-label">Examples:</span>
-            <span className="sri-info-text">on CO's ltr dtd 12 Jul 25 • on GySgt Admin's AA Form dtd 15 Aug 25</span>
+          <div className="flex gap-2">
+            <span className="font-semibold">Examples:</span>
+            <span className="italic">on CO's ltr 5000 dtd 12 Jul 25 • on GySgt Admin's AA Form 1000 dtd 15 Aug 25</span>
           </div>
         </div>
 
-        <div className="sri-grid">
-          <div className="sri-field">
-            <label className="sri-label">Who</label>
-            <input
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold uppercase text-muted-foreground">Who</Label>
+            <Input
               type="text"
-              className="sri-input"
               value={formData.referenceWho}
               onChange={(e) => updateReference('who', e.target.value)}
               placeholder="CO, GySgt Admin, etc."
               list="common-originators"
+              className="h-9"
             />
             <datalist id="common-originators">
               {COMMON_ORIGINATORS.map(originator => (
                 <option key={originator} value={originator} />
               ))}
             </datalist>
-            <div className="sri-hint">Who originated the basic letter?</div>
+            <p className="text-[10px] text-muted-foreground">Who originated the basic letter?</p>
           </div>
 
-          <div className="sri-field">
-            <label className="sri-label">Type</label>
-            <select
-              className="sri-select"
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold uppercase text-muted-foreground">Type</Label>
+            <Select
               value={formData.referenceType}
-              onChange={(e) => updateReference('type', e.target.value)}
+              onValueChange={(val) => updateReference('type', val)}
             >
-              <option value="">Select type</option>
-              {REFERENCE_TYPES.map(type => (
-                <option key={type.value} value={type.value}>{type.value}</option>
-              ))}
-            </select>
-            <div className="sri-hint">What type of document?</div>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                {REFERENCE_TYPES.map(type => (
+                  <SelectItem key={type.value} value={type.value}>{type.value}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[10px] text-muted-foreground">What type of document?</p>
           </div>
 
-          <div className="sri-field">
-            <label className="sri-label">Date</label>
-            <input
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold uppercase text-muted-foreground">SSIC</Label>
+            <Input
               type="text"
-              className="sri-input"
+              value={formData.basicLetterSsic || ''}
+              onChange={(e) => updateReference('ssic', e.target.value)}
+              placeholder="5216, 1000, etc."
+              className="h-9"
+            />
+            <p className="text-[10px] text-muted-foreground">Basic letter SSIC</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold uppercase text-muted-foreground">Date</Label>
+            <Input
+              type="text"
               value={formData.referenceDate}
               onChange={handleDateChange}
               onBlur={handleDateBlur}
-              placeholder="8 Jul 25"
+              placeholder="D Mmm YY"
+              className="h-9"
             />
-            <div className="sri-hint sri-hint-long">
-              Accepts: YYYYMMDD, MM/DD/YYYY, YYYY-MM-DD, DD MMM YY, or "today". Auto-formats to Naval standard.
-            </div>
+            <p className="text-[10px] text-muted-foreground">Date of basic letter</p>
           </div>
         </div>
 
         {formData.endorsementLevel && (
-          <div className="sri-errors">
+          <div className="space-y-1 pt-2">
             {!formData.referenceWho && (
-              <div className="sri-error">
+              <div className="text-xs text-destructive flex items-center gap-1">
                 • Please specify who originated the basic letter
               </div>
             )}
             {!formData.referenceType && (
-              <div className="sri-error">
+              <div className="text-xs text-destructive flex items-center gap-1">
                 • Please select the document type
               </div>
             )}
             {!formData.referenceDate && (
-              <div className="sri-error">
+              <div className="text-xs text-destructive flex items-center gap-1">
                 • Please enter the document date
               </div>
             )}
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

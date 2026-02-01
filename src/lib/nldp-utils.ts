@@ -271,6 +271,8 @@ export function generateNLDPFilename(subject: string, documentType: string): str
   return `${docTypePrefix}_${cleanSubject}_${timestamp}${NLDP_FILE_EXTENSION}`;
 }
 
+
+
 /**
  * Validates that imported data is safe and won't break the application
  */
@@ -298,7 +300,9 @@ export function sanitizeImportedData(data: NLDPDataPayload): NLDPDataPayload {
       sig: data.formData.sig || '',
       delegationText: data.formData.delegationText || '',
       startingPageNumber: data.formData.startingPageNumber || 1,
-      previousPackagePageCount: data.formData.previousPackagePageCount || 0
+      previousPackagePageCount: data.formData.previousPackagePageCount || 0,
+      headerType: data.formData.headerType || 'USMC',
+      bodyFont: data.formData.bodyFont || 'times'
     },
     vias: Array.isArray(data.vias) ? data.vias.filter(v => typeof v === 'string') : [],
     references: Array.isArray(data.references) ? data.references.filter(r => typeof r === 'string') : [],
@@ -317,4 +321,11 @@ export function sanitizeImportedData(data: NLDPDataPayload): NLDPDataPayload {
   };
 
   return sanitized;
+}
+
+/**
+ * Estimates the size of the NLDP data payload in bytes
+ */
+export function estimateNLDPFileSize(data: any): number {
+  return new TextEncoder().encode(JSON.stringify(data)).length;
 }

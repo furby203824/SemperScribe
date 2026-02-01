@@ -5,7 +5,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Paperclip, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { FormData } from '@/types';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface EnclosuresSectionProps {
   enclosures: string[];
@@ -21,12 +28,22 @@ export function EnclosuresSection({ enclosures, setEnclosures, formData, setForm
     setShowEncl(enclosures.some(e => e.trim() !== ''));
   }, [enclosures]);
 
-  const addItem = useCallback(() => setEnclosures(e => [...e, '']), [setEnclosures]);
-  const removeItem = useCallback((index: number) => setEnclosures(e => e.filter((_, i) => i !== index)), [setEnclosures]);
-  const updateItem = useCallback((index: number, value: string) => setEnclosures(e => e.map((item, i) => i === index ? value : item)), [setEnclosures]);
+  const addItem = useCallback(() => setEnclosures([...enclosures, '']), [enclosures, setEnclosures]);
+  const removeItem = useCallback((index: number) => setEnclosures(enclosures.filter((_, i) => i !== index)), [enclosures, setEnclosures]);
+  const updateItem = useCallback((index: number, value: string) => setEnclosures(enclosures.map((item, i) => i === index ? value : item)), [enclosures, setEnclosures]);
 
   const getEnclosureNumber = (index: number, startingNumber: string): number => {
     return parseInt(startingNumber, 10) + index;
+  };
+
+  const handleRadioChange = (value: string) => {
+    if (value === 'yes') {
+      setShowEncl(true);
+      if (enclosures.length === 0) setEnclosures(['']);
+    } else {
+      setShowEncl(false);
+      setEnclosures(['']);
+    }
   };
 
   const generateEnclosureOptions = () => {
@@ -40,100 +57,102 @@ export function EnclosuresSection({ enclosures, setEnclosures, formData, setForm
   };
 
   return (
-    <Card className="mb-6">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center text-lg font-semibold">
-          <i className="fas fa-paperclip mr-2"></i>
+    <Card className="shadow-sm border-border mb-6 border-l-4 border-l-primary">
+      <CardHeader className="pb-3 bg-secondary text-secondary-foreground rounded-t-lg">
+        <CardTitle className="flex items-center text-lg font-semibold font-headline tracking-wide">
+          <Paperclip className="mr-2 h-5 w-5 text-primary-foreground" />
           Enclosures
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-6">
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="radio"
-              name="ifEncl"
-              value="yes"
-              checked={showEncl}
-              onChange={() => setShowEncl(true)}
-              className="mr-2 scale-125"
-            />
-            <span className="text-base">Yes</span>
-          </label>
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="radio"
-              name="ifEncl"
-              value="no"
-              checked={!showEncl}
-              onChange={() => { setShowEncl(false); setEnclosures(['']); }}
-              className="mr-2 scale-125"
-            />
-            <span className="text-base">No</span>
-          </label>
+          <RadioGroup 
+            defaultValue={showEncl ? 'yes' : 'no'} 
+            value={showEncl ? 'yes' : 'no'}
+            onValueChange={handleRadioChange}
+            className="flex flex-row gap-6"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="yes" id="encl-yes" />
+              <Label htmlFor="encl-yes" className="cursor-pointer">Yes</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="no" id="encl-no" />
+              <Label htmlFor="encl-no" className="cursor-pointer">No</Label>
+            </div>
+          </RadioGroup>
         </div>
 
         {showEncl && (
-          <div className="space-y-4">
+          <div className="space-y-4 pt-2">
             {formData.documentType === 'endorsement' && (
               <>
-                <div className="mt-2 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-r-lg mb-4">
-                  <div className="flex">
-                    <div className="py-1"><i className="fas fa-exclamation-triangle fa-lg mr-3"></i></div>
-                    <div>
-                      <p className="font-bold">Endorsement Enclosure Rules</p>
-                      <p className="text-sm">Only add NEW enclosures not mentioned in the basic letter or previous endorsements. Continue the numbering sequence from the last enclosure.</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
-                  <span className="font-medium text-gray-700 whitespace-nowrap">Starting Enclosure:</span>
-                  <select
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                <Alert variant="default" className="border-l-4 border-l-yellow-500 bg-yellow-50/50">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                  <AlertTitle className="text-yellow-800 font-semibold ml-2">Endorsement Enclosure Rules</AlertTitle>
+                  <AlertDescription className="text-yellow-700 ml-2">
+                    Only add NEW enclosures not mentioned in the basic letter or previous endorsements. Continue the numbering sequence from the last enclosure.
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="flex items-center gap-3">
+                  <Label className="whitespace-nowrap">Starting Enclosure:</Label>
+                  <Select
                     value={formData.startingEnclosureNumber}
-                    onChange={(e) => setFormData({ ...formData, startingEnclosureNumber: e.target.value })}
+                    onValueChange={(val) => setFormData({ ...formData, startingEnclosureNumber: val })}
                   >
-                    {generateEnclosureOptions().map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                  </select>
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="Select starting number" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {generateEnclosureOptions().map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </>
             )}
 
             <div className="space-y-3">
-              <h4 className="font-semibold text-gray-700 flex items-center">
-                <i className="fas fa-paperclip mr-2"></i>
+              <Label className="font-semibold mb-2 flex items-center">
+                <Paperclip className="mr-2 h-4 w-4" />
                 Enter Enclosure(s):
-              </h4>
+              </Label>
               {enclosures.map((encl, index) => (
-                <div key={`encl-${index}-${encl.substring(0, 20)}`} className="flex items-stretch rounded-lg overflow-hidden border-2 border-gray-200 hover:border-blue-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all duration-200 shadow-sm hover:shadow-md">
-                  <div className="flex items-center justify-center px-4 py-3 bg-gradient-to-r from-yellow-600 to-yellow-500 text-white font-bold text-center min-w-[60px] border-r-2 border-yellow-700">
+                <div key={`encl-${index}`} className="flex w-full gap-2 items-center">
+                  <span className="flex h-10 w-12 items-center justify-center flex-shrink-0 rounded-md bg-secondary text-primary-foreground border border-secondary font-medium shadow-sm">
                     ({getEnclosureNumber(index, formData.startingEnclosureNumber)})
-                  </div>
-                  <input
-                    className="flex-1 px-4 py-3 border-0 focus:outline-none focus:ring-0 bg-gray-50 hover:bg-white focus:bg-white transition-colors text-gray-700 placeholder-gray-400"
+                  </span>
+                  <Input
+                    className="flex-1 border-input focus-visible:ring-primary"
                     type="text"
-                    placeholder="📎 Enter enclosure details (e.g., Training Certificate, Medical Records)"
+                    placeholder="Enter enclosure details (e.g., Training Certificate, Medical Records)"
                     value={encl}
                     onChange={(e) => updateItem(index, e.target.value)}
                   />
                   {index === enclosures.length - 1 ? (
-                    <button
-                      className="px-4 py-3 bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-700 hover:to-yellow-600 hover:-translate-y-px text-white font-semibold transition-all duration-200 border-l-2 border-yellow-700 flex items-center"
-                      type="button"
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="flex-shrink-0 border-primary/20 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
                       onClick={addItem}
+                      title="Add Enclosure"
                     >
-                      <i className="fas fa-plus mr-2"></i>
-                      Add
-                    </button>
+                      <Plus className="h-4 w-4" />
+                    </Button>
                   ) : (
-                    <button
-                      className="px-4 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-semibold transition-all duration-200 border-l-2 border-red-700 flex items-center"
-                      type="button"
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="flex-shrink-0 border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
                       onClick={() => removeItem(index)}
+                      title="Remove Enclosure"
                     >
-                      <i className="fas fa-trash mr-2"></i>
-                      Remove
-                    </button>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   )}
                 </div>
               ))}

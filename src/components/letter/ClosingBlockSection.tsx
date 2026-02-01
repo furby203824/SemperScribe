@@ -1,15 +1,16 @@
-/**
- * Closing Block Section Component
- * Manages signature name and delegation of signature authority
- */
 
 import React, { useState, useEffect } from 'react';
 import { FormData } from '@/types';
 import { autoUppercase } from '@/lib/string-utils';
-import { CopyToSection } from './CopyToSection';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PenLine, UserCheck } from 'lucide-react';
 
 interface ClosingBlockSectionProps {
-  formData: Pick<FormData, 'sig' | 'delegationText'>;
+  formData: Pick<FormData, 'sig' | 'delegationText' | 'documentType' | 'distribution'>;
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
   copyTos: string[];
   setCopyTos: (copies: string[]) => void;
@@ -18,131 +19,94 @@ interface ClosingBlockSectionProps {
 export function ClosingBlockSection({
   formData,
   setFormData,
-  copyTos,
-  setCopyTos
 }: ClosingBlockSectionProps) {
   const [showDelegation, setShowDelegation] = useState(false);
+  const isAAForm = formData.documentType === 'aa-form';
 
   useEffect(() => {
     setShowDelegation(!!formData.delegationText);
   }, [formData.delegationText]);
 
-  const updateDelegationType = (value: string) => {
-    let delegationText = '';
-    switch (value) {
-      case 'by_direction': delegationText = 'By direction'; break;
-      case 'acting_commander': delegationText = 'Acting'; break;
-      case 'acting_title': delegationText = 'Acting'; break;
-      case 'signing_for': delegationText = 'For'; break;
+  const updateDelegationType = (type: string) => {
+    let text = '';
+    switch (type) {
+      case 'by_direction': text = 'By direction'; break;
+      case 'acting_commander': text = 'Acting Commander'; break;
+      case 'acting_title': text = 'Acting'; break;
+      case 'signing_for': text = 'For'; break;
+      default: text = '';
     }
-    setFormData(prev => ({ ...prev, delegationText }));
+    setFormData(prev => ({ ...prev, delegationText: text }));
   };
 
   return (
-    <div className="form-section">
-      <div className="section-legend">
-        <i className="fas fa-signature mr-2"></i>
-        Closing Block
-      </div>
-
-      <div className="input-group">
-        <span className="input-group-text">
-          <i className="fas fa-pen-fancy mr-2"></i>
-          Signature Name:
-        </span>
-        <input
-          className="form-control"
-          type="text"
-          placeholder="F. M. LASTNAME"
-          value={formData.sig}
-          onChange={(e) => setFormData(prev => ({ ...prev, sig: autoUppercase(e.target.value) }))}
-        />
-      </div>
-
-      
-      <div className="mb-6">
-        <label className="block text-lg font-bold mb-2">
-          <i className="fas fa-user-tie mr-2"></i>
-          Delegation of Signature Authority?
-        </label>
-        <div className="radio-group">
-          <label className="flex items-center">
-            <input
-              type="radio"
-              name="ifDelegation"
-              value="yes"
-              checked={showDelegation}
-              onChange={() => setShowDelegation(true)}
-              className="mr-2 scale-125"
+    <Card className="shadow-sm border-border border-l-4 border-l-primary">
+      <CardHeader className="pb-3 bg-secondary text-secondary-foreground rounded-t-lg">
+        <CardTitle className="text-lg flex items-center font-headline tracking-wide">
+          <PenLine className="mr-2 h-5 w-5 text-primary-foreground" />
+          Closing Block
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        
+        <div className="space-y-2">
+          <Label htmlFor="signature-name" className="text-base font-semibold flex items-center">
+            Signature Name
+          </Label>
+          <div className="relative">
+            <UserCheck className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="signature-name"
+              className="pl-9"
+              placeholder="F. M. LASTNAME"
+              value={formData.sig}
+              onChange={(e) => setFormData(prev => ({ ...prev, sig: autoUppercase(e.target.value) }))}
             />
-            <span className="text-base">Yes</span>
-          </label>
-          <label className="flex items-center">
-            <input
-              type="radio"
-              name="ifDelegation"
-              value="no"
-              checked={!showDelegation}
-              onChange={() => setShowDelegation(false)}
-              className="mr-2 scale-125"
-            />
-            <span className="text-base">No</span>
-          </label>
+          </div>
         </div>
-
-        {showDelegation && (
-          <div className="dynamic-section">
-            <label className="block font-semibold mb-2">
-              <i className="fas fa-user-tie mr-2"></i>
-              Delegation Authority Type:
-            </label>
-
-            <div className="mb-4">
-              <select
-                className="form-control mb-2"
-                onChange={(e) => updateDelegationType(e.target.value)}
-              >
-                <option value="">Select delegation type...</option>
-                <option value="by_direction">By direction</option>
-                <option value="acting_commander">Acting for Commander/CO/OIC</option>
-                <option value="acting_title">Acting for Official by Title</option>
-                <option value="signing_for">Signing "For" an Absent Official</option>
-                <option value="custom">Custom</option>
-              </select>
-            </div>
-
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className="fas fa-edit mr-2"></i>
-                Delegation Text:
-              </span>
-              <input
-                className="form-control"
-                type="text"
-                placeholder="Enter delegation authority text (e.g., By direction, Acting, etc.)"
-                value={formData.delegationText}
-                onChange={(e) => setFormData(prev => ({ ...prev, delegationText: e.target.value }))}
-              />
-            </div>
-
-            <div className="mt-3 p-3 bg-cyan-50 rounded-lg border border-cyan-500 text-sm">
-              <strong className="text-cyan-700">
-                <i className="fas fa-info-circle mr-1"></i>
-                Examples:
-              </strong>
-              <br />
-              <div className="mt-1 text-cyan-700">
-                • <strong>By direction:</strong> For routine correspondence when specifically authorized<br />
-                • <strong>Acting:</strong> When temporarily succeeding to command or appointed to replace an official<br />
-                • <strong>Deputy Acting:</strong> For deputy positions acting in absence<br />
-                • <strong>For:</strong> When signing for an absent official (hand-written "for" before typed name)
+        
+        {!isAAForm && (
+          <div className="space-y-4 pt-4 border-t border-border">
+            <Label className="text-base font-semibold flex items-center">
+              Delegation of Signature Authority?
+            </Label>
+            
+            <RadioGroup 
+              value={showDelegation ? "yes" : "no"} 
+              onValueChange={(val) => setShowDelegation(val === "yes")}
+              className="flex space-x-6"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="yes" id="delegation-yes" />
+                <Label htmlFor="delegation-yes" className="font-normal cursor-pointer">Yes</Label>
               </div>
-            </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="no" id="delegation-no" />
+                <Label htmlFor="delegation-no" className="font-normal cursor-pointer">No</Label>
+              </div>
+            </RadioGroup>
+
+            {showDelegation && (
+              <div className="space-y-4 p-4 bg-secondary/5 rounded-lg border border-secondary/10 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-foreground">Delegation Authority Type</Label>
+                  <Select onValueChange={updateDelegationType}>
+                    <SelectTrigger className="bg-background border-input focus:ring-primary">
+                      <SelectValue placeholder="Select delegation type..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="by_direction">By direction</SelectItem>
+                      <SelectItem value="acting_commander">Acting Commander</SelectItem>
+                      <SelectItem value="acting_title">Acting</SelectItem>
+                      <SelectItem value="signing_for">For (Signing for another)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
           </div>
         )}
-      </div>
-
-      <CopyToSection copyTos={copyTos} setCopyTos={setCopyTos} />
-    </div>
+      </CardContent>
+    </Card>
   );
 }

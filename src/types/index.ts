@@ -7,14 +7,35 @@ export interface ParagraphData {
   level: number;
   content: string;
   acronymError?: string;
+  title?: string;
+  isMandatory?: boolean;
 }
 
-export type EndorsementLevel = 'FIRST' | 'SECOND' | 'THIRD' | 'FOURTH' | 'FIFTH' | 'SIXTH' | '';
+export type EndorsementLevel = 'FIRST' | 'SECOND' | 'THIRD' | 'FOURTH' | 'FIFTH' | 'SIXTH' | 'SEVENTH' | 'EIGHTH' | 'NINTH' | 'TENTH' | '';
+
+export interface ReportData {
+  id: string;
+  title: string;
+  controlSymbol: string;
+  paragraphRef: string;
+  exempt?: boolean;
+}
+
+export interface DistributionData {
+  type: 'none' | 'standard' | 'pcn' | 'pcn-with-copy';
+  pcn?: string;
+  copyTo?: Array<{ code: string; qty: number }>;
+  statementCode?: string;
+  statementReason?: string;
+  statementDate?: string;
+  statementAuthority?: string;
+}
 
 export interface FormData {
-  documentType: 'basic' | 'endorsement';
+  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin';
   endorsementLevel: EndorsementLevel;
   basicLetterReference: string;
+  basicLetterSsic?: string;
   referenceWho: string;
   referenceType: string;
   referenceDate: string;
@@ -35,6 +56,16 @@ export interface FormData {
   previousPackagePageCount: number;
   headerType: 'USMC' | 'DON';
   bodyFont: 'times' | 'courier';
+  accentColor?: 'black' | 'blue' | 'red';
+  classification?: string;
+  // AA Form specific fields
+  actionNo?: string;
+  orgStation?: string; // Can default to line1 + line2 + line3 if not set
+  // MCO/Bulletin specific fields
+  cancellationDate?: string;
+  cancellationType?: 'contingent' | 'fixed';
+  distribution?: DistributionData;
+  reports?: ReportData[];
 }
 
 export interface SavedLetter extends FormData {

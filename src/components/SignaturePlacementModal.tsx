@@ -249,10 +249,10 @@ export function SignaturePlacementModal({
         )}
 
         {/* PDF preview with overlay */}
-        <div className="flex-1 flex items-center justify-center bg-gray-200 rounded-lg p-4 min-h-[500px] overflow-auto">
+        <div className="flex-1 flex items-center justify-center bg-muted/30 rounded-lg p-4 min-h-[500px] overflow-auto border border-border">
           <div
             ref={containerRef}
-            className="relative cursor-crosshair"
+            className="relative cursor-crosshair shadow-lg"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -261,8 +261,8 @@ export function SignaturePlacementModal({
             {pdfUrl && (
               <Document
                 file={pdfUrl}
-                loading={<div className="p-8 text-gray-500">Loading PDF...</div>}
-                error={<div className="p-8 text-red-500">Failed to load PDF</div>}
+                loading={<div className="p-8 text-muted-foreground">Loading PDF...</div>}
+                error={<div className="p-8 text-destructive">Failed to load PDF</div>}
               >
                 <Page
                   pageNumber={currentPage}
@@ -284,9 +284,9 @@ export function SignaturePlacementModal({
             {/* Instructions overlay when no rect drawn */}
             {!rect && !isDrawing && pageSize.width > 0 && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="bg-white/95 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 border">
-                  <Move className="h-5 w-5 text-blue-500" />
-                  <span className="text-sm text-gray-700">Click and drag to draw signature area</span>
+                <div className="bg-card/95 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 border border-border">
+                  <Move className="h-5 w-5 text-primary" />
+                  <span className="text-sm text-card-foreground">Click and drag to draw signature area</span>
                 </div>
               </div>
             )}

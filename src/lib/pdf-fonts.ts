@@ -27,13 +27,22 @@ export function registerPDFFonts() {
     fonts: [
       { src: getFullFontUrl('/fonts/LiberationSerif-Regular.ttf'), fontWeight: 'normal' },
       { src: getFullFontUrl('/fonts/LiberationSerif-Bold.ttf'), fontWeight: 'bold' },
+      // Fallback for missing Italic fonts to prevent runtime errors
+      { src: getFullFontUrl('/fonts/LiberationSerif-Regular.ttf'), fontWeight: 'normal', fontStyle: 'italic' },
+      { src: getFullFontUrl('/fonts/LiberationSerif-Bold.ttf'), fontWeight: 'bold', fontStyle: 'italic' },
     ],
   });
 
   // Liberation Mono (Courier New equivalent)
   Font.register({
     family: 'Liberation Mono',
-    src: getFullFontUrl('/fonts/LiberationMono-Regular.ttf'),
+    fonts: [
+      { src: getFullFontUrl('/fonts/LiberationMono-Regular.ttf'), fontWeight: 'normal' },
+      // Fallback for missing Bold/Italic fonts
+      { src: getFullFontUrl('/fonts/LiberationMono-Regular.ttf'), fontWeight: 'bold' },
+      { src: getFullFontUrl('/fonts/LiberationMono-Regular.ttf'), fontWeight: 'normal', fontStyle: 'italic' },
+      { src: getFullFontUrl('/fonts/LiberationMono-Regular.ttf'), fontWeight: 'bold', fontStyle: 'italic' },
+    ],
   });
 
   // Disable hyphenation to match Word behavior

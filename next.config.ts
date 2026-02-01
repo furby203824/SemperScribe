@@ -1,19 +1,25 @@
 import type {NextConfig} from 'next';
 
 const isProd = process.env.NODE_ENV === 'production';
+const basePath = isProd ? '/naval-letter-formatter' : '';
 
-module.exports = {
-  basePath: isProd ? '/naval-letter-formatter' : '',
-  assetPrefix: isProd ? '/naval-letter-formatter' : '',
-  output: 'export',
+console.log(`[NextConfig] Environment: ${process.env.NODE_ENV}`);
+console.log(`[NextConfig] BasePath: '${basePath}'`);
+
+const nextConfig: NextConfig = {
+  basePath,
+  assetPrefix: isProd ? '/naval-letter-formatter/' : undefined,
+  output: isProd ? 'export' : undefined,
   trailingSlash: true,
   typescript: {
-    ignoreBuildErrors: true, // This fixes the TypeScript build issues
+    ignoreBuildErrors: true, 
   },
   eslint: {
-    ignoreDuringBuilds: true, // This skips ESLint during builds
+    ignoreDuringBuilds: true, 
   },
   images: {
-    unoptimized: true, // Required for GitHub Pages
+    unoptimized: true, 
   },
 };
+
+export default nextConfig;

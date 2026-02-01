@@ -4,288 +4,451 @@
  */
 
 import React from 'react';
-import { FormData, EndorsementLevel } from '@/types';
+import { FormData, EndorsementLevel, ParagraphData } from '@/types';
 import { StructuredReferenceInput } from './StructuredReferenceInput';
 import { debugFormChange } from '@/lib/console-utils';
+import { getMCOParagraphs, getMCBulParagraphs } from '@/lib/naval-format-utils';
+import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { FileText, FileSignature, ClipboardList, ScrollText, AlertCircle, Building2, Type } from 'lucide-react';
 
 interface DocumentTypeSectionProps {
   formData: FormData;
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
+  setParagraphs?: React.Dispatch<React.SetStateAction<ParagraphData[]>>;
 }
+
+interface DocumentTypeCardProps {
+  type: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  note: string;
+  onClick: () => void;
+  isActive: boolean;
+}
+
+const DocumentTypeCard = ({ type, icon, title, description, note, onClick, isActive }: DocumentTypeCardProps) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={cn(
+      "flex items-start gap-4 p-5 text-left rounded-xl transition-all duration-300 border-2 relative group w-full",
+      isActive 
+        ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20 scale-[1.02]" 
+        : "bg-card text-card-foreground border-border hover:border-primary/50 hover:bg-accent/5"
+    )}
+  >
+    <div className={cn(
+      "text-4xl min-w-[60px] flex items-center justify-center transition-colors",
+      isActive ? "text-primary-foreground" : "text-primary/80"
+    )}>
+      {icon}
+    </div>
+    <div className="flex-1">
+      <div className="text-xl font-bold mb-2 flex items-center gap-2 font-headline tracking-wide">
+        {title}
+        {isActive && (
+          <div className="ml-auto bg-primary-foreground/20 rounded-full p-1">
+            <svg className="w-4 h-4 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        )}
+      </div>
+      <div className={cn("text-sm mb-2 leading-relaxed", isActive ? "opacity-90" : "text-muted-foreground")}>
+        {description}
+      </div>
+      <div className={cn("text-xs font-medium uppercase tracking-wider opacity-80", isActive ? "text-primary-foreground" : "text-primary")}>
+        {note}
+      </div>
+    </div>
+  </button>
+);
 
 export function DocumentTypeSection({
   formData,
-  setFormData
+  setFormData,
+  setParagraphs
 }: DocumentTypeSectionProps) {
-  const handleEndorsementLevelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const level = e.target.value as EndorsementLevel;
-
-    const levelMap: Record<string, number> = {
-      'FIRST': 1, 'SECOND': 2, 'THIRD': 3, 'FOURTH': 4, 'FIFTH': 5, 'SIXTH': 6, 'RECEIVING': 1
-    };
-
-    const prevPages = levelMap[level] ? levelMap[level] - 1 : 0;
-    const refStart = String.fromCharCode('a'.charCodeAt(0) + (levelMap[level] || 1) - 1);
-    const enclStart = (levelMap[level] || 1).toString();
+  const handleEndorsementLevelChange = (value: string) => {
+    const level = value as EndorsementLevel;
+    
+    // We can't know the length of previous documents, so we reset to defaults and ask the user.
+    // Endorsements must start at least on page 2 (after a 1-page basic letter).
+    const defaultStartPage = 2; 
 
     setFormData(prev => ({
       ...prev,
       endorsementLevel: level,
-      startingReferenceLevel: refStart,
-      startingEnclosureNumber: enclStart,
-      previousPackagePageCount: prevPages,
-      startingPageNumber: (prev.previousPackagePageCount || 0) + 1
+      startingReferenceLevel: 'a', // Reset to 'a', user must verify
+      startingEnclosureNumber: '1', // Reset to '1', user must verify
+      previousPackagePageCount: defaultStartPage - 1,
+      startingPageNumber: defaultStartPage
     }));
   };
 
   return (
-    <>
+    <div className="space-y-8 animate-in fade-in duration-500">
       {/* Document Type Selector */}
-      <div className="form-section">
-        <div className="section-legend">
-          <i className="fas fa-file-alt mr-2"></i>
-          Choose Document Type
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="h-8 w-1 bg-primary rounded-full" />
+          <h2 className="text-2xl font-headline tracking-wide text-primary">Document Type</h2>
         </div>
 
-        <div className="document-type-grid grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
-          {/* Basic Letter Card */}
-          <button
-            type="button"
-            className={`btn ${formData.documentType === 'basic' ? 'btn-primary' : 'btn-outline-secondary'}`}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <DocumentTypeCard
+            type="basic"
+            icon={<FileText className="w-10 h-10" />}
+            title="Basic Letter"
+            description="The standard format for routine correspondence and official communications."
+            note="✓ Most common format"
+            isActive={formData.documentType === 'basic'}
             onClick={() => setFormData(prev => ({ ...prev, documentType: 'basic' }))}
-            style={{
-              padding: '20px',
-              height: 'auto',
-              textAlign: 'left',
-              border: formData.documentType === 'basic' ? '3px solid #007bff' : '2px solid #dee2e6',
-              borderRadius: '12px',
-              transition: 'all 0.3s ease',
-              position: 'relative',
-              background: formData.documentType === 'basic' ? 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)' : 'white',
-              color: formData.documentType === 'basic' ? 'white' : '#495057',
-              boxShadow: formData.documentType === 'basic' ? '0 8px 25px rgba(0, 123, 255, 0.3)' : '0 2px 10px rgba(0, 0, 0, 0.1)'
-            }}
-          >
-            <div className="flex items-start gap-4">
-              <div className="text-4xl opacity-90 min-w-[60px]">📄</div>
-              <div className="flex-1">
-                <div className="text-xl font-bold mb-2 flex items-center gap-2">
-                  Basic Letter
-                  {formData.documentType === 'basic' && (
-                    <i className="fas fa-check-circle ml-auto"></i>
-                  )}
-                </div>
-                <div className="text-base opacity-90 mb-2 leading-normal">
-                  The standard format for routine correspondence and official communications.
-                </div>
-                <div className="text-sm opacity-80 italic">
-                  ✓ Most common format
-                </div>
-              </div>
-            </div>
-          </button>
+          />
 
-          {/* New-Page Endorsement Card */}
-          <button
-            type="button"
-            className={`btn ${formData.documentType === 'endorsement' ? 'btn-success' : 'btn-outline-secondary'}`}
+          <DocumentTypeCard
+            type="endorsement"
+            icon={<FileSignature className="w-10 h-10" />}
+            title="New-Page Endorsement"
+            description="Forwards correspondence on a new page. Use for longer comments and formal endorsements."
+            note="→ For forwarding documents"
+            isActive={formData.documentType === 'endorsement'}
             onClick={() => setFormData(prev => ({ ...prev, documentType: 'endorsement' }))}
-            style={{
-              padding: '20px',
-              height: 'auto',
-              textAlign: 'left',
-              border: formData.documentType === 'endorsement' ? '3px solid #28a745' : '2px solid #dee2e6',
-              borderRadius: '12px',
-              transition: 'all 0.3s ease',
-              position: 'relative',
-              background: formData.documentType === 'endorsement' ? 'linear-gradient(135deg, #28a745 0%, #1e7e34 100%)' : 'white',
-              color: formData.documentType === 'endorsement' ? 'white' : '#495057',
-              boxShadow: formData.documentType === 'endorsement' ? '0 8px 25px rgba(40, 167, 69, 0.3)' : '0 2px 10px rgba(0, 0, 0, 0.1)'
+          />
+
+          <DocumentTypeCard
+            type="aa-form"
+            icon={<ClipboardList className="w-10 h-10" />}
+            title="NAVMC 10274 (AA Form)"
+            description="Administrative Action Form. Used for personnel requests and administrative matters."
+            note="→ For admin requests"
+            isActive={formData.documentType === 'aa-form'}
+            onClick={() => setFormData(prev => ({ ...prev, documentType: 'aa-form' }))}
+          />
+
+          <DocumentTypeCard
+            type="mco"
+            icon={<ScrollText className="w-10 h-10" />}
+            title="Marine Corps Order"
+            description="Permanent directives that establish policy or procedures."
+            note="→ For standing orders"
+            isActive={formData.documentType === 'mco'}
+            onClick={() => {
+              setFormData(prev => ({ ...prev, documentType: 'mco', to: prev.to || 'Distribution List' }));
+              if (setParagraphs && formData.documentType !== 'mco') {
+                if (window.confirm('Do you want to load the standard SMEAC structure for this Marine Corps Order? Existing paragraphs will be replaced.')) {
+                  setParagraphs(getMCOParagraphs());
+                }
+              }
             }}
-          >
-            <div className="flex items-start gap-4">
-              <div className="text-4xl opacity-90 min-w-[60px]">📝</div>
-              <div className="flex-1">
-                <div className="text-xl font-bold mb-2 flex items-center gap-2">
-                  New-Page Endorsement
-                  {formData.documentType === 'endorsement' && (
-                    <i className="fas fa-check-circle ml-auto"></i>
-                  )}
-                </div>
-                <div className="text-base opacity-90 mb-2 leading-normal">
-                  Forwards correspondence on a new page. Use for longer comments and formal endorsements.
-                </div>
-                <div className="text-sm opacity-80 italic">
-                  → For forwarding documents
-                </div>
-              </div>
-            </div>
-          </button>
+          />
+
+          <DocumentTypeCard
+            type="bulletin"
+            icon={<AlertCircle className="w-10 h-10" />}
+            title="Marine Corps Bulletin"
+            description="Directives of a temporary nature (expire after 12 months)."
+            note="→ For temporary orders"
+            isActive={formData.documentType === 'bulletin'}
+            onClick={() => {
+              setFormData(prev => ({ ...prev, documentType: 'bulletin', to: prev.to || 'Distribution List' }));
+              if (setParagraphs && formData.documentType !== 'bulletin') {
+                if (window.confirm('Do you want to load the standard Bulletin structure? Existing paragraphs will be replaced.')) {
+                  setParagraphs(getMCBulParagraphs());
+                }
+              }
+            }}
+          />
         </div>
+      </section>
 
-        <div className="text-sm text-gray-600 -mt-2 mb-4">
-          <small>
-            <i className="fas fa-info-circle mr-1"></i>
-            Select the type of document you want to create. Basic letters are for routine correspondence, while endorsements forward existing documents.
-          </small>
-        </div>
-
-        <div className="mt-5 pt-5 border-t border-gray-300">
-          <label className="block text-lg font-bold mb-2">
-            <i className="fas fa-building mr-2"></i>
-            Header Type
-          </label>
-          <div className="radio-group">
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="radio"
-                name="headerType"
-                value="USMC"
-                checked={formData.headerType === 'USMC'}
-                onChange={(e) => {
-                  setFormData({ ...formData, headerType: 'USMC' });
-                  debugFormChange('Header Type', 'USMC');
-                }}
-                className="mr-2 scale-125 cursor-pointer"
-              />
-              <span className="text-base">United States Marine Corps</span>
-            </label>
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="radio"
-                name="headerType"
-                value="DON"
-                checked={formData.headerType === 'DON'}
-                onChange={(e) => {
-                  setFormData({ ...formData, headerType: 'DON' });
-                  debugFormChange('Header Type', 'DON');
-                }}
-                className="mr-2 scale-125 cursor-pointer"
-              />
-              <span className="text-base">Department of the Navy</span>
-            </label>
-          </div>
-        </div>
-
-        <div className="mt-5 pt-5 border-t border-gray-300">
-          <label className="block text-lg font-bold mb-2">
-            <i className="fas fa-font mr-2"></i>
-            Body Font
-          </label>
-          <div className="radio-group">
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="radio"
-                name="bodyFont"
-                value="times"
-                checked={formData.bodyFont === 'times'}
-                onChange={(e) => {
-                  setFormData({ ...formData, bodyFont: 'times' });
-                  debugFormChange('Body Font', 'Times New Roman');
-                }}
-                className="mr-2 scale-125 cursor-pointer"
-              />
-              <span className="text-base">Times New Roman</span>
-            </label>
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="radio"
-                name="bodyFont"
-                value="courier"
-                checked={formData.bodyFont === 'courier'}
-                onChange={(e) => {
-                  setFormData({ ...formData, bodyFont: 'courier' });
-                  debugFormChange('Body Font', 'Courier New');
-                }}
-                className="mr-2 scale-125 cursor-pointer"
-              />
-              <span className="text-base">Courier New</span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      {/* Endorsement-Specific Fields */}
-      {(formData.documentType === 'endorsement') && (
-        <div className="form-section">
-          <div className="section-legend" style={{ background: 'linear-gradient(45deg, #0d47a1, #1976d2)', border: '2px solid rgba(25, 118, 210, 0.3)' }}>
-            <i className="fas fa-file-signature mr-2"></i>
-            Endorsement Details
-          </div>
-
-          <div className="input-group">
-            <span className="input-group-text" style={{ background: 'linear-gradient(45deg, #0d47a1, #1976d2)' }}>
-              <i className="fas fa-sort-numeric-up mr-2"></i>
-              Endorsement Level:
-            </span>
-            <select
-              className="form-control"
-              value={formData.endorsementLevel}
-              onChange={handleEndorsementLevelChange}
-              required
-            >
-              <option value="" disabled>Select endorsement level...</option>
-              <option value="FIRST">FIRST ENDORSEMENT</option>
-              <option value="SECOND">SECOND ENDORSEMENT</option>
-              <option value="THIRD">THIRD ENDORSEMENT</option>
-              <option value="FOURTH">FOURTH ENDORSEMENT</option>
-              <option value="FIFTH">FIFTH ENDORSEMENT</option>
-              <option value="SIXTH">SIXTH ENDORSEMENT</option>
-            </select>
-          </div>
-
-          {formData.endorsementLevel && (
-            <StructuredReferenceInput formData={formData} setFormData={setFormData} />
-          )}
-
-          {formData.endorsementLevel && (
-            <div className="mt-4">
-              {/* Page Numbering Section */}
-              <div className="bg-yellow-100 border border-yellow-400 rounded-lg p-3 mb-4">
-                <h4 className="font-medium text-yellow-900 mb-2 text-base">Page Numbering</h4>
-                <div>
-                  <label className="block text-sm font-medium text-yellow-900 mb-1">
-                    Last Page # of Previous Document
-                  </label>
+      {/* Header Type & Body Font - Only for Letters */}
+      {formData.documentType !== 'aa-form' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-border/50">
+          <Card className="border-border shadow-md bg-card">
+            <CardHeader className="py-3 px-4 border-b border-border bg-secondary text-primary-foreground rounded-t-lg">
+              <CardTitle className="text-sm font-bold flex items-center uppercase tracking-wider">
+                <Building2 className="w-4 h-4 mr-2 text-primary-foreground" />
+                Header Type
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="space-y-3">
+                <label className={cn(
+                  "flex items-center p-3 rounded-lg border cursor-pointer transition-all",
+                  formData.headerType === 'USMC' 
+                    ? "bg-primary/10 border-primary ring-1 ring-primary" 
+                    : "bg-background border-input hover:bg-accent/50"
+                )}>
                   <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={formData.previousPackagePageCount}
-                    onChange={(e) => {
-                      const newPrevCount = parseInt(e.target.value) || 0;
-                      setFormData(prev => ({
-                        ...prev,
-                        previousPackagePageCount: newPrevCount,
-                        startingPageNumber: newPrevCount + 1
-                      }))
+                    type="radio"
+                    name="headerType"
+                    value="USMC"
+                    checked={formData.headerType === 'USMC'}
+                    onChange={() => {
+                      setFormData({ ...formData, headerType: 'USMC' });
+                      debugFormChange('Header Type', 'USMC');
                     }}
-                    className="w-full px-3 py-2 border border-yellow-400 rounded text-base"
+                    className="w-4 h-4 text-primary border-primary focus:ring-primary"
                   />
-                  <p className="text-xs text-yellow-900 mt-1">
-                    Enter the last page number of the document you are endorsing.
-                  </p>
-                </div>
-                <div className="mt-3 p-2 bg-yellow-200 rounded">
-                  <strong className="text-yellow-900">
-                    Your {formData.endorsementLevel} endorsement will start on page {formData.startingPageNumber}.
-                  </strong>
-                </div>
+                  <span className="ml-3 font-medium">United States Marine Corps</span>
+                </label>
+                
+                <label className={cn(
+                  "flex items-center p-3 rounded-lg border cursor-pointer transition-all",
+                  formData.headerType === 'DON' 
+                    ? "bg-primary/5 border-primary ring-1 ring-primary" 
+                    : "bg-background border-input hover:bg-accent/50"
+                )}>
+                  <input
+                    type="radio"
+                    name="headerType"
+                    value="DON"
+                    checked={formData.headerType === 'DON'}
+                    onChange={() => {
+                      setFormData({ ...formData, headerType: 'DON' });
+                      debugFormChange('Header Type', 'DON');
+                    }}
+                    className="w-4 h-4 text-primary border-primary focus:ring-primary"
+                  />
+                  <span className="ml-3 font-medium">Department of the Navy</span>
+                </label>
               </div>
-            </div>
-          )}
+            </CardContent>
+          </Card>
 
-          <div className="mt-4 p-3 bg-blue-100 border-l-4 border-blue-500 text-blue-900 rounded-r-lg">
-            <div className="flex">
-              <div className="pt-1"><i className="fas fa-info-circle text-lg mr-2"></i></div>
-              <div>
-                <p className="font-bold m-0">Endorsement Mode</p>
-                <p className="text-sm m-0">Endorsements forward the original letter. The "From" field becomes the endorsing command, and the "To" field is the next destination.</p>
+          <Card className="border-border shadow-sm bg-card/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold text-muted-foreground flex items-center uppercase tracking-wider">
+                <Type className="w-4 h-4 mr-2 text-primary" />
+                Body Font
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <label className={cn(
+                  "flex items-center p-3 rounded-lg border cursor-pointer transition-all",
+                  formData.bodyFont === 'times' 
+                    ? "bg-primary/5 border-primary ring-1 ring-primary" 
+                    : "bg-background border-input hover:bg-accent/50"
+                )}>
+                  <input
+                    type="radio"
+                    name="bodyFont"
+                    value="times"
+                    checked={formData.bodyFont === 'times'}
+                    onChange={() => {
+                      setFormData({ ...formData, bodyFont: 'times' });
+                      debugFormChange('Body Font', 'Times New Roman');
+                    }}
+                    className="w-4 h-4 text-primary border-primary focus:ring-primary"
+                  />
+                  <span className="ml-3 font-serif text-lg">Times New Roman</span>
+                </label>
+                
+                <label className={cn(
+                  "flex items-center p-3 rounded-lg border cursor-pointer transition-all",
+                  formData.bodyFont === 'courier' 
+                    ? "bg-primary/5 border-primary ring-1 ring-primary" 
+                    : "bg-background border-input hover:bg-accent/50"
+                )}>
+                  <input
+                    type="radio"
+                    name="bodyFont"
+                    value="courier"
+                    checked={formData.bodyFont === 'courier'}
+                    onChange={() => {
+                      setFormData({ ...formData, bodyFont: 'courier' });
+                      debugFormChange('Body Font', 'Courier New');
+                    }}
+                    className="w-4 h-4 text-primary border-primary focus:ring-primary"
+                  />
+                  <span className="ml-3 font-mono text-base">Courier New</span>
+                </label>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       )}
-    </>
+
+      {/* Endorsement-Specific Fields */}
+      {formData.documentType === 'endorsement' && (
+        <Card className="border-secondary/20 shadow-md overflow-hidden animate-in slide-in-from-top-4 duration-500">
+          <div className="bg-secondary text-primary-foreground border-b border-secondary/10 p-4 flex items-center gap-2">
+            <FileSignature className="w-5 h-5 text-primary-foreground" />
+            <h3 className="text-lg font-bold text-primary-foreground font-headline tracking-wide">Endorsement Details</h3>
+          </div>
+          
+          <CardContent className="space-y-6 pt-6">
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Endorsement Level</Label>
+              <Select 
+                value={formData.endorsementLevel} 
+                onValueChange={handleEndorsementLevelChange}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select endorsement level..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="FIRST">FIRST ENDORSEMENT</SelectItem>
+                  <SelectItem value="SECOND">SECOND ENDORSEMENT</SelectItem>
+                  <SelectItem value="THIRD">THIRD ENDORSEMENT</SelectItem>
+                  <SelectItem value="FOURTH">FOURTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="FIFTH">FIFTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="SIXTH">SIXTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="SEVENTH">SEVENTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="EIGHTH">EIGHTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="NINTH">NINTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="TENTH">TENTH ENDORSEMENT</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {formData.endorsementLevel && (
+              <div className="space-y-4">
+                <StructuredReferenceInput formData={formData} setFormData={setFormData} />
+                
+                <div className="p-4 bg-secondary/5 border border-secondary/10 rounded-lg text-sm font-mono text-muted-foreground flex items-center gap-2">
+                  <span className="font-bold text-primary">Preview:</span> 
+                  {formData.endorsementLevel} ENDORSEMENT on {formData.basicLetterReference || "[Basic Letter Reference]"}
+                </div>
+              </div>
+            )}
+
+            {formData.endorsementLevel && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border/50">
+                {/* Page Numbering Section */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-secondary flex items-center gap-2">
+                    <span className="bg-secondary/10 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
+                    Page Numbering
+                  </h4>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Last Page # of Previous Document</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={formData.previousPackagePageCount}
+                      onChange={(e) => {
+                        const newPrevCount = parseInt(e.target.value) || 0;
+                        setFormData(prev => ({
+                          ...prev,
+                          previousPackagePageCount: newPrevCount,
+                          startingPageNumber: newPrevCount + 1
+                        }))
+                      }}
+                    />
+                    <p className="text-xs text-muted-foreground italic">
+                      Enter the last page number of the document you are endorsing.
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-secondary/5 rounded-lg border border-secondary/10">
+                    <p className="text-sm text-secondary font-medium">
+                      Endorsement starts on page <span className="font-bold text-lg">{formData.startingPageNumber}</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Identifier Sequencing Section */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-secondary flex items-center gap-2">
+                    <span className="bg-secondary/10 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
+                    Identifier Sequencing
+                  </h4>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Start References At Letter</Label>
+                    <Select
+                      value={formData.startingReferenceLevel}
+                      onValueChange={(val) => setFormData(prev => ({ ...prev, startingReferenceLevel: val }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 26 }, (_, i) => String.fromCharCode(97 + i)).map(char => (
+                          <SelectItem key={char} value={char}>{char}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground italic">
+                      If basic letter has refs (a) and (b), start here at (c).
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Start Enclosures At Number</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={formData.startingEnclosureNumber}
+                      onChange={(e) => setFormData(prev => ({ ...prev, startingEnclosureNumber: e.target.value }))}
+                    />
+                    <p className="text-xs text-muted-foreground italic">
+                      If basic letter has encl (1), start here at (2).
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Bulletin-Specific Fields */}
+      {formData.documentType === 'bulletin' && (
+        <Card className="border-secondary/20 shadow-md overflow-hidden animate-in slide-in-from-top-4 duration-500">
+          <div className="bg-secondary text-primary-foreground border-b border-secondary/10 p-4 flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-primary-foreground" />
+            <h3 className="text-lg font-bold text-primary-foreground font-headline tracking-wide">Bulletin Details</h3>
+          </div>
+          
+          <CardContent className="space-y-6 pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cancellation Date</Label>
+                <Input
+                  type="text"
+                  placeholder="DD MMM YY"
+                  value={formData.cancellationDate || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, cancellationDate: e.target.value }))}
+                />
+                <p className="text-xs text-muted-foreground italic">
+                  Typically 12 months from issue date.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cancellation Type</Label>
+                <Select
+                  value={formData.cancellationType || 'fixed'}
+                  onValueChange={(val) => setFormData(prev => ({ ...prev, cancellationType: val as 'fixed' | 'contingent' }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fixed">Fixed Date</SelectItem>
+                    <SelectItem value="contingent">Contingent (Action Complete)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground italic">
+                  "Contingent" adds a mandatory cancellation paragraph.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }

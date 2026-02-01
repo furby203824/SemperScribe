@@ -6,6 +6,8 @@
  * which enables sharing of naval correspondence data between users.
  */
 
+import { FormData, ParagraphData } from '../types';
+
 // Current format version - increment for breaking changes
 export const NLDP_FORMAT_VERSION = '1.0.0';
 
@@ -39,7 +41,7 @@ export interface NLDPMetadata {
     /** Subject line from the letter (for quick identification) */
     subject: string;
     /** Document type */
-    documentType: 'basic' | 'endorsement';
+    documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin';
     /** Tags for categorization */
     tags?: string[];
   };
@@ -52,37 +54,8 @@ export interface NLDPMetadata {
   };
 }
 
-// Re-export existing interfaces for the data payload
-export interface ParagraphData {
-  id: number;
-  level: number;
-  content: string;
-  acronymError?: string;
-}
+export type { FormData, ParagraphData };
 
-export interface FormData {
-  documentType: 'basic' | 'endorsement';
-  endorsementLevel: 'FIRST' | 'SECOND' | 'THIRD' | 'FOURTH' | 'FIFTH' | 'SIXTH' | '';
-  basicLetterReference: string;
-  referenceWho: string;
-  referenceType: string;
-  referenceDate: string;
-  startingReferenceLevel: string;
-  startingEnclosureNumber: string;
-  line1: string;
-  line2: string;
-  line3: string;
-  ssic: string;
-  originatorCode: string;
-  date: string;
-  from: string;
-  to: string;
-  subj: string;
-  sig: string;
-  delegationText: string;
-  startingPageNumber: number;
-  previousPackagePageCount: number;
-}
 
 // Data payload interface - the actual correspondence data
 export interface NLDPDataPayload {

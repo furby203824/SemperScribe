@@ -27,7 +27,7 @@ export interface NLFPayload {
     references: string[];
     enclosures: string[];
     copyTos: string[];
-    letterType: 'basic' | 'endorsement';
+    letterType: FormData['documentType'];
     headerType: 'USMC' | 'DON';
     originatorCode: string;
     date: string;

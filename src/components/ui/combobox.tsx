@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Search, ChevronDown, Check } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface ComboboxProps {
   items: {
@@ -13,9 +14,10 @@ interface ComboboxProps {
   placeholder: string;
   searchMessage: string;
   inputPlaceholder: string;
+  className?: string;
 }
 
-export function Combobox({ items, onSelect, placeholder, searchMessage, inputPlaceholder }: ComboboxProps) {
+export function Combobox({ items, onSelect, placeholder, searchMessage, inputPlaceholder, className }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const [value, setValue] = React.useState("")
   const [searchTerm, setSearchTerm] = React.useState("")
@@ -52,185 +54,66 @@ export function Combobox({ items, onSelect, placeholder, searchMessage, inputPla
   const selectedItem = items.find(item => item.value === value);
 
   return (
-    <div ref={dropdownRef} style={{ position: 'relative', flex: '1' }}>
-      {/* Trigger Button - Styled to match your form-control exactly */}
+    <div ref={dropdownRef} className={cn("relative flex-1", className)}>
+      {/* Trigger Button */}
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        style={{
-          // EXACT .form-control styling from your app
-          flex: '1',
-          borderWidth: '2px',
-          borderStyle: 'solid',
-          borderColor: '#e9ecef',
-          borderRadius: '0 8px 8px 0',
-          padding: '12px',
-          minHeight: '48px',
-          transition: 'all 0.3s ease',
-          fontSize: '16px',
-          fontWeight: '400',
-          color: value ? '#495057' : '#6c757d',
-          backgroundColor: '#ffffff',
-          cursor: 'pointer',
-          outline: 'none',
-          width: '100%',
-          
-          // Layout
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          textAlign: 'left',
-          
-          // Hover/focus states
-          ...(open ? {
-            borderColor: '#b8860b',
-            boxShadow: '0 0 0 0.2rem rgba(184, 134, 11, 0.25)'
-          } : {})
-        }}
-        onFocus={(e) => {
-          e.target.style.borderColor = '#b8860b';
-          e.target.style.boxShadow = '0 0 0 0.2rem rgba(184, 134, 11, 0.25)';
-        }}
-        onBlur={(e) => {
-          if (!open) {
-            e.target.style.borderColor = '#e9ecef';
-            e.target.style.boxShadow = 'none';
-          }
-        }}
-        onMouseEnter={(e) => {
-          if (!open) {
-            e.currentTarget.style.borderColor = '#b8860b';
-            e.currentTarget.style.boxShadow = '0 0 0 0.2rem rgba(184, 134, 11, 0.15)';
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!open) {
-            e.currentTarget.style.borderColor = '#e9ecef';
-            e.currentTarget.style.boxShadow = 'none';
-          }
-        }}
+        className={cn(
+          "flex items-center justify-between w-full min-h-[48px] px-3 py-2 text-base md:text-sm",
+          "bg-background border-2 border-input rounded-r-lg transition-all duration-300",
+          "focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25",
+          "hover:border-primary/50",
+          open && "border-primary ring-2 ring-primary/25",
+          !value ? "text-muted-foreground" : "text-foreground"
+        )}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-          {/* Golden Search Icon */}
-          <div style={{
-            background: 'linear-gradient(135deg, #b8860b, #ffd700)',
-            borderRadius: '6px',
-            width: '28px',
-            height: '28px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0
-          }}>
-            <Search style={{ width: '14px', height: '14px', color: 'white' }} />
+        <div className="flex items-center gap-3 flex-1 overflow-hidden">
+          {/* Search Icon */}
+          <div className="flex items-center justify-center w-7 h-7 rounded-md bg-gradient-to-br from-primary to-primary/80 shrink-0">
+            <Search className="w-3.5 h-3.5 text-primary-foreground" />
           </div>
           
           {/* Text */}
-          <span style={{ 
-            flex: 1, 
-            overflow: 'hidden', 
-            textOverflow: 'ellipsis', 
-            whiteSpace: 'nowrap'
-          }}>
+          <span className="truncate flex-1 text-left">
             {selectedItem ? selectedItem.label : placeholder}
           </span>
         </div>
         
         {/* Chevron */}
-        <ChevronDown style={{ 
-          width: '16px', 
-          height: '16px', 
-          color: '#6c757d',
-          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-          transition: 'transform 0.3s ease'
-        }} />
+        <ChevronDown 
+          className={cn(
+            "w-4 h-4 text-muted-foreground transition-transform duration-300 ml-2",
+            open && "rotate-180"
+          )} 
+        />
       </button>
 
       {/* Dropdown */}
       {open && (
-        <div style={{
-          position: 'absolute',
-          top: '100%',
-          left: '0',
-          right: '0',
-          zIndex: 1000,
-          marginTop: '4px',
-          background: 'white',
-          borderWidth: '1px',
-          borderStyle: 'solid',
-          borderColor: 'rgba(184, 134, 11, 0.2)',
-          borderRadius: '12px',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)',
-          maxHeight: '300px',
-          overflow: 'hidden'
-        }}>
+        <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-50 bg-popover border border-primary/20 rounded-xl shadow-xl max-h-[300px] overflow-hidden flex flex-col animate-in fade-in-0 zoom-in-95 duration-200">
           {/* Search Input */}
-          <div style={{ 
-            padding: '16px',
-            borderBottom: '1px solid #e9ecef',
-            position: 'relative'
-          }}>
-            <div style={{
-              position: 'absolute',
-              left: '28px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: 'linear-gradient(135deg, #b8860b, #ffd700)',
-              borderRadius: '4px',
-              width: '20px',
-              height: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <Search style={{ width: '10px', height: '10px', color: 'white' }} />
+          <div className="p-4 border-b border-border bg-muted/5">
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 rounded bg-gradient-to-br from-primary to-primary/80">
+                <Search className="w-2.5 h-2.5 text-primary-foreground" />
+              </div>
+              <input
+                type="text"
+                placeholder={inputPlaceholder}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 text-sm bg-background border border-input rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                autoFocus
+              />
             </div>
-            <input
-              type="text"
-              placeholder={inputPlaceholder}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px 12px 8px 40px',
-                border: '1px solid #e9ecef',
-                borderRadius: '8px',
-                fontSize: '14px',
-                outline: 'none',
-                backgroundColor: '#f8f9fa'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#b8860b';
-                e.target.style.backgroundColor = 'white';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#e9ecef';
-                e.target.style.backgroundColor = '#f8f9fa';
-              }}
-            />
           </div>
 
           {/* Results */}
-          <div style={{
-            maxHeight: '240px',
-            overflowY: 'auto',
-            padding: '8px',
-            WebkitOverflowScrolling: 'touch' // Smooth scrolling on iOS
-          }}>
+          <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
             {filteredItems.length === 0 ? (
-              <div style={{
-                padding: '24px',
-                textAlign: 'center',
-                color: '#6c757d',
-                fontSize: '14px'
-              }}>
-                <Search style={{ 
-                  width: '24px', 
-                  height: '24px', 
-                  color: '#dee2e6',
-                  margin: '0 auto 8px auto',
-                  display: 'block'
-                }} />
+              <div className="py-6 px-4 text-center text-muted-foreground text-sm">
+                <Search className="w-6 h-6 mx-auto mb-2 opacity-20" />
                 {searchMessage}
               </div>
             ) : (
@@ -238,45 +121,19 @@ export function Combobox({ items, onSelect, placeholder, searchMessage, inputPla
                 <div
                   key={item.value}
                   onClick={() => handleSelect(item.value)}
-                  style={{
-                    padding: '14px 16px', // Increased for better touch targets
-                    minHeight: '44px', // Minimum touch target size
-                    cursor: 'pointer',
-                    borderRadius: '8px',
-                    margin: '2px 0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    transition: 'all 0.2s ease',
-                    backgroundColor: value === item.value ?
-                      'linear-gradient(90deg, #b8860b, #ffd700)' : 'transparent',
-                    color: value === item.value ? 'white' : '#495057'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (value !== item.value) {
-                      e.currentTarget.style.backgroundColor = 'rgba(184, 134, 11, 0.1)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (value !== item.value) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
+                  className={cn(
+                    "flex items-center justify-between px-4 py-3 my-0.5 rounded-lg cursor-pointer transition-colors text-sm font-medium",
+                    value === item.value 
+                      ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground" 
+                      : "text-foreground hover:bg-primary/10"
+                  )}
                 >
-                  <span style={{ 
-                    flex: 1, 
-                    fontSize: '14px',
-                    fontWeight: '500'
-                  }}>
+                  <span className="flex-1 truncate mr-2">
                     {item.label}
                   </span>
                   
                   {value === item.value && (
-                    <Check style={{ 
-                      width: '16px', 
-                      height: '16px',
-                      color: 'white'
-                    }} />
+                    <Check className="w-4 h-4 text-primary-foreground shrink-0" />
                   )}
                 </div>
               ))

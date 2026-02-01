@@ -28,7 +28,9 @@ import {
 const CONTINUATION_HEADER_HEIGHT = 48;
 import { getPDFSealDataUrl } from '@/lib/pdf-seal';
 import { parseAndFormatDate } from '@/lib/date-utils';
-import { splitSubject } from '@/lib/naval-format-utils';
+import { splitSubject, formatCancellationDate } from '@/lib/naval-format-utils';
+import { DISTRIBUTION_STATEMENTS } from '@/lib/constants';
+import { parseFormattedText } from '@/lib/pdf-text-parser';
 
 interface NavalLetterPDFProps {
   formData: FormData;
@@ -283,7 +285,10 @@ function ParagraphItem({
             citation
           )}
           {spacesAfterCitation}
-          {paragraph.content}
+          {paragraph.title && (
+            <Text style={{ fontWeight: 'bold' }}>{paragraph.title.toUpperCase()}.{paragraph.content ? '\u00A0\u00A0' : ''}</Text>
+          )}
+          {parseFormattedText(paragraph.content)}
         </Text>
       </View>
     );
@@ -305,7 +310,11 @@ function ParagraphItem({
         ) : (
           citation
         )}
-        {'\u00A0\u00A0'}{paragraph.content}
+        {'\u00A0\u00A0'}
+        {paragraph.title && (
+            <Text style={{ fontWeight: 'bold' }}>{paragraph.title.toUpperCase()}.{paragraph.content ? '\u00A0\u00A0' : ''}</Text>
+        )}
+        {parseFormattedText(paragraph.content)}
       </Text>
     </View>
   );
@@ -319,17 +328,22 @@ export function NavalLetterPDF({
   copyTos,
   paragraphs,
 }: NavalLetterPDFProps) {
-  const styles = createStyles(formData.bodyFont, formData.headerType);
-  const sealDataUrl = getPDFSealDataUrl(formData.headerType);
+  const styles = createStyles(
+    formData.bodyFont || 'times',
+    formData.headerType as 'USMC' | 'DON'
+  );
+
+  const sealDataUrl = getPDFSealDataUrl(formData.headerType as 'USMC' | 'DON');
   const formattedDate = parseAndFormatDate(formData.date || '');
 
   const viasWithContent = vias.filter((v) => v.trim());
   const refsWithContent = references.filter((r) => r.trim());
   const enclsWithContent = enclosures.filter((e) => e.trim());
   const copiesWithContent = copyTos.filter((c) => c.trim());
-  const paragraphsWithContent = paragraphs.filter((p) => p.content.trim());
+  const paragraphsWithContent = paragraphs.filter((p) => p.content.trim() || p.title);
 
   const formattedSubjLines = splitSubject(formData.subj.toUpperCase(), PDF_SUBJECT.maxLineLength);
+  const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin';
 
   const getFromToSpacing = (label: string): string => {
     if (formData.bodyFont === 'courier') {
@@ -349,6 +363,18 @@ export function NavalLetterPDF({
     if (total === 1) return 'Via:';
     return index === 0 ? 'Via:' : '';
   };
+
+  const isEndorsement = formData.documentType === 'endorsement';
+  const startPage = isEndorsement ? (formData.startingPageNumber || 1) : 1;
+
+  // Calculate starting indices for refs/encls
+  const startRefChar = isEndorsement && formData.startingReferenceLevel 
+    ? formData.startingReferenceLevel.charCodeAt(0) 
+    : 'a'.charCodeAt(0);
+    
+  const startEnclNum = isEndorsement && formData.startingEnclosureNumber
+    ? parseInt(formData.startingEnclosureNumber, 10)
+    : 1;
 
   return (
     <Document
@@ -386,10 +412,10 @@ export function NavalLetterPDF({
           )}
         />
         
-        {/* Seal */}
+        {/* Seal - Only on first page */}
         <Image src={sealDataUrl} style={styles.seal} />
 
-        {/* Letterhead */}
+        {/* Letterhead - Only on first page */}
         <View style={styles.letterhead}>
           <Text style={styles.headerTitle}>
             {formData.headerType === 'USMC'
@@ -404,11 +430,28 @@ export function NavalLetterPDF({
         {/* One empty line after letterhead */}
         <View style={styles.emptyLine} />
 
-        {/* SSIC block - pushed right */}
-        <View style={styles.addressBlock}>
-          <Text style={styles.addressLine}>{formData.ssic || ''}</Text>
-          <Text style={styles.addressLine}>{formData.originatorCode || ''}</Text>
-          <Text style={styles.addressLine}>{formattedDate}</Text>
+        {/* SSIC Block and Endorsement ID Line Container */}
+        <View style={{ flexDirection: 'row', marginBottom: PDF_SPACING.sectionGap }}>
+           {/* Endorsement Identification Line - Absolute Left */}
+           {isEndorsement && formData.endorsementLevel && formData.basicLetterReference && (
+             <View style={{ position: 'absolute', left: 0, top: 0, width: PDF_INDENTS.ssicBlock }}>
+                <Text style={styles.addressLine}>
+                  {`${formData.endorsementLevel} ENDORSEMENT on ${formData.basicLetterReference}`}
+                </Text>
+             </View>
+           )}
+
+           {/* SSIC Block - Standard Position */}
+           <View style={{ marginLeft: PDF_INDENTS.ssicBlock }}>
+              {formData.documentType === 'bulletin' && formData.cancellationDate && (
+                 <Text style={styles.addressLine}>
+                   Canc: {formatCancellationDate(formData.cancellationDate)}
+                 </Text>
+              )}
+              <Text style={styles.addressLine}>{formData.ssic || ''}</Text>
+              <Text style={styles.addressLine}>{formData.originatorCode || ''}</Text>
+              <Text style={styles.addressLine}>{formattedDate}</Text>
+           </View>
         </View>
 
         {/* From/To/Via */}
@@ -477,7 +520,7 @@ export function NavalLetterPDF({
         {refsWithContent.length > 0 && (
           <View style={styles.refEnclSection}>
             {refsWithContent.map((ref, i) => {
-              const refLetter = String.fromCharCode('a'.charCodeAt(0) + i);
+              const refLetter = String.fromCharCode(startRefChar + i);
               if (formData.bodyFont === 'courier') {
                 const prefix = i === 0
                   ? `Ref:\u00A0\u00A0\u00A0(${refLetter})\u00A0`
@@ -498,7 +541,7 @@ export function NavalLetterPDF({
         {enclsWithContent.length > 0 && (
           <View style={styles.refEnclSection}>
             {enclsWithContent.map((encl, i) => {
-              const enclNum = i + 1;
+              const enclNum = startEnclNum + i;
               if (formData.bodyFont === 'courier') {
                 const prefix = i === 0
                   ? `Encl:\u00A0\u00A0(${enclNum})\u00A0`
@@ -528,6 +571,28 @@ export function NavalLetterPDF({
           ))}
         </View>
 
+        {/* Reports Required (for Directives) */}
+        {isDirective && formData.reports && formData.reports.length > 0 && (
+          <View style={styles.bodySection}>
+             <View style={styles.emptyLine} />
+             <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body }}>
+               REPORTS REQUIRED:
+             </Text>
+             {formData.reports.map((report, i) => {
+               let reportText = report.title;
+               if (report.controlSymbol) reportText += ` (${report.controlSymbol})`;
+               if (report.exempt) reportText += " (Exempt)";
+               return (
+                 <View key={i} style={{ flexDirection: 'row', marginLeft: PDF_INDENTS.tabStop1 }}>
+                   <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body }}>
+                     {reportText}
+                   </Text>
+                 </View>
+               );
+             })}
+          </View>
+        )}
+
         {/* Signature block */}
         {formData.sig && (
           <View style={styles.signatureBlock}>
@@ -540,8 +605,56 @@ export function NavalLetterPDF({
           </View>
         )}
 
-        {/* Copy to */}
-        {copiesWithContent.length > 0 && (
+        {/* Distribution / Copy To for Directives */}
+        {isDirective && (
+            <View style={styles.copyToSection}>
+                {/* Distribution Statement */}
+                {(() => {
+                    const dist = formData.distribution;
+                    if (dist?.statementCode && DISTRIBUTION_STATEMENTS[dist.statementCode as keyof typeof DISTRIBUTION_STATEMENTS]) {
+                        const stmt = DISTRIBUTION_STATEMENTS[dist.statementCode as keyof typeof DISTRIBUTION_STATEMENTS];
+                        let stmtText = stmt.text;
+                        if (stmt.requiresFillIns) {
+                            if (dist.statementReason) stmtText = stmtText.replace('(fill in reason)', dist.statementReason);
+                            if (dist.statementDate) stmtText = stmtText.replace('(date of determination)', formatCancellationDate(dist.statementDate));
+                            if (dist.statementAuthority) {
+                                stmtText = stmtText.replace('(insert originating command)', dist.statementAuthority);
+                                stmtText = stmtText.replace('(originating command)', dist.statementAuthority);
+                            }
+                        }
+                        return (
+                            <View style={{ marginBottom: PDF_SPACING.sectionGap, marginTop: PDF_SPACING.sectionGap }}>
+                                <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body }}>
+                                    {stmtText}
+                                </Text>
+                            </View>
+                        );
+                    }
+                    return null;
+                })()}
+
+                {formData.distribution && (formData.distribution.type === 'pcn' || formData.distribution.type === 'pcn-with-copy') && (
+                    <View style={{ flexDirection: 'row', marginTop: PDF_SPACING.paragraph }}>
+                        <Text style={styles.copyToLabel}>DISTRIBUTION: </Text>
+                        <Text style={styles.copyToLine}>
+                            PCN {formData.distribution.pcn || '___________'}
+                        </Text>
+                    </View>
+                )}
+                
+                {formData.distribution?.copyTo && formData.distribution.copyTo.length > 0 && (
+                    <View style={{ flexDirection: 'row', marginTop: PDF_SPACING.paragraph }}>
+                        <Text style={styles.copyToLabel}>Copy to: </Text>
+                        <Text style={styles.copyToLine}>
+                            {formData.distribution.copyTo.map(c => c.code).join(', ')}
+                        </Text>
+                    </View>
+                )}
+            </View>
+        )}
+
+        {/* Copy to (Standard Letter) */}
+        {!isDirective && copiesWithContent.length > 0 && (
           <View style={styles.copyToSection}>
             <Text style={styles.copyToLabel}>
               {formData.bodyFont === 'courier' ? 'Copy to:  ' : 'Copy to:'}
@@ -557,7 +670,11 @@ export function NavalLetterPDF({
         {/* Footer - page number on pages after first */}
         <Text
           style={styles.footer}
-          render={({ pageNumber }) => (pageNumber > 1 ? pageNumber : '')}
+          render={({ pageNumber }) => {
+            const displayPage = pageNumber + startPage - 1;
+            if (isDirective) return displayPage;
+            return displayPage > 1 ? displayPage : '';
+          }}
           fixed
         />
       </Page>

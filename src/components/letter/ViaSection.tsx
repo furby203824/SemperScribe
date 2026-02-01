@@ -5,6 +5,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Route, Plus, Trash2 } from 'lucide-react';
 
 interface ViaSectionProps {
   vias: string[];
@@ -18,80 +23,84 @@ export function ViaSection({ vias, setVias }: ViaSectionProps) {
     setShowVia(vias.some(v => v.trim() !== ''));
   }, [vias]);
 
-  const addItem = useCallback(() => setVias(v => [...v, '']), [setVias]);
-  const removeItem = useCallback((index: number) => setVias(v => v.filter((_, i) => i !== index)), [setVias]);
-  const updateItem = useCallback((index: number, value: string) => setVias(v => v.map((item, i) => i === index ? value : item)), [setVias]);
+  const addItem = useCallback(() => setVias([...vias, '']), [vias, setVias]);
+  const removeItem = useCallback((index: number) => setVias(vias.filter((_, i) => i !== index)), [vias, setVias]);
+  const updateItem = useCallback((index: number, value: string) => setVias(vias.map((item, i) => i === index ? value : item)), [vias, setVias]);
+
+  const handleRadioChange = (value: string) => {
+    if (value === 'yes') {
+      setShowVia(true);
+      if (vias.length === 0) setVias(['']);
+    } else {
+      setShowVia(false);
+      setVias(['']);
+    }
+  };
 
   return (
-    <Card className="mb-6">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center text-lg font-semibold">
-          <i className="fas fa-route mr-2"></i>
+    <Card className="shadow-sm border-border border-l-4 border-l-primary">
+      <CardHeader className="pb-3 bg-secondary text-secondary-foreground rounded-t-lg">
+        <CardTitle className="flex items-center text-lg font-semibold font-headline tracking-wide">
+          <Route className="mr-2 h-5 w-5 text-primary-foreground" />
           Via
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-6">
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="radio"
-              name="ifVia"
-              value="yes"
-              checked={showVia}
-              onChange={() => setShowVia(true)}
-              className="mr-2 scale-125"
-            />
-            <span className="text-base">Yes</span>
-          </label>
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="radio"
-              name="ifVia"
-              value="no"
-              checked={!showVia}
-              onChange={() => { setShowVia(false); setVias(['']); }}
-              className="mr-2 scale-125"
-            />
-            <span className="text-base">No</span>
-          </label>
+          <RadioGroup 
+            defaultValue={showVia ? 'yes' : 'no'} 
+            value={showVia ? 'yes' : 'no'}
+            onValueChange={handleRadioChange}
+            className="flex flex-row gap-6"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="yes" id="via-yes" />
+              <Label htmlFor="via-yes" className="cursor-pointer">Yes</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="no" id="via-no" />
+              <Label htmlFor="via-no" className="cursor-pointer">No</Label>
+            </div>
+          </RadioGroup>
         </div>
 
         {showVia && (
-          <div className="space-y-3">
-            <label className="block font-semibold mb-2">
-              <i className="fas fa-route mr-2"></i>
+          <div className="space-y-3 pt-2">
+            <Label className="block font-semibold mb-2">
               Enter Via Addressee(s):
-            </label>
+            </Label>
             {vias.map((via, index) => (
-              <div key={`via-${index}`} className="flex w-full">
-                <span className="flex min-w-[60px] items-center justify-center flex-shrink-0 rounded-l-lg border-2 border-[#b8860b] bg-gradient-to-br from-[#b8860b] to-[#ffd700] text-center font-semibold text-white">
+              <div key={`via-${index}`} className="flex w-full gap-2 items-center">
+                <span className="flex h-10 w-12 items-center justify-center flex-shrink-0 rounded-md bg-secondary text-secondary-foreground border border-secondary font-medium shadow-sm">
                   ({index + 1})
                 </span>
-                <input
-                  className="flex-1 min-w-0 px-4 py-3 text-base border-2 border-l-0 border-gray-300 bg-gray-50 transition-all focus:border-[#b8860b] focus:bg-white focus:ring-2 focus:ring-[#b8860b]/10 focus:outline-none"
+                <Input
+                  className="flex-1 border-input focus-visible:ring-primary"
                   type="text"
-                  placeholder="🚀 Enter via information (e.g., Commanding Officer, 1st Marine Division)"
+                  placeholder="Enter via information (e.g., Commanding Officer, 1st Marine Division)"
                   value={via}
                   onChange={(e) => updateItem(index, e.target.value)}
                 />
                 {index === vias.length - 1 ? (
-                  <button
-                    className="flex-shrink-0 rounded-r-lg border-2 border-[#b8860b] bg-gradient-to-br from-[#b8860b] to-[#ffd700] px-4 py-2 font-semibold text-white transition-all hover:from-[#ffd700] hover:to-[#b8860b] hover:-translate-y-px"
-                    type="button"
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="flex-shrink-0 border-primary/20 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
                     onClick={addItem}
+                    title="Add Via"
                   >
-                    <i className="fas fa-plus mr-1"></i>
-                    Add
-                  </button>
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 ) : (
-                  <button
-                    className="flex-shrink-0 rounded-r-lg bg-gradient-to-r from-red-600 to-red-500 px-4 py-2 font-semibold text-white transition-all hover:from-red-700 hover:to-red-600"
-                    type="button"
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="flex-shrink-0 border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
                     onClick={() => removeItem(index)}
+                    title="Remove Via"
                   >
-                    <i className="fas fa-trash mr-1"></i>
-                    Remove
-                  </button>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 )}
               </div>
             ))}

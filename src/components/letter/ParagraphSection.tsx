@@ -1,13 +1,22 @@
+
 /**
  * Paragraph Section Component
  * Manages the body paragraphs with multi-level indentation, voice input, and validation
+ * Modernized UI based on Marine Corps Directives Formatter
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ParagraphData } from '@/types';
+import { ParagraphItem } from './ParagraphItem';
+import { 
+  Indent,
+  AlertTriangle
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ParagraphSectionProps {
   paragraphs: ParagraphData[];
+  documentType: string;
   activeVoiceInput: number | null;
   validateParagraphNumbering: (paragraphs: ParagraphData[]) => string[];
   getUiCitation: (paragraph: ParagraphData, index: number, allParagraphs: ParagraphData[]) => string;
@@ -21,6 +30,7 @@ interface ParagraphSectionProps {
 
 export function ParagraphSection({
   paragraphs,
+  documentType,
   activeVoiceInput,
   validateParagraphNumbering,
   getUiCitation,
@@ -32,146 +42,78 @@ export function ParagraphSection({
   removeParagraph
 }: ParagraphSectionProps) {
   const numberingErrors = validateParagraphNumbering(paragraphs);
+  const [focusedId, setFocusedId] = useState<number | null>(null);
+
+  // Updated to use more neutral/theme-compatible colors
+  const getLevelColor = (level: number) => {
+    const colors = {
+      1: 'bg-background border-border', // Main level
+      2: 'bg-muted/30 border-border/80', // First indent
+      3: 'bg-muted/50 border-border/60', // Second indent
+      4: 'bg-muted/70 border-border/40', // Third indent
+      5: 'bg-muted/90 border-border/20', // Deep indent
+    };
+    return colors[level as keyof typeof colors] || 'bg-background border-border';
+  };
 
   return (
-    <div className="form-section">
-      <div className="section-legend">
-        <i className="fas fa-paragraph mr-2"></i>
-        Body Paragraphs
-      </div>
-
-      <div>
+    <Card className="mb-8 border-border shadow-sm border-l-4 border-l-primary">
+      <CardHeader className="pb-3 bg-secondary text-secondary-foreground rounded-t-lg">
+        <CardTitle className="text-lg font-semibold flex items-center font-headline tracking-wide">
+          <Indent className="mr-2 h-5 w-5 text-primary-foreground" />
+          Body Paragraphs
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent className="pt-6 space-y-6">
         {numberingErrors.length > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-            <div className="font-bold text-yellow-800 mb-2">
-              <i className="fas fa-exclamation-triangle mr-2"></i>
-              Paragraph Numbering Issues:
-            </div>
-            {numberingErrors.map((error, index) => (
-              <div key={index} className="text-yellow-800 text-sm">
-                • {error}
+          <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-md shadow-sm">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-5 w-5 text-yellow-600" aria-hidden="true" />
               </div>
-            ))}
-            <div className="mt-2 text-xs text-gray-600">
-              <strong>Rule:</strong> If there's a paragraph 1a, there must be a paragraph 1b; if there's a paragraph 1a(1), there must be a paragraph 1a(2), etc.
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">Paragraph Numbering Issues</h3>
+                <div className="mt-2 text-sm text-yellow-700 space-y-1">
+                  {numberingErrors.map((error, index) => (
+                    <p key={index}>• {error}</p>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-yellow-600 font-medium">
+                  Rule: Sequence must be preserved (1, 2... a, b... (1), (2)...).
+                </p>
+              </div>
             </div>
           </div>
         )}
 
-        {paragraphs.map((paragraph, index) => {
-          const citation = getUiCitation(paragraph, index, paragraphs);
-          return (
-            <div
-              key={paragraph.id}
-              className='paragraph-container'
-              data-level={paragraph.level}
-            >
-              <div className="paragraph-header">
-                <div>
-                  <span className="paragraph-level-badge">Level {paragraph.level} {citation}</span>
-                </div>
-                <div>
-                  {index > 0 && (
-                    <button
-                      className="btn btn-sm bg-gray-50 border border-gray-300 mr-1"
-                      onClick={() => moveParagraphUp(paragraph.id)}
-                      title="Move Up"
-                    >
-                      ↑
-                    </button>
-                  )}
-                  <button
-                    className="btn btn-sm bg-gray-50 border border-gray-300"
-                    onClick={() => moveParagraphDown(paragraph.id)}
-                    disabled={index === paragraphs.length - 1}
-                    title="Move Down"
-                  >
-                    ↓
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2 mb-3">
-                <textarea
-                  className="form-control flex-1"
-                  rows={4}
-                  placeholder="Enter your paragraph content here..."
-                  value={paragraph.content}
-                  onChange={(e) => updateParagraphContent(paragraph.id, e.target.value)}
-                />
-
-                <button
-                  className={`btn btn-sm ${activeVoiceInput === paragraph.id ? 'btn-danger' : 'btn-outline-primary'}`}
-                  onClick={() => toggleVoiceInput(paragraph.id)}
-                  title={activeVoiceInput === paragraph.id ? 'Stop Recording' : 'Start Voice Input'}
-                  style={{
-                    minWidth: '100px',
-                    height: '38px',
-                    fontSize: '12px'
-                  }}
-                >
-                  {activeVoiceInput === paragraph.id ? (
-                    <>🔴 Recording...</>
-                  ) : (
-                    <>🎤 Voice Input</>
-                  )}
-                </button>
-              </div>
-
-              {paragraph.acronymError && (
-                <div className="acronym-error">
-                  <i className="fas fa-exclamation-triangle mr-1"></i>
-                  <small>{paragraph.acronymError}</small>
-                </div>
-              )}
-
-              <div className="paragraph-actions">
-                <button
-                  className="btn btn-smart-main btn-sm"
-                  onClick={() => addParagraph('main', paragraph.id)}
-                >
-                  Main Paragraph
-                </button>
-                {paragraph.level < 8 && (
-                  <button
-                    className="btn btn-smart-sub btn-sm"
-                    onClick={() => addParagraph('sub', paragraph.id)}
-                  >
-                    Sub-paragraph
-                  </button>
-                )}
-
-                {paragraph.level > 1 && (
-                  <button
-                    className="btn btn-smart-same btn-sm"
-                    onClick={() => addParagraph('same', paragraph.id)}
-                  >
-                    Same
-                  </button>
-                )}
-
-                {paragraph.level > 2 && (
-                  <button
-                    className="btn btn-smart-up btn-sm"
-                    onClick={() => addParagraph('up', paragraph.id)}
-                  >
-                    One Up
-                  </button>
-                )}
-
-                {paragraphs.length > 1 && (
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => removeParagraph(paragraph.id)}
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+        <div className="space-y-4">
+          {paragraphs.map((paragraph, index) => {
+            const citation = getUiCitation(paragraph, index, paragraphs);
+            
+            return (
+              <ParagraphItem
+                key={paragraph.id}
+                paragraph={paragraph}
+                index={index}
+                totalParagraphs={paragraphs.length}
+                activeVoiceInput={activeVoiceInput}
+                citation={citation}
+                levelColor={getLevelColor(paragraph.level)}
+                titleBadgeColor="bg-primary/10 text-primary border-primary/20"
+                onUpdateContent={updateParagraphContent}
+                onMoveUp={moveParagraphUp}
+                onMoveDown={moveParagraphDown}
+                onToggleVoice={toggleVoiceInput}
+                onAddParagraph={addParagraph}
+                onRemove={removeParagraph}
+                onFocus={setFocusedId}
+                isFocused={focusedId === paragraph.id}
+              />
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
