@@ -1,0 +1,76 @@
+{
+  "metadata": {
+    "packageId": "export_1769981906572",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-02-01T21:38:26.572Z",
+    "author": {
+      "name": "Unknown"
+    },
+    "package": {
+      "title": "Untitled Package",
+      "description": "Exported from Naval Letter Formatter",
+      "subject": "",
+      "documentType": "page11"
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "page11",
+      "endorsementLevel": "",
+      "basicLetterReference": "",
+      "basicLetterSsic": "",
+      "referenceWho": "",
+      "referenceType": "",
+      "referenceDate": "",
+      "startingReferenceLevel": "a",
+      "startingEnclosureNumber": "1",
+      "line1": "",
+      "line2": "",
+      "line3": "",
+      "ssic": "",
+      "originatorCode": "",
+      "date": "1 Feb 26",
+      "from": "",
+      "to": "",
+      "subj": "",
+      "sig": "",
+      "delegationText": "",
+      "startingPageNumber": 1,
+      "previousPackagePageCount": 0,
+      "headerType": "USMC",
+      "bodyFont": "times",
+      "cancellationDate": "",
+      "cancellationType": "fixed",
+      "distribution": {
+        "type": "none"
+      },
+      "reports": [],
+      "actionNo": "",
+      "orgStation": "",
+      "name": "",
+      "edipi": "",
+      "box11": "",
+      "remarksLeft": "____________:  I understand that I am eligible but not recommended for promotion to the rank of Corporal for 1 December 20XX, due to insert reason for promotion recommendation). This will remain in effect indefinitely until I am recommended for promotion by the appropriate authority. \n\nI was advised that within 5 working days after acknowledgment of this entry, a written rebuttal can be submitted and this rebuttal will be filed in my electronic service record. \n\nI choose (to)___(not to)___ make a rebuttal.\n\n\n\n _____________________\n Signature of Marine                        "
+    },
+    "vias": [
+      ""
+    ],
+    "references": [
+      ""
+    ],
+    "enclosures": [
+      ""
+    ],
+    "copyTos": [
+      ""
+    ],
+    "paragraphs": [
+      {
+        "id": 1,
+        "level": 1,
+        "content": "",
+        "acronymError": ""
+      }
+    ]
+  }
+}
