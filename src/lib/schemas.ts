@@ -134,8 +134,16 @@ export const BasicLetterDefinition: DocumentTypeDefinition = {
 // 2. Endorsement
 export const EndorsementSchema = BasicLetterSchema.extend({
   documentType: z.literal('endorsement'),
-  endorsementLevel: z.enum(['FIRST', 'SECOND', 'THIRD', 'FOURTH', 'FIFTH', 'SIXTH', '']),
+  endorsementLevel: z.enum(['FIRST', 'SECOND', 'THIRD', 'FOURTH', 'FIFTH', 'SIXTH', 'SEVENTH', 'EIGHTH', 'NINTH', 'TENTH', '']),
   basicLetterReference: z.string().optional(),
+  basicLetterSsic: z.string().optional(),
+  referenceWho: z.string().optional(),
+  referenceType: z.string().optional(),
+  referenceDate: z.string().optional(),
+  startingReferenceLevel: z.string().optional(),
+  startingEnclosureNumber: z.string().optional(),
+  startingPageNumber: z.number().optional(),
+  previousPackagePageCount: z.number().optional(),
 });
 
 export const EndorsementDefinition: DocumentTypeDefinition = {
