@@ -390,3 +390,43 @@ export async function addSignatureFieldAtPosition(
 
   return pdfDoc.save();
 }
+
+/**
+ * Adds multiple signature fields at user-specified positions.
+ * Creates both visual placeholders and interactive PKI signature fields.
+ *
+ * @param pdfBytes - The PDF as a Uint8Array or ArrayBuffer
+ * @param positions - Array of user-specified positions and dimensions
+ * @returns The modified PDF as Uint8Array
+ */
+export async function addMultipleSignatureFields(
+  pdfBytes: Uint8Array | ArrayBuffer,
+  positions: ManualSignaturePosition[]
+): Promise<Uint8Array> {
+  const pdfDoc = await PDFDocument.load(pdfBytes);
+  const pages = pdfDoc.getPages();
+
+  positions.forEach((position, index) => {
+    // Get the target page (1-indexed to 0-indexed)
+    const pageIndex = Math.max(0, Math.min(position.page - 1, pages.length - 1));
+    const targetPage = pages[pageIndex];
+
+    // Draw the visual signature box at the specified position
+    console.log(`Drawing signature rectangle ${index + 1} at:`, { x: position.x, y: position.y, width: position.width, height: position.height });
+    targetPage.drawRectangle({
+      x: position.x,
+      y: position.y,
+      width: position.width,
+      height: position.height,
+      borderColor: rgb(0.3, 0.3, 0.8),
+      borderWidth: 1,
+      color: rgb(0.95, 0.97, 1.0),
+      opacity: 0.3,
+    });
+
+    // Create the interactive PKI signature field with unique name
+    createSignatureField(pdfDoc, targetPage, position, `Signature${index + 1}`);
+  });
+
+  return pdfDoc.save();
+}

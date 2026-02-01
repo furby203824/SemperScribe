@@ -4,7 +4,7 @@ import { registerPDFFonts } from './pdf-fonts';
 import NavalLetterPDF from '@/components/pdf/NavalLetterPDF';
 import React from 'react';
 import { openBlobInNewTab } from './blob-utils';
-import { addSignatureField, addSignatureFieldAtPosition, ManualSignaturePosition } from './pdf-signature-field';
+import { addSignatureField, addSignatureFieldAtPosition, addMultipleSignatureFields, ManualSignaturePosition } from './pdf-signature-field';
 import { logError } from './console-utils';
 
 // Re-export for convenience
@@ -67,6 +67,18 @@ export async function addSignatureToBlob(
 ): Promise<Blob> {
   const pdfBytes = await blob.arrayBuffer();
   const signedPdfBytes = await addSignatureFieldAtPosition(pdfBytes, position);
+  return new Blob([signedPdfBytes], { type: 'application/pdf' });
+}
+
+/**
+ * Add multiple signature fields to a PDF at specified positions
+ */
+export async function addMultipleSignaturesToBlob(
+  blob: Blob,
+  positions: ManualSignaturePosition[]
+): Promise<Blob> {
+  const pdfBytes = await blob.arrayBuffer();
+  const signedPdfBytes = await addMultipleSignatureFields(pdfBytes, positions);
   return new Blob([signedPdfBytes], { type: 'application/pdf' });
 }
 
