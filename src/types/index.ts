@@ -32,7 +32,7 @@ export interface DistributionData {
 }
 
 export interface FormData {
-  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin';
+  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11';
   endorsementLevel: EndorsementLevel;
   basicLetterReference: string;
   basicLetterSsic?: string;
@@ -66,6 +66,12 @@ export interface FormData {
   cancellationType?: 'contingent' | 'fixed';
   distribution?: DistributionData;
   reports?: ReportData[];
+  
+  // Page 11 specific fields
+  name?: string;
+  edipi?: string;
+  remarksLeft?: string;
+  remarksRight?: string;
 }
 
 export interface SavedLetter extends FormData {

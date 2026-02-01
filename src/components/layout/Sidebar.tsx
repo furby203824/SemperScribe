@@ -122,6 +122,11 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
                     onClick={() => onDocumentTypeChange('aa-form')}
                     label="AA Form (NAVMC 10274)"
                   />
+                  <DocumentTypeButton
+                    active={documentType === 'page11'}
+                    onClick={() => onDocumentTypeChange('page11')}
+                    label="Pg. 11 (NAVMC 118(11))"
+                  />
                 </div>
               </AccordionContent>
             </AccordionItem>

@@ -29,6 +29,8 @@ import { getDoDSealBufferSync } from '@/lib/dod-seal';
 import { createFormattedParagraph } from '@/lib/paragraph-formatter';
 import { DOC_SETTINGS } from '@/lib/doc-settings';
 import { generateNavmc10274 } from '@/services/pdf/navmc10274Generator';
+import { generateNavmc11811 } from '@/services/pdf/navmc11811Generator';
+import { Navmc11811Data } from '@/types/navmc';
 import { openBlobInNewTab } from '@/lib/blob-utils';
 import { getBasePath } from '@/lib/path-utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -62,7 +64,10 @@ function NavalLetterGeneratorInner() {
     distribution: { type: 'none' },
     reports: [],
     actionNo: '',
-    orgStation: ''
+    orgStation: '',
+    name: '',
+    edipi: '',
+    box11: ''
   });
 
   const handleDynamicFormSubmit = useCallback((data: any) => {
@@ -223,20 +228,57 @@ function NavalLetterGeneratorInner() {
   const handleUpdatePreview = useCallback(async () => {
     setIsGeneratingPreview(true);
     try {
-      // Skip if critical data is missing
-      if (!formData.subj && !formData.from) {
-          setIsGeneratingPreview(false);
-          return;
+      let blob: Blob;
+
+      if (formData.documentType === 'page11') {
+        const page11Data: Navmc11811Data = {
+          name: formData.name || '',
+          edipi: formData.edipi || '',
+          remarksLeft: formData.remarksLeft,
+          remarksRight: formData.remarksRight
+        };
+        const pdfBytes = await generateNavmc11811(page11Data);
+        blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      } else if (formData.documentType === 'navmc10274') {
+         // Placeholder for AA Form if needed later, or use base generator if it supports it
+         // For now, fall back to base or implement specific if known. 
+         // Assuming base for now or separate generator. 
+         // The user asked for Pg 11 specifically.
+         // Let's check if generateNavmc10274 is available (it is imported).
+         const pdfBytes = await generateNavmc10274({
+            actionNo: formData.actionNo || '',
+            ssic: formData.ssic || '',
+            date: formData.date || '',
+            from: formData.from || '',
+            orgStation: formData.orgStation || '',
+            to: formData.to || '',
+            via: vias[0] || '', // Simple mapping for now
+            subject: formData.subj || '',
+            reference: references[0] || '',
+            enclosure: enclosures[0] || '',
+            supplementalInfo: '', // Need to map this from somewhere if it exists
+            copyTo: copyTos[0] || '',
+            isDraft: true
+         });
+         blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      } else {
+        // Standard Naval Letter
+        // Skip if critical data is missing
+        if (!formData.subj && !formData.from) {
+            setIsGeneratingPreview(false);
+            return;
+        }
+
+        blob = await generateBasePDFBlob(
+          formData,
+          vias,
+          references,
+          enclosures,
+          copyTos,
+          paragraphs
+        );
       }
 
-      const blob = await generateBasePDFBlob(
-        formData,
-        vias,
-        references,
-        enclosures,
-        copyTos,
-        paragraphs
-      );
       const url = URL.createObjectURL(blob);
       setPreviewUrl(prev => {
         if (prev) URL.revokeObjectURL(prev);
@@ -602,6 +644,15 @@ function NavalLetterGeneratorInner() {
         };
         const pdfBytes = await generateNavmc10274(aaFormData);
         blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      } else if (formData.documentType === 'page11') {
+        const navmcData: Navmc11811Data = {
+          name: formData.name || '',
+          edipi: formData.edipi || '',
+          remarksLeft: formData.remarksLeft || '',
+          remarksRight: formData.remarksRight || ''
+        };
+        const pdfBytes = await generateNavmc11811(navmcData);
+        blob = new Blob([pdfBytes], { type: 'application/pdf' });
       } else {
         // Generate standard letter PDF
         blob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphs);
@@ -644,6 +695,15 @@ function NavalLetterGeneratorInner() {
         };
         const pdfBytes = await generateNavmc10274(aaFormData);
         baseBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+      } else if (formData.documentType === 'page11') {
+        const navmcData: Navmc11811Data = {
+          name: formData.name || '',
+          edipi: formData.edipi || '',
+          remarksLeft: formData.remarksLeft || '',
+          remarksRight: formData.remarksRight || ''
+        };
+        const pdfBytes = await generateNavmc11811(navmcData);
+        baseBlob = new Blob([pdfBytes], { type: 'application/pdf' });
       } else {
         // Generate standard letter PDF
         baseBlob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphs);
@@ -665,6 +725,8 @@ function NavalLetterGeneratorInner() {
       let filename: string;
       if (formData.documentType === 'aa-form') {
         filename = `NAVMC_10274_${formData.ssic || 'AA_Form'}.pdf`;
+      } else if (formData.documentType === 'page11') {
+        filename = `NAVMC_118(11)_${formData.name?.replace(/\s+/g, '_') || 'Page11'}.pdf`;
       } else if (formData.documentType === 'endorsement') {
         filename = `${formData.endorsementLevel}_ENDORSEMENT_on_${formData.subj || 'letter'}_Page${formData.startingPageNumber}.pdf`;
       } else {
@@ -728,6 +790,28 @@ function NavalLetterGeneratorInner() {
         } catch (error) {
           console.error('Error generating AA Form PDF:', error);
           alert('Failed to generate AA Form PDF. Please check the console for details.');
+        }
+      } else if (formData.documentType === 'page11') {
+        try {
+          const navmcData: Navmc11811Data = {
+            name: formData.name || '',
+            edipi: formData.edipi || '',
+            remarksLeft: formData.remarksLeft || '',
+            remarksRight: formData.remarksRight || ''
+          };
+          const pdfBytes = await generateNavmc11811(navmcData);
+          const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `NAVMC_118(11)_${formData.name?.replace(/\s+/g, '_') || 'Page11'}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error('Error generating Page 11 PDF:', error);
+          alert('Failed to generate Page 11 PDF. Please check the console for details.');
         }
       } else {
         // Standard letter PDF generation
@@ -919,8 +1003,8 @@ function NavalLetterGeneratorInner() {
         </div>
       </div>
 
-      {/* Header Settings (Hidden for AA Form) */}
-      {formData.documentType !== 'aa-form' && (
+      {/* Header Settings (Hidden for AA Form and Page 11) */}
+      {formData.documentType !== 'aa-form' && formData.documentType !== 'page11' && (
         <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Header Type</label>
@@ -975,12 +1059,155 @@ function NavalLetterGeneratorInner() {
         </div>
       )}
 
+<<<<<<< HEAD
       <UnitInfoSection
         formData={formData}
         setFormData={setFormData}
         setCurrentUnitCode={setCurrentUnitCode}
         setCurrentUnitName={setCurrentUnitName}
       />
+=======
+      {/* Unit Info / Letterhead - Hide for Page 11 */ }
+      {formData.documentType !== 'page11' && (
+        <UnitInfoSection
+          formData={formData}
+          setFormData={setFormData}
+          setCurrentUnitCode={setCurrentUnitCode}
+          setCurrentUnitName={setCurrentUnitName}
+        />
+      )}
+
+      {/* Endorsement-Specific Fields */}
+      {formData.documentType === 'endorsement' && (
+        <Card className="border-primary/20 shadow-md overflow-hidden mb-6">
+          <CardHeader className="bg-secondary text-secondary-foreground border-b border-secondary/10 p-4 flex flex-row items-center gap-2">
+            <FileSignature className="w-5 h-5" />
+            <CardTitle className="text-lg font-bold font-headline tracking-wide">Endorsement Details</CardTitle>
+          </CardHeader>
+
+          <CardContent className="space-y-6 pt-6">
+            {/* Endorsement Level Selector */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Endorsement Level <span className="text-destructive">*</span></Label>
+              <Select
+                value={formData.endorsementLevel}
+                onValueChange={(val) => setFormData(prev => ({ ...prev, endorsementLevel: val as any }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select endorsement level..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="FIRST">FIRST ENDORSEMENT</SelectItem>
+                  <SelectItem value="SECOND">SECOND ENDORSEMENT</SelectItem>
+                  <SelectItem value="THIRD">THIRD ENDORSEMENT</SelectItem>
+                  <SelectItem value="FOURTH">FOURTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="FIFTH">FIFTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="SIXTH">SIXTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="SEVENTH">SEVENTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="EIGHTH">EIGHTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="NINTH">NINTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="TENTH">TENTH ENDORSEMENT</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Basic Letter Reference Builder */}
+            {formData.endorsementLevel && (
+              <div className="space-y-4">
+                <StructuredReferenceInput formData={formData} setFormData={setFormData} />
+
+                <div className="p-4 bg-secondary/5 border border-secondary/10 rounded-lg text-sm font-mono text-muted-foreground flex items-center gap-2">
+                  <span className="font-bold text-primary">Preview:</span>
+                  {formData.endorsementLevel} ENDORSEMENT on {formData.basicLetterReference || "[Basic Letter Reference]"}
+                </div>
+              </div>
+            )}
+
+            {/* Page Numbering and Sequencing */}
+            {formData.endorsementLevel && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border/50">
+                {/* Page Numbering Section */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-foreground flex items-center gap-2">
+                    <span className="bg-secondary/20 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
+                    Page Numbering
+                  </h4>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Last Page # of Previous Document</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={formData.previousPackagePageCount}
+                      onChange={(e) => {
+                        const newPrevCount = parseInt(e.target.value) || 0;
+                        setFormData(prev => ({
+                          ...prev,
+                          previousPackagePageCount: newPrevCount,
+                          startingPageNumber: newPrevCount + 1
+                        }))
+                      }}
+                    />
+                    <p className="text-xs text-muted-foreground italic">
+                      Enter the last page number of the document you are endorsing.
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-secondary/5 rounded-lg border border-secondary/10">
+                    <p className="text-sm text-foreground font-medium">
+                      Endorsement starts on page <span className="font-bold text-lg text-primary">{formData.startingPageNumber}</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Identifier Sequencing Section */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-foreground flex items-center gap-2">
+                    <span className="bg-secondary/20 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
+                    Identifier Sequencing
+                  </h4>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Start References At Letter</Label>
+                    <Select
+                      value={formData.startingReferenceLevel}
+                      onValueChange={(val) => setFormData(prev => ({ ...prev, startingReferenceLevel: val }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 26 }, (_, i) => String.fromCharCode(97 + i)).map(char => (
+                          <SelectItem key={char} value={char}>{char}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground italic">
+                      If basic letter has refs (a) and (b), start here at (c).
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Start Enclosures At Number</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={formData.startingEnclosureNumber}
+                      onChange={(e) => setFormData(prev => ({ ...prev, startingEnclosureNumber: e.target.value }))}
+                    />
+                    <p className="text-xs text-muted-foreground italic">
+                      If basic letter has encl (1), start here at (2).
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+>>>>>>> 0098873 (feat: add Page 11 preview support and disable docx export)
 
       {/* Endorsement-Specific Fields */}
       {formData.documentType === 'endorsement' && (
@@ -1123,20 +1350,24 @@ function NavalLetterGeneratorInner() {
         />
       </div>
 
-      {/* Legacy Sections wrapped to fit layout */}
-      <ViaSection vias={vias} setVias={setVias} />
-      <ReferencesSection 
-        references={references} 
-        setReferences={setReferences} 
-        formData={formData}
-        setFormData={setFormData}
-      />
-      <EnclosuresSection 
-        enclosures={enclosures} 
-        setEnclosures={setEnclosures} 
-        formData={formData}
-        setFormData={setFormData}
-      />
+      {/* Legacy Sections wrapped to fit layout - Hide for Page 11 */}
+      {formData.documentType !== 'page11' && (
+        <>
+          <ViaSection vias={vias} setVias={setVias} />
+          <ReferencesSection 
+            references={references} 
+            setReferences={setReferences} 
+            formData={formData}
+            setFormData={setFormData}
+          />
+          <EnclosuresSection 
+            enclosures={enclosures} 
+            setEnclosures={setEnclosures} 
+            formData={formData}
+            setFormData={setFormData}
+          />
+        </>
+      )}
 
       {(formData.documentType === 'mco' || formData.documentType === 'bulletin') && (
         <ReportsSection 
@@ -1145,25 +1376,72 @@ function NavalLetterGeneratorInner() {
         />
       )}
 
-      <ParagraphSection 
-        paragraphs={paragraphs}
-        documentType={formData.documentType}
-        activeVoiceInput={activeVoiceInput}
-        validateParagraphNumbering={validateParagraphNumbering}
-        getUiCitation={getUiCitation}
-        moveParagraphUp={moveParagraphUp}
-        moveParagraphDown={moveParagraphDown}
-        updateParagraphContent={updateParagraphContent}
-        toggleVoiceInput={toggleVoiceInput}
-        addParagraph={addParagraph}
-        removeParagraph={removeParagraph}
-      />
+      {formData.documentType !== 'page11' && (
+        <ParagraphSection 
+          paragraphs={paragraphs}
+          documentType={formData.documentType}
+          activeVoiceInput={activeVoiceInput}
+          validateParagraphNumbering={validateParagraphNumbering}
+          getUiCitation={getUiCitation}
+          moveParagraphUp={moveParagraphUp}
+          moveParagraphDown={moveParagraphDown}
+          updateParagraphContent={updateParagraphContent}
+          toggleVoiceInput={toggleVoiceInput}
+          addParagraph={addParagraph}
+          removeParagraph={removeParagraph}
+        />
+      )}
 
+<<<<<<< HEAD
       <ClosingBlockSection
         formData={formData}
         setFormData={setFormData}
         copyTos={copyTos}
         setCopyTos={setCopyTos}
+=======
+      {formData.documentType !== 'page11' && (
+        <ClosingBlockSection
+          formData={formData}
+          setFormData={setFormData}
+          copyTos={copyTos}
+          setCopyTos={setCopyTos}
+        />
+      )}
+
+      {/* Digital Signature Section */}
+      <Card className="shadow-sm border-border mb-6 border-l-4 border-l-primary">
+        <CardHeader className="pb-3 bg-secondary text-secondary-foreground rounded-t-lg">
+          <CardTitle className="flex items-center text-lg font-semibold font-headline tracking-wide">
+            <FileSignature className="mr-2 h-5 w-5 text-primary-foreground" />
+            Digital Signature Field
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 pt-4">
+          <p className="text-sm text-muted-foreground">
+            Add a digital signature field to your PDF for CAC/PKI signing in Adobe Reader.
+          </p>
+          <button
+            type="button"
+            onClick={handleOpenSignaturePlacement}
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <FileSignature className="mr-2 h-4 w-4" />
+            Place Signature Field & Download PDF
+          </button>
+          <p className="text-xs text-muted-foreground italic">
+            This will generate a PDF preview where you can draw the signature box location.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Signature Placement Modal */}
+      <SignaturePlacementModal
+        open={showSignatureModal}
+        onClose={handleSignatureCancel}
+        onConfirm={handleSignatureConfirm}
+        pdfBlob={signaturePdfBlob}
+        totalPages={signaturePdfPageCount}
+>>>>>>> 0098873 (feat: add Page 11 preview support and disable docx export)
       />
 
       {/* Digital Signature Section */}

@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { FileText, FileSignature, ClipboardList, ScrollText, AlertCircle, Building2, Type } from 'lucide-react';
+import { FileText, FileSignature, ClipboardList, ScrollText, AlertCircle, Building2, Type, FileCheck } from 'lucide-react';
 
 interface DocumentTypeSectionProps {
   formData: FormData;
@@ -94,81 +94,105 @@ export function DocumentTypeSection({
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Document Type Selector */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-2 mb-6">
+      <section className="space-y-8">
+        <div className="flex items-center gap-2 mb-2">
           <div className="h-8 w-1 bg-primary rounded-full" />
           <h2 className="text-2xl font-headline tracking-wide text-primary">Document Type</h2>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <DocumentTypeCard
-            type="basic"
-            icon={<FileText className="w-10 h-10" />}
-            title="Basic Letter"
-            description="The standard format for routine correspondence and official communications."
-            note="✓ Most common format"
-            isActive={formData.documentType === 'basic'}
-            onClick={() => setFormData(prev => ({ ...prev, documentType: 'basic' }))}
-          />
+        {/* Standard Correspondence Section */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-muted-foreground uppercase tracking-wider text-sm border-b pb-2">
+            Standard Correspondence
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <DocumentTypeCard
+              type="basic"
+              icon={<FileText className="w-10 h-10" />}
+              title="Basic Letter"
+              description="The standard format for routine correspondence and official communications."
+              note="✓ Most common format"
+              isActive={formData.documentType === 'basic'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'basic' }))}
+            />
 
-          <DocumentTypeCard
-            type="endorsement"
-            icon={<FileSignature className="w-10 h-10" />}
-            title="New-Page Endorsement"
-            description="Forwards correspondence on a new page. Use for longer comments and formal endorsements."
-            note="→ For forwarding documents"
-            isActive={formData.documentType === 'endorsement'}
-            onClick={() => setFormData(prev => ({ ...prev, documentType: 'endorsement' }))}
-          />
+            <DocumentTypeCard
+              type="endorsement"
+              icon={<FileSignature className="w-10 h-10" />}
+              title="New-Page Endorsement"
+              description="Forwards correspondence on a new page. Use for longer comments and formal endorsements."
+              note="→ For forwarding documents"
+              isActive={formData.documentType === 'endorsement'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'endorsement' }))}
+            />
 
-          <DocumentTypeCard
-            type="aa-form"
-            icon={<ClipboardList className="w-10 h-10" />}
-            title="NAVMC 10274 (AA Form)"
-            description="Administrative Action Form. Used for personnel requests and administrative matters."
-            note="→ For admin requests"
-            isActive={formData.documentType === 'aa-form'}
-            onClick={() => setFormData(prev => ({ ...prev, documentType: 'aa-form' }))}
-          />
-
-          <DocumentTypeCard
-            type="mco"
-            icon={<ScrollText className="w-10 h-10" />}
-            title="Marine Corps Order"
-            description="Permanent directives that establish policy or procedures."
-            note="→ For standing orders"
-            isActive={formData.documentType === 'mco'}
-            onClick={() => {
-              setFormData(prev => ({ ...prev, documentType: 'mco', to: prev.to || 'Distribution List' }));
-              if (setParagraphs && formData.documentType !== 'mco') {
-                if (window.confirm('Do you want to load the standard SMEAC structure for this Marine Corps Order? Existing paragraphs will be replaced.')) {
-                  setParagraphs(getMCOParagraphs());
+            <DocumentTypeCard
+              type="mco"
+              icon={<ScrollText className="w-10 h-10" />}
+              title="Marine Corps Order"
+              description="Permanent directives that establish policy or procedures."
+              note="→ For standing orders"
+              isActive={formData.documentType === 'mco'}
+              onClick={() => {
+                setFormData(prev => ({ ...prev, documentType: 'mco', to: prev.to || 'Distribution List' }));
+                if (setParagraphs && formData.documentType !== 'mco') {
+                  if (window.confirm('Do you want to load the standard SMEAC structure for this Marine Corps Order? Existing paragraphs will be replaced.')) {
+                    setParagraphs(getMCOParagraphs());
+                  }
                 }
-              }
-            }}
-          />
+              }}
+            />
 
-          <DocumentTypeCard
-            type="bulletin"
-            icon={<AlertCircle className="w-10 h-10" />}
-            title="Marine Corps Bulletin"
-            description="Directives of a temporary nature (expire after 12 months)."
-            note="→ For temporary orders"
-            isActive={formData.documentType === 'bulletin'}
-            onClick={() => {
-              setFormData(prev => ({ ...prev, documentType: 'bulletin', to: prev.to || 'Distribution List' }));
-              if (setParagraphs && formData.documentType !== 'bulletin') {
-                if (window.confirm('Do you want to load the standard Bulletin structure? Existing paragraphs will be replaced.')) {
-                  setParagraphs(getMCBulParagraphs());
+            <DocumentTypeCard
+              type="bulletin"
+              icon={<AlertCircle className="w-10 h-10" />}
+              title="Marine Corps Bulletin"
+              description="Directives of a temporary nature (expire after 12 months)."
+              note="→ For temporary orders"
+              isActive={formData.documentType === 'bulletin'}
+              onClick={() => {
+                setFormData(prev => ({ ...prev, documentType: 'bulletin', to: prev.to || 'Distribution List' }));
+                if (setParagraphs && formData.documentType !== 'bulletin') {
+                  if (window.confirm('Do you want to load the standard Bulletin structure? Existing paragraphs will be replaced.')) {
+                    setParagraphs(getMCBulParagraphs());
+                  }
                 }
-              }
-            }}
-          />
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Forms Section */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-muted-foreground uppercase tracking-wider text-sm border-b pb-2">
+            Forms
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <DocumentTypeCard
+              type="aa-form"
+              icon={<ClipboardList className="w-10 h-10" />}
+              title="NAVMC 10274 (AA Form)"
+              description="Administrative Action Form. Used for personnel requests and administrative matters."
+              note="→ For admin requests"
+              isActive={formData.documentType === 'aa-form'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'aa-form' }))}
+            />
+
+            <DocumentTypeCard
+              type="page11"
+              icon={<FileCheck className="w-10 h-10" />}
+              title="NAVMC 118(11)"
+              description="Administrative Remarks (Page 11). For permanent service record entries."
+              note="→ For admin remarks"
+              isActive={formData.documentType === 'page11'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'page11' }))}
+            />
+          </div>
         </div>
       </section>
 
       {/* Header Type & Body Font - Only for Letters */}
-      {formData.documentType !== 'aa-form' && (
+      {formData.documentType !== 'aa-form' && formData.documentType !== 'page11' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-border/50">
           <Card className="border-border shadow-md bg-card">
             <CardHeader className="py-3 px-4 border-b border-border bg-secondary text-primary-foreground rounded-t-lg">

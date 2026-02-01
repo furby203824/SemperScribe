@@ -27,6 +27,7 @@ export interface FieldDefinition {
   options?: FieldOption[];
   defaultValue?: any;
   className?: string; // Layout hints (e.g., 'col-span-1', 'md:col-span-2')
+  rows?: number; // For textareas
   required?: boolean;
   
   // Dynamic behavior
@@ -314,11 +315,75 @@ export const BulletinDefinition: DocumentTypeDefinition = {
   ]
 };
 
+// 6. Page 11 (NAVMC 118(11))
+export const Page11Schema = z.object({
+  documentType: z.literal('page11'),
+  name: z.string().min(1, "Name is required"),
+  edipi: z.string().min(1, "DOD ID / EDIPI is required"),
+  remarksLeft: z.string().optional(),
+  remarksRight: z.string().optional(),
+});
+
+export const Page11Definition: DocumentTypeDefinition = {
+  id: 'page11',
+  name: 'NAVMC 118(11) (Page 11)',
+  description: 'Administrative Remarks for service record entries.',
+  icon: '🗂️',
+  schema: Page11Schema,
+  sections: [
+    {
+      id: 'header',
+      title: 'Page 11 Details',
+      fields: [
+        {
+          name: 'name',
+          label: 'Name (LAST, FIRST MI)',
+          type: 'text',
+          placeholder: 'DOE, JOHN A',
+          required: true,
+          className: 'col-span-full'
+        },
+        {
+          name: 'edipi',
+          label: 'DOD ID / EDIPI',
+          type: 'text',
+          placeholder: '1234567890',
+          required: true,
+          className: 'md:col-span-1'
+        }
+      ]
+    },
+    {
+      id: 'remarks',
+      title: 'Remarks',
+      fields: [
+        {
+          name: 'remarksLeft',
+          label: 'Left Column Content',
+          type: 'textarea',
+          placeholder: 'Enter dates or entry headers...',
+          className: 'md:col-span-1 font-mono',
+          rows: 20
+        },
+        {
+          name: 'remarksRight',
+          label: 'Right Column Content',
+          type: 'textarea',
+          placeholder: 'Enter remarks text...',
+          className: 'md:col-span-1 font-mono',
+          rows: 20
+        }
+      ]
+    }
+  ]
+};
+
 // Registry of all document types
 export const DOCUMENT_TYPES: Record<string, DocumentTypeDefinition> = {
   basic: BasicLetterDefinition,
   endorsement: EndorsementDefinition,
   'aa-form': AAFormDefinition,
   mco: MCODefinition,
-  bulletin: BulletinDefinition
+  bulletin: BulletinDefinition,
+  page11: Page11Definition
 };

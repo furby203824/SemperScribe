@@ -302,21 +302,23 @@ export function HeaderActions({
             )}
           </Button>
         )}
-        <Button 
-            variant="outline" 
-            size="sm"
-            className={cn(
-              "hidden sm:flex",
-              className 
-                ? "bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-white/10 hover:text-primary-foreground" 
-                : ""
-            )}
-            onClick={onExportDocx}
-            disabled={isGenerating}
-        >
-            <FileText className={cn("mr-2 w-4 h-4", className ? "text-primary-foreground" : "text-primary")} />
-            Export .docx
-        </Button>
+        {documentType !== 'page11' && (
+          <Button 
+              variant="outline" 
+              size="sm"
+              className={cn(
+                "hidden sm:flex",
+                className 
+                  ? "bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-white/10 hover:text-primary-foreground" 
+                  : ""
+              )}
+              onClick={onExportDocx}
+              disabled={isGenerating}
+          >
+              <FileText className={cn("mr-2 w-4 h-4", className ? "text-primary-foreground" : "text-primary")} />
+              Export .docx
+          </Button>
+        )}
         <Button 
             size="sm"
             className="text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm shadow-primary/20 border border-primary-foreground/10"

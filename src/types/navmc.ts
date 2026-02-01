@@ -20,6 +20,15 @@ export interface Navmc10274Data {
   isDraft?: boolean;
 }
 
+export interface Navmc11811Data {
+  name: string;
+  edipi: string;
+  remarksLeft?: string;
+  remarksRight?: string;
+  // Fallback for single remarks string if needed, but prefer left/right split
+  remarks?: string;
+}
+
 export interface BoxBoundary {
   left: number;
   top: number;
