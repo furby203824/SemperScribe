@@ -1,4 +1,4 @@
-# Naval Letter Generator
+# Semper Scribe
 
 This is a Next.js application that helps users generate properly formatted Naval letters according to official standards (SECNAV M-5216.5).
 
