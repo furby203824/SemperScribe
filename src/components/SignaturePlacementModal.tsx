@@ -11,7 +11,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Move } from "lucide-react";
+import { ChevronLeft, ChevronRight, Move, Download } from "lucide-react";
 
 // Dynamically import react-pdf to avoid SSR issues
 const Document = dynamic(() => import("react-pdf").then((mod) => mod.Document), { ssr: false });
@@ -301,7 +301,8 @@ export function SignaturePlacementModal({
             onClick={handleConfirm}
             disabled={!rect || rect.width < 10 || rect.height < 10}
           >
-            Confirm Placement
+            <Download className="mr-2 h-4 w-4" />
+            Save & Download PDF
           </Button>
         </DialogFooter>
       </DialogContent>
