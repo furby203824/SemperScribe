@@ -828,6 +828,31 @@ function NavalLetterGeneratorInner() {
           </CardHeader>
 
           <CardContent className="space-y-6 pt-6">
+            {/* Endorsement Level Selector */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Endorsement Level <span className="text-destructive">*</span></Label>
+              <Select
+                value={formData.endorsementLevel}
+                onValueChange={(val) => setFormData(prev => ({ ...prev, endorsementLevel: val as any }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select endorsement level..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="FIRST">FIRST ENDORSEMENT</SelectItem>
+                  <SelectItem value="SECOND">SECOND ENDORSEMENT</SelectItem>
+                  <SelectItem value="THIRD">THIRD ENDORSEMENT</SelectItem>
+                  <SelectItem value="FOURTH">FOURTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="FIFTH">FIFTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="SIXTH">SIXTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="SEVENTH">SEVENTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="EIGHTH">EIGHTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="NINTH">NINTH ENDORSEMENT</SelectItem>
+                  <SelectItem value="TENTH">TENTH ENDORSEMENT</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Basic Letter Reference Builder */}
             {formData.endorsementLevel && (
               <div className="space-y-4">
