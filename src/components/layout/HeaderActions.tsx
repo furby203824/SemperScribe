@@ -1,17 +1,19 @@
 import React, { useRef } from 'react';
-import { 
-  FileText, 
-  Download, 
-  Save, 
-  FolderOpen, 
-  Upload, 
-  Trash2, 
+import {
+  FileText,
+  Download,
+  Save,
+  FolderOpen,
+  Upload,
+  Trash2,
   File,
   ChevronDown,
   Search,
   LayoutTemplate,
   Eye,
-  EyeOff
+  EyeOff,
+  Link2,
+  Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -55,8 +57,10 @@ interface HeaderActionsProps {
   currentUnitName?: string;
   isGenerating?: boolean;
   onExportNldp?: () => void;
+  onShareLink?: () => void;
   showPreview?: boolean;
   onTogglePreview?: () => void;
+  onOpenPreviewModal?: () => void;
   className?: string;
   // AMHS Actions
   onCopyAMHS?: () => void;
@@ -77,8 +81,10 @@ export function HeaderActions({
   currentUnitName,
   isGenerating,
   onExportNldp,
+  onShareLink,
   showPreview,
   onTogglePreview,
+  onOpenPreviewModal,
   className,
   onCopyAMHS,
   onExportAMHS
@@ -268,6 +274,16 @@ export function HeaderActions({
             Export Data Package (.nldp)
           </DropdownMenuItem>
 
+          {onShareLink && (
+            <>
+              <DropdownMenuSeparator className="bg-border" />
+              <DropdownMenuItem onClick={onShareLink} className="cursor-pointer focus:bg-accent focus:text-accent-foreground">
+                <Link2 className="w-4 h-4 mr-2" />
+                Copy Share Link
+              </DropdownMenuItem>
+            </>
+          )}
+
           {/* Hidden File Input */}
           <input
             type="file"
@@ -287,13 +303,33 @@ export function HeaderActions({
       </DropdownMenu>
 
       {/* Export/Generate Buttons */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1 sm:space-x-2">
+        {/* Mobile Preview Button - opens modal (shows below xl breakpoint) */}
+        {onOpenPreviewModal && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onOpenPreviewModal}
+            className={cn(
+              "xl:hidden flex",
+              className
+                ? "bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-white/10 hover:text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+            title="Show Preview"
+          >
+            <Eye className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Preview</span>
+          </Button>
+        )}
+
+        {/* Desktop Preview Toggle - shows/hides side panel (shows on xl and above) */}
         {onTogglePreview && (
           <Button
             variant="ghost"
             size="sm"
             onClick={onTogglePreview}
-            className={buttonClass("hidden lg:flex")}
+            className={buttonClass("hidden xl:flex")}
             title={showPreview ? "Hide Preview" : "Show Preview"}
           >
             {showPreview ? (

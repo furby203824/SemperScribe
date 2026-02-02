@@ -239,7 +239,12 @@ export const MCOSchema = BasicLetterSchema.extend({
     copyTo: z.array(z.object({
         code: z.string(),
         qty: z.number()
-    })).optional()
+    })).optional(),
+    // Distribution Statement fields (per DoD 5230.24)
+    statementCode: z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'X', '']).optional(),
+    statementReason: z.string().optional(),
+    statementDate: z.string().optional(),
+    statementAuthority: z.string().optional(),
   }).optional(),
 });
 
@@ -384,7 +389,7 @@ export const AMHSSchema = z.object({
   amhsMessageType: z.enum(['GENADMIN', 'MARADMIN', 'ALMAR']),
   amhsClassification: z.enum(['UNCLASSIFIED', 'CONFIDENTIAL', 'SECRET', 'TOP SECRET']),
   amhsPrecedence: z.enum(['ROUTINE', 'PRIORITY', 'IMMEDIATE', 'FLASH']),
-  amhsDtg: z.string().min(1, "DTG is required"),
+  amhsDtg: z.string().optional(), // Auto-generated, handled separately
   amhsOfficeCode: z.string().optional(),
   originatorCode: z.string().min(1, "Originator (FROM) is required"), // Reusing originatorCode for "FROM" field
   subj: z.string().min(1, "Subject is required"),
@@ -446,14 +451,6 @@ export const AMHSDefinition: DocumentTypeDefinition = {
       id: 'header',
       title: 'Message Header',
       fields: [
-        {
-          name: 'amhsDtg',
-          label: 'Date-Time Group (DTG)',
-          type: 'text',
-          placeholder: 'DDHHMMZMMMYY',
-          required: true,
-          className: 'md:col-span-1'
-        },
         {
           name: 'amhsOfficeCode',
           label: 'Office Code (Optional)',

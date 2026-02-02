@@ -16,27 +16,43 @@ export function POCManager({ pocs, onChange }: POCManagerProps) {
   const [rank, setRank] = useState('');
   const [unit, setUnit] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
 
   const addPOC = () => {
-    if (!name || !phone) return; // Basic validation
+    if (!name) return; // At minimum need a name
 
-    // Format: NAME/RANK/UNIT/TEL: NUMBER
-    // We filter out empty fields to avoid extra slashes if e.g. Unit is missing
-    const parts = [
-      name.toUpperCase(),
-      rank.toUpperCase(),
-      unit.toUpperCase(),
-      phone.toUpperCase().startsWith('TEL:') ? phone.toUpperCase() : `TEL: ${phone.toUpperCase()}`
-    ].filter(p => p && p.trim().length > 0);
+    // Format: NAME/RANK/UNIT/TEL: NUMBER/EMAIL: ADDRESS
+    // We filter out empty fields to avoid extra slashes
+    const parts: string[] = [];
 
-    const pocString = parts.join('/');
+    if (name.trim()) parts.push(name.toUpperCase());
+    if (rank.trim()) parts.push(rank.toUpperCase());
+    if (unit.trim()) parts.push(unit.toUpperCase());
+    if (phone.trim()) {
+      parts.push(phone.toUpperCase().startsWith('TEL:') ? phone.toUpperCase() : `TEL: ${phone.toUpperCase()}`);
+    }
+
+    // Build POC string
+    let pocString = parts.join('/');
+
+    // Handle email - may need to wrap to next line if too long (per legacy behavior)
+    if (email.trim()) {
+      const emailPart = email.toUpperCase().startsWith('EMAIL:') ? email.toUpperCase() : `EMAIL: ${email.toUpperCase()}`;
+      if ((pocString + '/' + emailPart).length > 65) {
+        pocString += '\n' + emailPart;
+      } else {
+        pocString += '/' + emailPart;
+      }
+    }
+
     onChange([...pocs, pocString]);
-    
+
     // Reset form
     setName('');
     setRank('');
     setUnit('');
     setPhone('');
+    setEmail('');
   };
 
   const removePOC = (index: number) => {
@@ -52,45 +68,58 @@ export function POCManager({ pocs, onChange }: POCManagerProps) {
       <CardContent className="space-y-6">
         
         {/* Input Form */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 border rounded-lg bg-muted/20">
-          <div className="md:col-span-3 space-y-2">
-            <Label htmlFor="poc-rank" className="text-xs">Rank/Grade</Label>
-            <Input
-              id="poc-rank"
-              placeholder="CAPT"
-              value={rank}
-              onChange={(e) => setRank(e.target.value)}
-            />
-          </div>
-          <div className="md:col-span-3 space-y-2">
-            <Label htmlFor="poc-name" className="text-xs">Name</Label>
-            <Input
-              id="poc-name"
-              placeholder="J. M. DOE"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-          <div className="md:col-span-3 space-y-2">
-            <Label htmlFor="poc-unit" className="text-xs">Unit/Office</Label>
-            <Input
-              id="poc-unit"
-              placeholder="HQMC AR"
-              value={unit}
-              onChange={(e) => setUnit(e.target.value)}
-            />
-          </div>
-          <div className="md:col-span-3 space-y-2">
-            <Label htmlFor="poc-phone" className="text-xs">Phone/Email</Label>
-            <div className="flex gap-2">
+        <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="poc-rank" className="text-xs">Rank/Grade</Label>
+              <Input
+                id="poc-rank"
+                placeholder="MSGT"
+                value={rank}
+                onChange={(e) => setRank(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="poc-name" className="text-xs">Name (LAST, FIRST)</Label>
+              <Input
+                id="poc-name"
+                placeholder="MORALES, J. K."
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="poc-unit" className="text-xs">Unit/Office</Label>
+              <Input
+                id="poc-unit"
+                placeholder="MRA/MPE"
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="poc-phone" className="text-xs">Phone</Label>
               <Input
                 id="poc-phone"
-                placeholder="703-555-1234"
+                placeholder="(703)784-6164"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
-              <Button onClick={addPOC} size="icon" disabled={!name || !phone}>
-                <Plus className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="md:col-span-3 space-y-2">
+              <Label htmlFor="poc-email" className="text-xs">Email</Label>
+              <Input
+                id="poc-email"
+                placeholder="FIRSTNAME.LASTNAME@USMC.MIL"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="flex items-end">
+              <Button onClick={addPOC} className="w-full gap-2" disabled={!name}>
+                <UserPlus className="h-4 w-4" /> Add POC
               </Button>
             </div>
           </div>

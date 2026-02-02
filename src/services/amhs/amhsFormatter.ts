@@ -5,6 +5,51 @@ import { FormData, AMHSReference } from '@/types';
 export const AMHS_LINE_LIMIT = 69;
 
 /**
+ * Validation error structure
+ */
+export interface AMHSValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
+/**
+ * Validates an AMHS message before copy/export.
+ */
+export function validateAMHSMessage(data: FormData, references: AMHSReference[] = []): AMHSValidationResult {
+  const errors: string[] = [];
+
+  // Required field checks
+  if (!data.originatorCode?.trim() && !data.from?.trim()) {
+    errors.push('Originator (FROM) is required');
+  }
+
+  if (!data.subj?.trim()) {
+    errors.push('Subject is required');
+  }
+
+  if (!data.amhsTextBody?.trim()) {
+    errors.push('Message text is required');
+  }
+
+  if (!data.amhsDtg?.trim()) {
+    errors.push('Date-Time Group (DTG) is required');
+  }
+
+  // Reference validation
+  references.forEach((ref, idx) => {
+    const letter = String.fromCharCode(65 + idx);
+    if (ref.title && !ref.docId) {
+      errors.push(`Reference ${letter} has title but missing document identifier`);
+    }
+  });
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+/**
  * Generates the current Date-Time Group (DTG) in Zulu time.
  * Format: DDHHMMZMMMYY (e.g., 011230ZFEB26)
  */

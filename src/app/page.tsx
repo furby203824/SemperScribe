@@ -10,6 +10,7 @@ import { ViaSection } from '@/components/letter/ViaSection';
 import { ReferencesSection } from '@/components/letter/ReferencesSection';
 import { EnclosuresSection } from '@/components/letter/EnclosuresSection';
 import { ReportsSection } from '@/components/letter/ReportsSection';
+import { DistributionStatementSection } from '@/components/letter/DistributionStatementSection';
 import { DistributionSection } from '@/components/letter/DistributionSection';
 import { StructuredReferenceInput } from '@/components/letter/StructuredReferenceInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,8 +41,9 @@ import { DOCUMENT_TYPES } from '@/lib/schemas';
 import { AMHSEditor } from '@/components/amhs/AMHSEditor';
 import { AMHSPreview } from '@/components/amhs/AMHSPreview';
 import { LandingPage } from '@/components/layout/LandingPage';
-import { generateFullMessage } from '@/services/amhs/amhsFormatter';
+import { generateFullMessage, validateAMHSMessage } from '@/services/amhs/amhsFormatter';
 import { useToast } from '@/hooks/use-toast';
+import { generateShareableUrl, getStateFromUrl, clearShareParam, copyToClipboard, ShareableState } from '@/lib/url-state';
 
 // Inner component that uses useSearchParams (requires Suspense boundary)
 function NavalLetterGeneratorInner() {
@@ -67,6 +69,7 @@ function NavalLetterGeneratorInner() {
     previousPackagePageCount: 0,
     headerType: 'USMC',
     bodyFont: 'times',
+    directiveTitle: '',
     cancellationDate: '',
     cancellationType: 'fixed',
     distribution: { type: 'none' },
@@ -984,6 +987,7 @@ function NavalLetterGeneratorInner() {
             previousPackagePageCount: 0,
             headerType: 'USMC',
             bodyFont: 'times',
+            directiveTitle: '',
             cancellationDate: '',
             cancellationType: 'fixed',
             distribution: { type: 'none' },
@@ -1019,6 +1023,17 @@ function NavalLetterGeneratorInner() {
   };
 
   const handleCopyAMHS = () => {
+    // Validate before copying
+    const validation = validateAMHSMessage(formData, formData.amhsReferences || []);
+    if (!validation.isValid) {
+      toast({
+        title: "Validation Failed",
+        description: validation.errors.join('. '),
+        variant: "destructive"
+      });
+      return;
+    }
+
     const message = generateFullMessage(formData, formData.amhsReferences || [], formData.amhsPocs || []);
     navigator.clipboard.writeText(message);
     toast({
@@ -1028,16 +1043,27 @@ function NavalLetterGeneratorInner() {
   };
 
   const handleExportAMHS = () => {
+    // Validate before exporting
+    const validation = validateAMHSMessage(formData, formData.amhsReferences || []);
+    if (!validation.isValid) {
+      toast({
+        title: "Validation Failed",
+        description: validation.errors.join('. '),
+        variant: "destructive"
+      });
+      return;
+    }
+
     const message = generateFullMessage(formData, formData.amhsReferences || [], formData.amhsPocs || []);
     const blob = new Blob([message], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    
+
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const msgType = formData.amhsMessageType || 'MSG';
     a.download = `SEMPERADMIN_${msgType}_${dateStr}.txt`;
-    
+
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1082,6 +1108,82 @@ function NavalLetterGeneratorInner() {
     debugUserAction('Export Data', { format: 'nldp' });
   };
 
+  // Share Link Handler
+  const handleShareLink = async () => {
+    if (!formData.documentType) {
+      toast({
+        title: "No Document",
+        description: "Please select a document type first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const state: ShareableState = {
+      formData,
+      paragraphs,
+      references,
+      enclosures,
+      vias,
+      copyTos,
+      version: 1
+    };
+
+    const { url, isLong, error } = generateShareableUrl(state);
+
+    if (error && !url) {
+      toast({
+        title: "Failed to Generate Link",
+        description: error,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const success = await copyToClipboard(url);
+
+    if (success) {
+      toast({
+        title: "Link Copied!",
+        description: isLong
+          ? "Link copied. Note: This link is very long and may not work in all applications."
+          : "Share link copied to clipboard. Anyone with this link can view and edit the document.",
+      });
+    } else {
+      toast({
+        title: "Copy Failed",
+        description: "Could not copy to clipboard. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Load shared state from URL on mount
+  useEffect(() => {
+    const sharedState = getStateFromUrl();
+    if (sharedState) {
+      // Load the shared state into the form
+      setFormData(sharedState.formData);
+      if (sharedState.paragraphs) setParagraphs(sharedState.paragraphs);
+      if (sharedState.references) setReferences(sharedState.references);
+      if (sharedState.enclosures) setEnclosures(sharedState.enclosures);
+      if (sharedState.vias) setVias(sharedState.vias);
+      if (sharedState.copyTos) setCopyTos(sharedState.copyTos);
+
+      // Clear the share param from URL to keep it clean
+      clearShareParam();
+
+      // Show a toast notification
+      toast({
+        title: "Document Loaded",
+        description: "Shared document has been loaded. You can view and edit it.",
+      });
+
+      // Force form remount to pick up new values
+      setFormKey(prev => prev + 1);
+    }
+  }, []);
+
   return (
     <ModernAppShell
       documentType={formData.documentType}
@@ -1100,17 +1202,19 @@ function NavalLetterGeneratorInner() {
       currentUnitCode={currentUnitCode}
       currentUnitName={currentUnitName}
       onExportNldp={handleExportNldp}
+      onShareLink={handleShareLink}
       onUpdatePreview={handleUpdatePreview}
       onCopyAMHS={handleCopyAMHS}
       onExportAMHS={handleExportAMHS}
       customRightPanel={
         formData.documentType === 'amhs' ? (
-          <AMHSPreview 
-            formData={formData} 
-            references={formData.amhsReferences || []} 
+          <AMHSPreview
+            formData={formData}
+            references={formData.amhsReferences || []}
           />
         ) : undefined
       }
+      formData={formData}
     >
       {!formData.documentType ? (
         <LandingPage />
@@ -1337,42 +1441,70 @@ function NavalLetterGeneratorInner() {
         </Card>
       )}
 
-      {/* Dynamic Header Form based on Document Type - Hide for AMHS */}
-      {formData.documentType !== 'amhs' && (
-        <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6">
-          <DynamicForm 
-            key={`${formData.documentType}-${formKey}`} // Force re-render when type changes or data is imported
-            documentType={DOCUMENT_TYPES[formData.documentType] || DOCUMENT_TYPES['basic']}
-            onSubmit={handleDynamicFormSubmit}
-            defaultValues={formData}
-          />
-        </div>
+      {/* Dynamic Header Form based on Document Type */}
+      <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6">
+        <DynamicForm
+          key={`${formData.documentType}-${formKey}`} // Force re-render when type changes or data is imported
+          documentType={DOCUMENT_TYPES[formData.documentType] || DOCUMENT_TYPES['basic']}
+          onSubmit={handleDynamicFormSubmit}
+          defaultValues={formData}
+        />
+      </div>
+
+      {/* Directive Title Input for MCO/Bulletin */}
+      {(formData.documentType === 'mco' || formData.documentType === 'bulletin') && (
+        <Card className="shadow-sm border-border mb-6 border-l-4 border-l-amber-500">
+          <CardHeader className="pb-3 bg-secondary text-secondary-foreground rounded-t-lg">
+            <CardTitle className="text-lg font-semibold font-headline tracking-wide">
+              Directive Title
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">
+                Full Directive Title <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                type="text"
+                value={formData.directiveTitle || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, directiveTitle: e.target.value }))}
+                placeholder="e.g., MARINE CORPS ORDER 5210.11F"
+                className="font-mono"
+              />
+              <p className="text-xs text-muted-foreground">
+                This title will appear underlined between the date and From line. Examples: MCO 5210.11F, NAVMC DIR 5000.1, MCBul 1020
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Legacy Sections wrapped to fit layout - Hide for Page 11 */}
-      {formData.documentType !== 'page11' && (
-        <>
-          <ViaSection vias={vias} setVias={setVias} />
-          <ReferencesSection 
-            references={references} 
-            setReferences={setReferences} 
-            formData={formData}
-            setFormData={setFormData}
-          />
-          <EnclosuresSection 
-            enclosures={enclosures} 
-            setEnclosures={setEnclosures} 
-            formData={formData}
-            setFormData={setFormData}
-          />
-        </>
-      )}
+      {/* Legacy Sections wrapped to fit layout */}
+      <ViaSection vias={vias} setVias={setVias} />
+      <ReferencesSection 
+        references={references} 
+        setReferences={setReferences} 
+        formData={formData}
+        setFormData={setFormData}
+      />
+      <EnclosuresSection 
+        enclosures={enclosures} 
+        setEnclosures={setEnclosures} 
+        formData={formData}
+        setFormData={setFormData}
+      />
 
       {(formData.documentType === 'mco' || formData.documentType === 'bulletin') && (
-        <ReportsSection 
-          reports={formData.reports || []}
-          onUpdateReports={(reports) => setFormData(prev => ({ ...prev, reports }))}
-        />
+        <>
+          <DistributionStatementSection
+            distribution={formData.distribution || { type: 'none' }}
+            onUpdateDistribution={(distribution) => setFormData(prev => ({ ...prev, distribution }))}
+          />
+          <ReportsSection
+            reports={formData.reports || []}
+            onUpdateReports={(reports) => setFormData(prev => ({ ...prev, reports }))}
+          />
+        </>
       )}
 
       {formData.documentType !== 'page11' && (

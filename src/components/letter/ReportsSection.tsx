@@ -76,23 +76,21 @@ export function ReportsSection({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center space-x-4 mb-4">
-          <div className="flex items-center space-x-2">
-            <RadioGroup 
-              value={showReports ? "yes" : "no"} 
-              onValueChange={(val) => handleToggleReports(val === "yes")}
-              className="flex items-center space-x-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="reports-yes" />
-                <Label htmlFor="reports-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="reports-no" />
-                <Label htmlFor="reports-no">No</Label>
-              </div>
-            </RadioGroup>
-          </div>
+        <div className="flex gap-6 pt-2">
+          <RadioGroup
+            value={showReports ? "yes" : "no"}
+            onValueChange={(val) => handleToggleReports(val === "yes")}
+            className="flex flex-row gap-6"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="yes" id="reports-yes" />
+              <Label htmlFor="reports-yes" className="cursor-pointer">Yes</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="no" id="reports-no" />
+              <Label htmlFor="reports-no" className="cursor-pointer">No</Label>
+            </div>
+          </RadioGroup>
         </div>
 
         {showReports && (

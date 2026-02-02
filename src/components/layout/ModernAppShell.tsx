@@ -2,7 +2,8 @@ import React from 'react';
 import { Sidebar } from './Sidebar';
 import { LivePreview } from './LivePreview';
 import { HeaderActions } from './HeaderActions';
-import { ParagraphData, SavedLetter } from '@/types';
+import { PreviewModal } from './PreviewModal';
+import { ParagraphData, SavedLetter, FormData } from '@/types';
 import { getBasePath } from '@/lib/path-utils';
 
 interface ModernAppShellProps {
@@ -29,11 +30,15 @@ interface ModernAppShellProps {
   // AMHS Actions
   onCopyAMHS?: () => void;
   onExportAMHS?: () => void;
+  // Share link
+  onShareLink?: () => void;
+  // For mobile preview modal
+  formData?: FormData;
 }
 
-export function ModernAppShell({ 
-  children, 
-  documentType, 
+export function ModernAppShell({
+  children,
+  documentType,
   onDocumentTypeChange,
   previewUrl,
   isGeneratingPreview,
@@ -53,8 +58,11 @@ export function ModernAppShell({
   customRightPanel,
   onCopyAMHS,
   onExportAMHS,
+  onShareLink,
+  formData,
 }: ModernAppShellProps) {
   const [showPreview, setShowPreview] = React.useState(true);
+  const [showPreviewModal, setShowPreviewModal] = React.useState(false);
   const [logoSrc, setLogoSrc] = React.useState('/logo.png');
 
   React.useEffect(() => {
@@ -114,8 +122,10 @@ export function ModernAppShell({
             currentUnitName={currentUnitName}
             isGenerating={isGeneratingPreview}
             onExportNldp={onExportNldp}
+            onShareLink={documentType ? onShareLink : undefined}
             showPreview={showPreview}
             onTogglePreview={() => setShowPreview(!showPreview)}
+            onOpenPreviewModal={documentType ? () => setShowPreviewModal(true) : undefined}
             onCopyAMHS={onCopyAMHS}
             onExportAMHS={onExportAMHS}
           />
@@ -142,7 +152,7 @@ export function ModernAppShell({
           customRightPanel ? (
             customRightPanel
           ) : (
-            <LivePreview 
+            <LivePreview
               previewUrl={previewUrl}
               isLoading={isGeneratingPreview}
               onUpdatePreview={onUpdatePreview}
@@ -150,6 +160,18 @@ export function ModernAppShell({
           )
         )}
       </div>
+
+      {/* Mobile Preview Modal */}
+      <PreviewModal
+        open={showPreviewModal}
+        onOpenChange={setShowPreviewModal}
+        documentType={documentType}
+        formData={formData}
+        amhsReferences={formData?.amhsReferences}
+        previewUrl={previewUrl}
+        isLoading={isGeneratingPreview}
+        onUpdatePreview={onUpdatePreview}
+      />
     </div>
   );
 }

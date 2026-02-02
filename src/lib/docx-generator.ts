@@ -161,7 +161,22 @@ export async function generateDocxBlob(
     // Add hard return/space after endorsement line before "From:"
     endorsementParagraphs.push(createEmptyLine(font));
   }
-  
+
+  // --- Directive Title Line (between date and From for MCO/Bulletin) ---
+  const directiveTitleParagraphs: Paragraph[] = [];
+  if (isDirective && formData.directiveTitle) {
+    directiveTitleParagraphs.push(new Paragraph({
+      children: [new TextRun({
+        text: formData.directiveTitle,
+        font,
+        size: FONT_SIZE_BODY,
+        underline: { type: UnderlineType.SINGLE }
+      })],
+      alignment: AlignmentType.LEFT,
+      spacing: { after: 240 }
+    }));
+  }
+
   // --- From/To/Via ---
   const addressParagraphs: Paragraph[] = [];
   
@@ -614,6 +629,7 @@ export async function generateDocxBlob(
         ...ssicParagraphs,
         createEmptyLine(font),
         ...endorsementParagraphs,
+        ...directiveTitleParagraphs,
         ...addressParagraphs,
         ...refParagraphs,
         ...enclParagraphs,
