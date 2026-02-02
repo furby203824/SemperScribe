@@ -129,14 +129,19 @@ export function DocumentTypeSection({
             <DocumentTypeCard
               type="mco"
               icon={<ScrollText className="w-10 h-10" />}
-              title="Marine Corps Order"
-              description="Permanent directives that establish policy or procedures."
+              title="Order / Directive"
+              description="Directives that establish policy or procedures (e.g. MCO, BnO)."
               note="→ For standing orders"
               isActive={formData.documentType === 'mco'}
               onClick={() => {
-                setFormData(prev => ({ ...prev, documentType: 'mco', to: prev.to || 'Distribution List' }));
+                setFormData(prev => ({ 
+                  ...prev, 
+                  documentType: 'mco', 
+                  to: prev.to || 'Distribution List',
+                  orderPrefix: prev.orderPrefix || 'MCO' 
+                }));
                 if (setParagraphs && formData.documentType !== 'mco') {
-                  if (window.confirm('Do you want to load the standard SMEAC structure for this Marine Corps Order? Existing paragraphs will be replaced.')) {
+                  if (window.confirm('Do you want to load the standard SMEAC structure for this Order? Existing paragraphs will be replaced.')) {
                     setParagraphs(getMCOParagraphs());
                   }
                 }
@@ -160,6 +165,81 @@ export function DocumentTypeSection({
               }}
             />
           </div>
+
+          {/* MCO Specific Inputs */}
+          {formData.documentType === 'mco' && (
+            <div className="mt-6 p-4 bg-muted/30 rounded-lg border border-border animate-in fade-in slide-in-from-top-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="orderPrefix" className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    Directive Prefix / Short Title
+                  </Label>
+                  <Input
+                    id="orderPrefix"
+                    value={formData.orderPrefix || 'MCO'}
+                    onChange={(e) => setFormData(prev => ({ ...prev, orderPrefix: e.target.value.toUpperCase() }))}
+                    placeholder="e.g. MCO, BnO, RegO, DivO"
+                    className="max-w-xs font-mono"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Determines the export filename (e.g., <strong>{formData.orderPrefix || 'MCO'} {formData.ssic || 'XXXX.X'}</strong>)
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Bulletin Specific Inputs */}
+          {formData.documentType === 'bulletin' && (
+            <div className="mt-6 p-4 bg-muted/30 rounded-lg border border-border animate-in fade-in slide-in-from-top-2">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    Cancellation
+                  </Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                       <Label htmlFor="cancellationType" className="text-xs">Type</Label>
+                       <Select 
+                        value={formData.cancellationType || 'fixed'} 
+                        onValueChange={(val: 'fixed' | 'contingent') => setFormData(prev => ({ ...prev, cancellationType: val }))}
+                       >
+                        <SelectTrigger id="cancellationType">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fixed">Fixed Date</SelectItem>
+                          <SelectItem value="contingent">Contingency</SelectItem>
+                        </SelectContent>
+                       </Select>
+                    </div>
+                    
+                    {formData.cancellationType === 'fixed' ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="cancellationDate" className="text-xs">Cancellation Date</Label>
+                        <Input
+                          id="cancellationDate"
+                          type="date"
+                          value={formData.cancellationDate || ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, cancellationDate: e.target.value }))}
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label htmlFor="cancellationContingency" className="text-xs">Contingency Condition</Label>
+                        <Input
+                          id="cancellationContingency"
+                          value={formData.cancellationContingency || ''}
+                          placeholder="e.g. Upon receipt"
+                          onChange={(e) => setFormData(prev => ({ ...prev, cancellationContingency: e.target.value }))}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Forms Section */}

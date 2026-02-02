@@ -121,10 +121,20 @@ export async function generateDocxBlob(
 
   // --- SSIC Block ---
   const ssicBlock = [];
-  if (formData.documentType === 'bulletin' && formData.cancellationDate) {
-    ssicBlock.push(`Canc: ${formatCancellationDate(formData.cancellationDate)}`);
+  if (formData.documentType === 'bulletin') {
+    if (formData.cancellationType === 'contingent' && formData.cancellationContingency) {
+       ssicBlock.push(`Canc: ${formData.cancellationContingency}`);
+    } else if (formData.cancellationDate) {
+       ssicBlock.push(`Canc: ${formatCancellationDate(formData.cancellationDate)}`);
+    }
   }
-  if (formData.ssic) ssicBlock.push(formData.ssic);
+  
+  if (formData.documentType === 'mco' && formData.orderPrefix) {
+    ssicBlock.push(`${formData.orderPrefix} ${formData.ssic}`);
+  } else {
+    if (formData.ssic) ssicBlock.push(formData.ssic);
+  }
+
   if (formData.originatorCode) ssicBlock.push(formData.originatorCode);
   ssicBlock.push(formData.date || 'Date Placeholder');
 
@@ -148,6 +158,8 @@ export async function generateDocxBlob(
       alignment: AlignmentType.LEFT,
       spacing: { after: 0 }
     }));
+    // Add hard return/space after endorsement line before "From:"
+    endorsementParagraphs.push(createEmptyLine(font));
   }
   
   // --- From/To/Via ---
@@ -333,7 +345,10 @@ export async function generateDocxBlob(
 
   // --- Reports Required (Directives) ---
   const reportsParagraphs: Paragraph[] = [];
-  if (isDirective && formData.reports && formData.reports.length > 0) {
+  // Only add if not already present in paragraphs (avoid duplication with merged admin subsections)
+  const hasReportsParagraph = paragraphs.some(p => p.content.includes('Reports Required'));
+  
+  if (isDirective && formData.reports && formData.reports.length > 0 && !hasReportsParagraph) {
     reportsParagraphs.push(createEmptyLine(font));
     reportsParagraphs.push(new Paragraph({
         children: [new TextRun({ text: "REPORTS REQUIRED:", font, size: FONT_SIZE_BODY })],

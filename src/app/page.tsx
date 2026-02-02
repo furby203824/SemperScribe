@@ -10,6 +10,7 @@ import { ViaSection } from '@/components/letter/ViaSection';
 import { ReferencesSection } from '@/components/letter/ReferencesSection';
 import { EnclosuresSection } from '@/components/letter/EnclosuresSection';
 import { ReportsSection } from '@/components/letter/ReportsSection';
+import { DistributionSection } from '@/components/letter/DistributionSection';
 import { StructuredReferenceInput } from '@/components/letter/StructuredReferenceInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -18,7 +19,7 @@ import { FileSignature } from 'lucide-react';
 import { useEDMSContext, isEditMode } from '@/hooks/useEDMSContext';
 import { UNITS } from '@/lib/units';
 import { getTodaysDate } from '@/lib/date-utils';
-import { getMCOParagraphs, getMCBulParagraphs } from '@/lib/naval-format-utils';
+import { getMCOParagraphs, getMCBulParagraphs, getExportFilename, mergeAdminSubsections } from '@/lib/naval-format-utils';
 import { validateSSIC, validateSubject, validateFromTo } from '@/lib/validation-utils';
 import { loadSavedLetters, saveLetterToStorage, findLetterById } from '@/lib/storage-utils';
 import { generateBasePDFBlob, generatePDFBlob, getPDFPageCount, addMultipleSignaturesToBlob, ManualSignaturePosition } from '@/lib/pdf-generator';
@@ -39,6 +40,8 @@ import { DOCUMENT_TYPES } from '@/lib/schemas';
 import { AMHSEditor } from '@/components/amhs/AMHSEditor';
 import { AMHSPreview } from '@/components/amhs/AMHSPreview';
 import { LandingPage } from '@/components/layout/LandingPage';
+import { generateFullMessage } from '@/services/amhs/amhsFormatter';
+import { useToast } from '@/hooks/use-toast';
 
 // Inner component that uses useSearchParams (requires Suspense boundary)
 function NavalLetterGeneratorInner() {
@@ -46,6 +49,8 @@ function NavalLetterGeneratorInner() {
   useEffect(() => {
     configureConsole();
   }, []);
+
+  const { toast } = useToast();
 
   const [formData, setFormData] = useState<FormData>({
     documentType: '',
@@ -66,6 +71,11 @@ function NavalLetterGeneratorInner() {
     cancellationType: 'fixed',
     distribution: { type: 'none' },
     reports: [],
+    adminSubsections: {
+      recordsManagement: { show: false, content: '', order: 0 },
+      privacyAct: { show: false, content: '', order: 0 },
+      reportsRequired: { show: false, content: 'None.', order: 0 }
+    },
     actionNo: '',
     orgStation: '',
     name: '',
@@ -227,6 +237,38 @@ function NavalLetterGeneratorInner() {
     }
   }, [formData.documentType, formData.cancellationType, paragraphs]);
 
+  // Sync Reports to Admin Subsections
+  useEffect(() => {
+    if (formData.documentType === 'mco' || formData.documentType === 'order') {
+      let content = 'None.';
+      const validReports = formData.reports?.filter(r => r.title) || [];
+      
+      if (validReports.length > 0) {
+        const reportTexts = validReports.map(r => {
+          if (r.exempt) {
+            return `${r.title} is exempt from reports control.`;
+          }
+          return `${r.title} (Report Control Symbol ${r.controlSymbol || 'TBD'})`;
+        });
+        content = reportTexts.join(' ');
+      }
+
+      // Only update if content changed to avoid infinite loop
+      if (formData.adminSubsections?.reportsRequired?.content !== content) {
+         setFormData(prev => ({
+            ...prev,
+            adminSubsections: {
+                ...prev.adminSubsections!,
+                reportsRequired: {
+                    ...prev.adminSubsections!.reportsRequired,
+                    content
+                }
+            }
+         }));
+      }
+    }
+  }, [formData.reports, formData.documentType]);
+
   // Manual Preview Generation
   const handleUpdatePreview = useCallback(async () => {
     setIsGeneratingPreview(true);
@@ -272,13 +314,16 @@ function NavalLetterGeneratorInner() {
             return;
         }
 
+        // Merge Admin Subsections for preview
+        const paragraphsToRender = mergeAdminSubsections(paragraphs, formData.adminSubsections);
+
         blob = await generateBasePDFBlob(
           formData,
           vias,
           references,
           enclosures,
           copyTos,
-          paragraphs
+          paragraphsToRender
         );
       }
 
@@ -310,6 +355,27 @@ function NavalLetterGeneratorInner() {
 
   const handleValidateFromTo = (value: string, field: 'from' | 'to') => {
     setValidation(prev => ({ ...prev, [field]: validateFromTo(value) }));
+  };
+
+  const handleUpdateAdminSubsection = (key: keyof AdminSubsections, field: 'show' | 'content' | 'order', value: any) => {
+    setFormData(prev => {
+        const currentSubsections = prev.adminSubsections || {
+            recordsManagement: { show: false, content: '', order: 0 },
+            privacyAct: { show: false, content: '', order: 0 },
+            reportsRequired: { show: false, content: 'None.', order: 0 }
+        };
+        
+        return {
+            ...prev,
+            adminSubsections: {
+                ...currentSubsections,
+                [key]: {
+                    ...currentSubsections[key],
+                    [field]: value
+                }
+            }
+        };
+    });
   };
 
   const handleDocumentTypeChange = (newType: string) => {
@@ -599,18 +665,21 @@ function NavalLetterGeneratorInner() {
 
   const downloadPDF = async (formData: FormData, vias: string[], references: string[], enclosures: string[], copyTos: string[], paragraphs: ParagraphData[], withSignature?: ManualSignaturePosition) => {
     try {
+      // Merge Admin Subsections for export
+      const paragraphsToRender = mergeAdminSubsections(paragraphs, formData.adminSubsections);
+
       let blob: Blob;
       if (withSignature) {
         // Generate PDF with signature field at specified position
-        blob = await generatePDFBlob(formData, vias, references, enclosures, copyTos, paragraphs, withSignature);
+        blob = await generatePDFBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender, withSignature);
       } else {
         // Generate base PDF without signature field
-        blob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphs);
+        blob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender);
       }
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Naval_Letter_${formData.ssic || 'Draft'}.pdf`;
+      link.download = getExportFilename(formData, 'pdf');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -626,8 +695,8 @@ function NavalLetterGeneratorInner() {
     try {
       let blob: Blob;
 
-      // Generate appropriate PDF based on document type
       if (formData.documentType === 'aa-form') {
+        // ... (AA Form logic remains same)
         // Generate AA Form PDF
         const aaFormData = {
           actionNo: formData.actionNo || '',
@@ -648,6 +717,7 @@ function NavalLetterGeneratorInner() {
         const pdfBytes = await generateNavmc10274(aaFormData);
         blob = new Blob([pdfBytes], { type: 'application/pdf' });
       } else if (formData.documentType === 'page11') {
+        // ... (Page 11 logic remains same)
         const navmcData: Navmc11811Data = {
           name: formData.name || '',
           edipi: formData.edipi || '',
@@ -658,7 +728,9 @@ function NavalLetterGeneratorInner() {
         blob = new Blob([pdfBytes], { type: 'application/pdf' });
       } else {
         // Generate standard letter PDF
-        blob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphs);
+        // Merge Admin Subsections
+        const paragraphsToRender = mergeAdminSubsections(paragraphs, formData.adminSubsections);
+        blob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender);
       }
 
       const pageCount = await getPDFPageCount(blob);
@@ -679,7 +751,7 @@ function NavalLetterGeneratorInner() {
 
       // Generate appropriate PDF based on document type
       if (formData.documentType === 'aa-form') {
-        // Generate AA Form PDF
+         // ... AA Form logic
         const aaFormData = {
           actionNo: formData.actionNo || '',
           ssic: formData.ssic || '',
@@ -699,6 +771,7 @@ function NavalLetterGeneratorInner() {
         const pdfBytes = await generateNavmc10274(aaFormData);
         baseBlob = new Blob([pdfBytes], { type: 'application/pdf' });
       } else if (formData.documentType === 'page11') {
+        // ... Page 11 logic
         const navmcData: Navmc11811Data = {
           name: formData.name || '',
           edipi: formData.edipi || '',
@@ -709,7 +782,9 @@ function NavalLetterGeneratorInner() {
         baseBlob = new Blob([pdfBytes], { type: 'application/pdf' });
       } else {
         // Generate standard letter PDF
-        baseBlob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphs);
+        // Merge Admin Subsections
+        const paragraphsToRender = mergeAdminSubsections(paragraphs, formData.adminSubsections);
+        baseBlob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender);
       }
 
       // Convert SignaturePositions to ManualSignaturePositions
@@ -725,16 +800,7 @@ function NavalLetterGeneratorInner() {
       const signedBlob = await addMultipleSignaturesToBlob(baseBlob, manualPositions);
 
       // Download the PDF
-      let filename: string;
-      if (formData.documentType === 'aa-form') {
-        filename = `NAVMC_10274_${formData.ssic || 'AA_Form'}.pdf`;
-      } else if (formData.documentType === 'page11') {
-        filename = `NAVMC_118(11)_${formData.name?.replace(/\s+/g, '_') || 'Page11'}.pdf`;
-      } else if (formData.documentType === 'endorsement') {
-        filename = `${formData.endorsementLevel}_ENDORSEMENT_on_${formData.subj || 'letter'}_Page${formData.startingPageNumber}.pdf`;
-      } else {
-        filename = `${formData.subj || 'NavalLetter'}.pdf`;
-      }
+      const filename = getExportFilename(formData, 'pdf');
 
       const url = window.URL.createObjectURL(signedBlob);
       const link = document.createElement('a');
@@ -785,7 +851,7 @@ function NavalLetterGeneratorInner() {
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
-          link.download = `NAVMC_10274_${formData.ssic || 'AA_Form'}.pdf`;
+          link.download = getExportFilename(formData, 'pdf');
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
@@ -822,11 +888,16 @@ function NavalLetterGeneratorInner() {
       }
     } else {
        try {
-         const blob = await generateDocxBlob(formData, vias, references, enclosures, copyTos, paragraphs);
+         // Merge Admin Subsections for MCOs/Orders
+         const paragraphsToRender = (formData.documentType === 'mco' || formData.documentType === 'order')
+            ? mergeAdminSubsections(paragraphs, formData.adminSubsections)
+            : paragraphs;
+
+         const blob = await generateDocxBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender);
          const url = window.URL.createObjectURL(blob);
          const link = document.createElement('a');
          link.href = url;
-         link.download = `Naval_Letter_${formData.ssic || 'Draft'}.docx`;
+         link.download = getExportFilename(formData, 'docx');
          document.body.appendChild(link);
          link.click();
          document.body.removeChild(link);
@@ -947,6 +1018,32 @@ function NavalLetterGeneratorInner() {
       }
   };
 
+  const handleCopyAMHS = () => {
+    const message = generateFullMessage(formData, formData.amhsReferences || [], formData.amhsPocs || []);
+    navigator.clipboard.writeText(message);
+    toast({
+      title: "Copied to Clipboard",
+      description: "Message text is ready to paste into AMHS.",
+    });
+  };
+
+  const handleExportAMHS = () => {
+    const message = generateFullMessage(formData, formData.amhsReferences || [], formData.amhsPocs || []);
+    const blob = new Blob([message], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const msgType = formData.amhsMessageType || 'MSG';
+    a.download = `SEMPERADMIN_${msgType}_${dateStr}.txt`;
+    
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handleExportNldp = () => {
     const exportData = {
       metadata: {
@@ -1004,6 +1101,8 @@ function NavalLetterGeneratorInner() {
       currentUnitName={currentUnitName}
       onExportNldp={handleExportNldp}
       onUpdatePreview={handleUpdatePreview}
+      onCopyAMHS={handleCopyAMHS}
+      onExportAMHS={handleExportAMHS}
       customRightPanel={
         formData.documentType === 'amhs' ? (
           <AMHSPreview 
@@ -1298,6 +1397,13 @@ function NavalLetterGeneratorInner() {
           setFormData={setFormData}
           copyTos={copyTos}
           setCopyTos={setCopyTos}
+        />
+      )}
+
+      {(formData.documentType === 'mco' || formData.documentType === 'bulletin') && (
+        <DistributionSection 
+          distribution={formData.distribution || { type: 'none' }}
+          onUpdateDistribution={(dist) => setFormData(prev => ({ ...prev, distribution: dist }))}
         />
       )}
 

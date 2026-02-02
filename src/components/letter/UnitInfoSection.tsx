@@ -3,7 +3,7 @@ import { FormData } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Building, Search, X } from 'lucide-react';
+import { Building, Search, X, Pencil, Check } from 'lucide-react';
 import { UNITS } from '@/lib/units';
 import {
   Dialog,
@@ -30,6 +30,7 @@ export function UnitInfoSection({
 }: UnitInfoSectionProps) {
   
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleUnitSelect = (unit: typeof UNITS[0]) => {
@@ -42,6 +43,7 @@ export function UnitInfoSection({
     setCurrentUnitCode(unit.ruc);
     setCurrentUnitName(unit.unitName.toUpperCase());
     setIsSearchOpen(false);
+    setIsEditing(false);
     setSearchQuery('');
   };
 
@@ -49,6 +51,7 @@ export function UnitInfoSection({
     setFormData(prev => ({ ...prev, line1: '', line2: '', line3: '' }));
     setCurrentUnitCode(undefined);
     setCurrentUnitName(undefined);
+    setIsEditing(false);
   };
 
   const filteredUnits = searchQuery.length > 1
@@ -114,7 +117,7 @@ export function UnitInfoSection({
               <div className="space-y-2">
                 {searchQuery.length > 1 && filteredUnits.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
-                    No units found matching "{searchQuery}"
+                    No units found matching &quot;{searchQuery}&quot;
                   </div>
                 )}
                 {filteredUnits.map((unit) => (
@@ -145,12 +148,79 @@ export function UnitInfoSection({
           </DialogContent>
         </Dialog>
 
-        {formData.line1 && (
-            <div className="rounded-md border border-primary/20 bg-primary/5 p-3 space-y-1">
-                <div className="font-medium text-sm text-primary">{formData.line1}</div>
-                <div className="text-xs text-foreground/80">{formData.line2}</div>
-                <div className="text-xs text-foreground/80">{formData.line3}</div>
-            </div>
+        {isEditing ? (
+          <div className="space-y-3 rounded-md border border-border p-4 bg-muted/10">
+             <div className="flex items-center justify-between mb-2">
+               <Label className="text-xs font-semibold text-muted-foreground uppercase">Manual Entry</Label>
+               <Button 
+                 variant="ghost" 
+                 size="sm" 
+                 className="h-6 w-6 p-0 hover:bg-primary/10 hover:text-primary"
+                 onClick={() => setIsEditing(false)}
+                 title="Done"
+               >
+                 <Check className="w-4 h-4" />
+               </Button>
+             </div>
+             
+             <div className="space-y-2">
+               <div className="space-y-1">
+                 <Label className="text-xs">Unit Name (Line 1)</Label>
+                 <Input 
+                   value={formData.line1} 
+                   onChange={(e) => setFormData(prev => ({ ...prev, line1: e.target.value.toUpperCase() }))}
+                   placeholder="e.g. HEADQUARTERS BATTALION"
+                 />
+               </div>
+               <div className="space-y-1">
+                 <Label className="text-xs">Street Address (Line 2)</Label>
+                 <Input 
+                   value={formData.line2} 
+                   onChange={(e) => setFormData(prev => ({ ...prev, line2: e.target.value.toUpperCase() }))}
+                   placeholder="e.g. 3250 CATLIN AVENUE"
+                 />
+               </div>
+               <div className="space-y-1">
+                 <Label className="text-xs">City, State Zip (Line 3)</Label>
+                 <Input 
+                   value={formData.line3} 
+                   onChange={(e) => setFormData(prev => ({ ...prev, line3: e.target.value.toUpperCase() }))}
+                   placeholder="e.g. QUANTICO VA 22134-5001"
+                 />
+               </div>
+             </div>
+          </div>
+        ) : (
+          <>
+            {!formData.line1 && (
+              <Button 
+                variant="link" 
+                size="sm" 
+                className="text-muted-foreground h-auto p-0 text-xs hover:text-primary"
+                onClick={() => setIsEditing(true)}
+              >
+                Or enter manually...
+              </Button>
+            )}
+
+            {formData.line1 && (
+                <div className="group relative rounded-md border border-primary/20 bg-primary/5 p-3 space-y-1 hover:border-primary/40 transition-colors">
+                    <div className="font-medium text-sm text-primary pr-6">{formData.line1}</div>
+                    <div className="text-xs text-foreground/80">{formData.line2}</div>
+                    <div className="text-xs text-foreground/80">{formData.line3}</div>
+                    
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 hover:text-primary"
+                      onClick={() => setIsEditing(true)}
+                      title="Edit Unit Information"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

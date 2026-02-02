@@ -31,6 +31,12 @@ export interface DistributionData {
   statementAuthority?: string;
 }
 
+export interface AdminSubsections {
+  recordsManagement: { show: boolean; content: string; order: number };
+  privacyAct: { show: boolean; content: string; order: number };
+  reportsRequired: { show: boolean; content: string; order: number };
+}
+
 export interface FormData {
   documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs' | '';
   endorsementLevel: EndorsementLevel;
@@ -62,10 +68,13 @@ export interface FormData {
   actionNo?: string;
   orgStation?: string; // Can default to line1 + line2 + line3 if not set
   // MCO/Bulletin specific fields
+  orderPrefix?: string; // e.g. "MCO", "BnO", "RegO"
   cancellationDate?: string;
   cancellationType?: 'contingent' | 'fixed';
+  cancellationContingency?: string;
   distribution?: DistributionData;
   reports?: ReportData[];
+  adminSubsections?: AdminSubsections;
   
   // Page 11 specific fields
   name?: string;

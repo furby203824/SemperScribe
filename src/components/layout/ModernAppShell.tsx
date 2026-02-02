@@ -2,9 +2,6 @@ import React from 'react';
 import { Sidebar } from './Sidebar';
 import { LivePreview } from './LivePreview';
 import { HeaderActions } from './HeaderActions';
-import { cn } from '@/lib/utils';
-import { Settings, FileText, Download } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { ParagraphData, SavedLetter } from '@/types';
 import { getBasePath } from '@/lib/path-utils';
 
@@ -29,6 +26,9 @@ interface ModernAppShellProps {
   onExportNldp: () => void;
   onUpdatePreview: () => void;
   customRightPanel?: React.ReactNode;
+  // AMHS Actions
+  onCopyAMHS?: () => void;
+  onExportAMHS?: () => void;
 }
 
 export function ModernAppShell({ 
@@ -51,6 +51,8 @@ export function ModernAppShell({
   onExportNldp,
   onUpdatePreview,
   customRightPanel,
+  onCopyAMHS,
+  onExportAMHS,
 }: ModernAppShellProps) {
   const [showPreview, setShowPreview] = React.useState(true);
   const [logoSrc, setLogoSrc] = React.useState('/logo.png');
@@ -98,23 +100,25 @@ export function ModernAppShell({
         </div>
         
         <HeaderActions
-          className="text-primary-foreground"
-          onSave={onSave}
-          onLoadDraft={onLoadDraft}
-          onImport={onImport}
-          onExportDocx={onExportDocx}
-          onGeneratePdf={onGeneratePdf}
-          onClearForm={onClearForm}
-          savedLetters={savedLetters}
-          onLoadTemplateUrl={onLoadTemplateUrl}
-          documentType={documentType}
-          currentUnitCode={currentUnitCode}
-          currentUnitName={currentUnitName}
-          isGenerating={isGeneratingPreview}
-          onExportNldp={onExportNldp}
-          showPreview={showPreview}
-          onTogglePreview={() => setShowPreview(!showPreview)}
-        />
+            className="text-primary-foreground"
+            documentType={documentType}
+            onSave={onSave}
+            onLoadDraft={onLoadDraft}
+            onImport={onImport}
+            onExportDocx={onExportDocx}
+            onGeneratePdf={onGeneratePdf}
+            onClearForm={onClearForm}
+            savedLetters={savedLetters}
+            onLoadTemplateUrl={onLoadTemplateUrl}
+            currentUnitCode={currentUnitCode}
+            currentUnitName={currentUnitName}
+            isGenerating={isGeneratingPreview}
+            onExportNldp={onExportNldp}
+            showPreview={showPreview}
+            onTogglePreview={() => setShowPreview(!showPreview)}
+            onCopyAMHS={onCopyAMHS}
+            onExportAMHS={onExportAMHS}
+          />
       </header>
 
       {/* Main Content Area (3-Pane Grid) */}

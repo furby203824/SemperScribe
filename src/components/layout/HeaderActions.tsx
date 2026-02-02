@@ -10,7 +10,6 @@ import {
   ChevronDown,
   Search,
   LayoutTemplate,
-  MessageSquare,
   Eye,
   EyeOff
 } from 'lucide-react';
@@ -34,7 +33,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog"
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -60,6 +58,9 @@ interface HeaderActionsProps {
   showPreview?: boolean;
   onTogglePreview?: () => void;
   className?: string;
+  // AMHS Actions
+  onCopyAMHS?: () => void;
+  onExportAMHS?: () => void;
 }
 
 export function HeaderActions({
@@ -78,14 +79,15 @@ export function HeaderActions({
   onExportNldp,
   showPreview,
   onTogglePreview,
-  className
+  className,
+  onCopyAMHS,
+  onExportAMHS
 }: HeaderActionsProps) {
   const { 
     globalTemplates, 
     unitTemplates, 
     searchQuery, 
     setSearchQuery, 
-    isLoading: templatesLoading 
   } = useTemplates({ documentType, currentUnitCode, currentUnitName });
   
   // Helper to merge classes for buttons
@@ -93,7 +95,6 @@ export function HeaderActions({
   const iconClass = className ? "text-primary-foreground/80" : "text-muted-foreground";
 
   const [isTemplateOpen, setIsTemplateOpen] = React.useState(false);
-  const [isDisclaimerOpen, setIsDisclaimerOpen] = React.useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImportClick = () => {
@@ -302,32 +303,62 @@ export function HeaderActions({
             )}
           </Button>
         )}
-        {documentType !== 'page11' && (
-          <Button 
-              variant="outline" 
+
+        {documentType === 'amhs' ? (
+          <>
+            <Button
+              variant="outline"
               size="sm"
               className={cn(
                 "hidden sm:flex",
-                className 
-                  ? "bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-white/10 hover:text-primary-foreground" 
+                className
+                  ? "bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-white/10 hover:text-primary-foreground"
                   : ""
               )}
-              onClick={onExportDocx}
-              disabled={isGenerating}
-          >
+              onClick={onCopyAMHS}
+            >
               <FileText className={cn("mr-2 w-4 h-4", className ? "text-primary-foreground" : "text-primary")} />
-              Export .docx
-          </Button>
+              Copy
+            </Button>
+            <Button
+              size="sm"
+              className="text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm shadow-primary/20 border border-primary-foreground/10"
+              onClick={onExportAMHS}
+            >
+              <Download className="mr-2 w-4 h-4" />
+              Export
+            </Button>
+          </>
+        ) : (
+          <>
+            {documentType !== 'page11' && (
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "hidden sm:flex",
+                  className
+                    ? "bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-white/10 hover:text-primary-foreground"
+                    : ""
+                )}
+                onClick={onExportDocx}
+                disabled={isGenerating}
+              >
+                <FileText className={cn("mr-2 w-4 h-4", className ? "text-primary-foreground" : "text-primary")} />
+                Export .docx
+              </Button>
+            )}
+            <Button
+              size="sm"
+              className="text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm shadow-primary/20 border border-primary-foreground/10"
+              onClick={onGeneratePdf}
+              disabled={isGenerating}
+            >
+              <Download className="mr-2 w-4 h-4" />
+              {isGenerating ? 'Generating...' : 'PDF'}
+            </Button>
+          </>
         )}
-        <Button 
-            size="sm"
-            className="text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm shadow-primary/20 border border-primary-foreground/10"
-            onClick={onGeneratePdf}
-            disabled={isGenerating}
-        >
-            <Download className="mr-2 w-4 h-4" />
-            {isGenerating ? 'Generating...' : 'PDF'}
-        </Button>
       </div>
     </div>
   );
