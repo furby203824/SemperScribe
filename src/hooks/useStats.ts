@@ -27,15 +27,15 @@ export function useStats(): UseStatsReturn {
         const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout for initial load
         
         const [docResponse, saveResponse, loadResponse] = await Promise.all([
-          fetch('https://api.countapi.xyz/get/naval-letter-formatter/documents', {
+          fetch('https://api.countapi.xyz/get/semper-scribe/documents', {
             signal: controller.signal,
             mode: 'cors'
           }),
-          fetch('https://api.countapi.xyz/get/naval-letter-formatter/saves', {
+          fetch('https://api.countapi.xyz/get/semper-scribe/saves', {
             signal: controller.signal,
             mode: 'cors'
           }),
-          fetch('https://api.countapi.xyz/get/naval-letter-formatter/loads', {
+          fetch('https://api.countapi.xyz/get/semper-scribe/loads', {
             signal: controller.signal,
             mode: 'cors'
           })
@@ -73,7 +73,7 @@ export function useStats(): UseStatsReturn {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
       
-      const response = await fetch('https://api.countapi.xyz/hit/naval-letter-formatter/documents', {
+      const response = await fetch('https://api.countapi.xyz/hit/semper-scribe/documents', {
         signal: controller.signal,
         mode: 'cors'
       });
@@ -107,7 +107,7 @@ export function useStats(): UseStatsReturn {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch('https://api.countapi.xyz/hit/naval-letter-formatter/saves', {
+      const response = await fetch('https://api.countapi.xyz/hit/semper-scribe/saves', {
         signal: controller.signal,
         mode: 'cors'
       });
@@ -141,7 +141,7 @@ export function useStats(): UseStatsReturn {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch('https://api.countapi.xyz/hit/naval-letter-formatter/loads', {
+      const response = await fetch('https://api.countapi.xyz/hit/semper-scribe/loads', {
         signal: controller.signal,
         mode: 'cors'
       });

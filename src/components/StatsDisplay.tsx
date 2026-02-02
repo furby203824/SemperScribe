@@ -33,13 +33,13 @@ export function StatsDisplay({ onDocumentGenerated }: StatsDisplayProps) {
       const timeoutId = setTimeout(() => controller.abort(), 8000);
 
       // Increment page view
-      const viewResponse = await fetch('https://api.countapi.xyz/hit/naval-letter-formatter/views', {
+      const viewResponse = await fetch('https://api.countapi.xyz/hit/semper-scribe/views', {
         signal: controller.signal,
         mode: 'cors'
       });
 
       // Get document generation count
-      const docResponse = await fetch('https://api.countapi.xyz/get/naval-letter-formatter/documents', {
+      const docResponse = await fetch('https://api.countapi.xyz/get/semper-scribe/documents', {
         signal: controller.signal,
         mode: 'cors'
       });
@@ -68,7 +68,7 @@ export function StatsDisplay({ onDocumentGenerated }: StatsDisplayProps) {
 
   const incrementDocumentCount = async () => {
     try {
-      const response = await fetch('https://api.countapi.xyz/hit/naval-letter-formatter/documents');
+      const response = await fetch('https://api.countapi.xyz/hit/semper-scribe/documents');
       const data = await response.json();
       setStats(prev => ({
         ...prev,

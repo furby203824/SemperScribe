@@ -4,9 +4,6 @@ export function getBasePath(): string {
     if (pathname.startsWith('/SemperScribe')) {
       return '/SemperScribe';
     }
-    if (pathname.startsWith('/naval-letter-formatter')) {
-      return '/naval-letter-formatter';
-    }
   }
   return '';
 }

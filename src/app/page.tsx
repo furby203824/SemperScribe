@@ -386,7 +386,7 @@ function NavalLetterGeneratorInner() {
     if (newType === 'mco') {
       newParagraphs = getMCOParagraphs();
     } else if (newType === 'bulletin') {
-      newParagraphs = getMCBulParagraphs(false);
+      newParagraphs = getMCBulParagraphs();
     } else {
        if (formData.documentType === 'mco' || formData.documentType === 'bulletin') {
           newParagraphs = [{ id: 1, level: 1, content: '', acronymError: '' }];

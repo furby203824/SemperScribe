@@ -180,7 +180,7 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
         <Button 
           variant="ghost" 
           className="w-full justify-start text-muted-foreground hover:text-primary hover:bg-primary/5"
-          onClick={() => window.open('https://semperadmin.github.io/Sentinel/#detail/naval-letter-formatter/todo', '_blank')}
+          onClick={() => window.open('https://semperadmin.github.io/Sentinel/#detail/semper-scribe/todo', '_blank')}
         >
           <MessageSquare className="w-4 h-4 mr-2" />
           Feedback

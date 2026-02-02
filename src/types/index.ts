@@ -42,7 +42,7 @@ export interface AdminSubsections {
 }
 
 export interface FormData {
-  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs' | '';
+  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs' | 'order' | 'navmc10274' | '';
   endorsementLevel: EndorsementLevel;
   basicLetterReference: string;
   basicLetterSsic?: string;
@@ -73,6 +73,7 @@ export interface FormData {
   orgStation?: string; // Can default to line1 + line2 + line3 if not set
   // MCO/Bulletin specific fields
   directiveTitle?: string;  // Full directive title (e.g., "MARINE CORPS ORDER 5210.11F")
+  orderPrefix?: string;
   cancellationDate?: string;
   cancellationType?: 'contingent' | 'fixed';
   cancellationContingency?: string;
@@ -85,6 +86,7 @@ export interface FormData {
   edipi?: string;
   remarksLeft?: string;
   remarksRight?: string;
+  box11?: string;
 
   // AMHS specific fields
   amhsMessageType?: 'GENADMIN' | 'MARADMIN' | 'ALMAR';
