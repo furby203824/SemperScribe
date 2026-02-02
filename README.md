@@ -121,6 +121,7 @@ src/
 
 All standard letter sections plus:
 - **Distribution Statement** - A through F with descriptions
+- **Administrative Subsections** - Auto-injected Records Management, Privacy Act, and Reports Required sections
 - **Reports Required** - Report tracking with RCS symbols
 - **Cancellation Date** - For bulletins
 
