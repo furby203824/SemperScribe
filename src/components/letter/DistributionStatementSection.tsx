@@ -20,16 +20,18 @@ export function DistributionStatementSection({
   onUpdateDistribution
 }: DistributionStatementSectionProps) {
   const statementCode = (distribution?.statementCode || '') as DistributionStatementCode;
-  const statement = statementCode ? DISTRIBUTION_STATEMENTS[statementCode as StatementKey] : null;
+  const statement = statementCode && statementCode !== '' ? DISTRIBUTION_STATEMENTS[statementCode as StatementKey] : null;
 
   const updateField = (field: keyof DistributionData, value: any) => {
     onUpdateDistribution({ ...distribution, [field]: value });
   };
 
   const handleStatementChange = (code: string) => {
+    // Handle "none" selection by setting empty string
+    const newCode = code === 'none' ? '' : code;
     onUpdateDistribution({
       ...distribution,
-      statementCode: code as DistributionStatementCode,
+      statementCode: newCode as DistributionStatementCode,
       // Clear fill-in fields when changing statement
       statementReason: '',
       statementDate: '',
@@ -89,14 +91,14 @@ export function DistributionStatementSection({
             Statement Code
           </Label>
           <Select
-            value={statementCode}
+            value={statementCode || 'none'}
             onValueChange={handleStatementChange}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select Distribution Statement" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {Object.entries(DISTRIBUTION_STATEMENTS).map(([code, stmt]) => (
                 <SelectItem key={code} value={code}>
                   <div className="flex items-center gap-2">
