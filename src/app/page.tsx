@@ -41,7 +41,7 @@ import { DOCUMENT_TYPES } from '@/lib/schemas';
 import { AMHSEditor } from '@/components/amhs/AMHSEditor';
 import { AMHSPreview } from '@/components/amhs/AMHSPreview';
 import { LandingPage } from '@/components/layout/LandingPage';
-import { generateFullMessage } from '@/services/amhs/amhsFormatter';
+import { generateFullMessage, validateAMHSMessage } from '@/services/amhs/amhsFormatter';
 import { useToast } from '@/hooks/use-toast';
 
 // Inner component that uses useSearchParams (requires Suspense boundary)
@@ -1022,6 +1022,17 @@ function NavalLetterGeneratorInner() {
   };
 
   const handleCopyAMHS = () => {
+    // Validate before copying
+    const validation = validateAMHSMessage(formData, formData.amhsReferences || []);
+    if (!validation.isValid) {
+      toast({
+        title: "Validation Failed",
+        description: validation.errors.join('. '),
+        variant: "destructive"
+      });
+      return;
+    }
+
     const message = generateFullMessage(formData, formData.amhsReferences || [], formData.amhsPocs || []);
     navigator.clipboard.writeText(message);
     toast({
@@ -1031,16 +1042,27 @@ function NavalLetterGeneratorInner() {
   };
 
   const handleExportAMHS = () => {
+    // Validate before exporting
+    const validation = validateAMHSMessage(formData, formData.amhsReferences || []);
+    if (!validation.isValid) {
+      toast({
+        title: "Validation Failed",
+        description: validation.errors.join('. '),
+        variant: "destructive"
+      });
+      return;
+    }
+
     const message = generateFullMessage(formData, formData.amhsReferences || [], formData.amhsPocs || []);
     const blob = new Blob([message], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    
+
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const msgType = formData.amhsMessageType || 'MSG';
     a.download = `SEMPERADMIN_${msgType}_${dateStr}.txt`;
-    
+
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
