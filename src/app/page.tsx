@@ -11,6 +11,7 @@ import { ReferencesSection } from '@/components/letter/ReferencesSection';
 import { EnclosuresSection } from '@/components/letter/EnclosuresSection';
 import { ReportsSection } from '@/components/letter/ReportsSection';
 import { DistributionStatementSection } from '@/components/letter/DistributionStatementSection';
+import { DistributionSection } from '@/components/letter/DistributionSection';
 import { StructuredReferenceInput } from '@/components/letter/StructuredReferenceInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
