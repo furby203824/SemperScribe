@@ -84,23 +84,21 @@ export function DistributionSection({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center space-x-4 mb-4">
-          <div className="flex items-center space-x-2">
-            <RadioGroup 
-              value={showDistribution ? "yes" : "no"} 
-              onValueChange={(val) => handleToggleDistribution(val === "yes")}
-              className="flex items-center space-x-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="dist-yes" />
-                <Label htmlFor="dist-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="dist-no" />
-                <Label htmlFor="dist-no">No</Label>
-              </div>
-            </RadioGroup>
-          </div>
+        <div className="flex gap-6 pt-2">
+          <RadioGroup
+            value={showDistribution ? "yes" : "no"}
+            onValueChange={(val) => handleToggleDistribution(val === "yes")}
+            className="flex flex-row gap-6"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="yes" id="dist-yes" />
+              <Label htmlFor="dist-yes" className="cursor-pointer">Yes</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="no" id="dist-no" />
+              <Label htmlFor="dist-no" className="cursor-pointer">No</Label>
+            </div>
+          </RadioGroup>
         </div>
 
         {showDistribution && (
