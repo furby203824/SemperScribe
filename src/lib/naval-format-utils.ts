@@ -103,6 +103,61 @@ export function getCopySpacing(bodyFont: 'times' | 'courier'): string {
 }
 
 /**
+ * Alias for getCopySpacing to match consumer expectations
+ */
+export const getCopyToSpacing = getCopySpacing;
+
+/**
+ * Splits a subject line into multiple lines based on a character limit
+ * while preserving whole words.
+ * 
+ * @param subject - The subject string
+ * @param maxLength - Maximum characters per line
+ * @returns Array of subject lines
+ */
+export function splitSubject(subject: string, maxLength: number = 60): string[] {
+  if (!subject) return [];
+  
+  const words = subject.split(' ');
+  const lines: string[] = [];
+  let currentLine = words[0];
+
+  for (let i = 1; i < words.length; i++) {
+    if (currentLine.length + 1 + words[i].length <= maxLength) {
+      currentLine += ' ' + words[i];
+    } else {
+      lines.push(currentLine);
+      currentLine = words[i];
+    }
+  }
+  lines.push(currentLine);
+  
+  return lines;
+}
+
+/**
+ * Formats a date string for cancellation (e.g., "Jun 2025")
+ * 
+ * @param dateString - The date string to format
+ * @returns Formatted date string or original if invalid
+ */
+export function formatCancellationDate(dateString: string): string {
+  if (!dateString) return '';
+  
+  try {
+    const dateObj = new Date(dateString);
+    if (isNaN(dateObj.getTime())) return dateString;
+    
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[dateObj.getMonth()];
+    const year = dateObj.getFullYear();
+    return `${month} ${year}`;
+  } catch {
+    return dateString;
+  }
+}
+
+/**
  * Standard MCO Paragraphs
  */
 export function getMCOParagraphs(): ParagraphData[] {
