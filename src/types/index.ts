@@ -32,7 +32,7 @@ export interface DistributionData {
 }
 
 export interface FormData {
-  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs';
+  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs' | '';
   endorsementLevel: EndorsementLevel;
   basicLetterReference: string;
   basicLetterSsic?: string;

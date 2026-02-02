@@ -30,7 +30,10 @@ export function AMHSEditor({ formData, onUpdate }: AMHSEditorProps) {
   };
 
   if (!AMHSDefinition) {
-    return <div className="p-4 text-destructive">Error: AMHS Definition failed to load. Please check schema definitions.</div>;
+    console.error("AMHSDefinition is undefined. Check schemas.ts export.");
+    return <div className="p-4 text-destructive border border-destructive rounded bg-destructive/10">
+      Error: AMHS Definition failed to load. Please refresh or check console.
+    </div>;
   }
 
   return (

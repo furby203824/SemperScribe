@@ -56,7 +56,7 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Document Type</h3>
           <Accordion
             type="multiple"
-            defaultValue={["standard-letter", "directives", "forms"]}
+            defaultValue={[]}
             className="w-full"
           >
             {/* Standard Letter Group */}

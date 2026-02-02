@@ -38,6 +38,7 @@ import { DynamicForm } from '@/components/ui/DynamicForm';
 import { DOCUMENT_TYPES } from '@/lib/schemas';
 import { AMHSEditor } from '@/components/amhs/AMHSEditor';
 import { AMHSPreview } from '@/components/amhs/AMHSPreview';
+import { LandingPage } from '@/components/layout/LandingPage';
 
 // Inner component that uses useSearchParams (requires Suspense boundary)
 function NavalLetterGeneratorInner() {
@@ -47,7 +48,7 @@ function NavalLetterGeneratorInner() {
   }, []);
 
   const [formData, setFormData] = useState<FormData>({
-    documentType: 'basic',
+    documentType: '',
     endorsementLevel: '',
     basicLetterReference: '',
     basicLetterSsic: '',
@@ -896,8 +897,10 @@ function NavalLetterGeneratorInner() {
 
   const handleClearForm = () => {
       if (window.confirm('Are you sure you want to clear the form? All unsaved progress will be lost.')) {
+        const currentType = formData.documentType;
+
         setFormData({
-            documentType: 'basic',
+            documentType: currentType,
             endorsementLevel: '',
             basicLetterReference: '',
             referenceWho: '',
@@ -915,7 +918,19 @@ function NavalLetterGeneratorInner() {
             distribution: { type: 'none' },
             reports: [],
             actionNo: '',
-            orgStation: ''
+            orgStation: '',
+            name: '',
+            edipi: '',
+            box11: '',
+            // AMHS Specific
+            amhsMessageType: 'GENADMIN',
+            amhsClassification: 'UNCLASSIFIED',
+            amhsPrecedence: 'ROUTINE',
+            amhsDtg: '',
+            amhsOfficeCode: '',
+            amhsPocs: [],
+            amhsReferences: [],
+            amhsTextBody: ''
         });
         setParagraphs([{ id: 1, level: 1, content: '', acronymError: '' }]);
         setVias(['']);
@@ -998,32 +1013,36 @@ function NavalLetterGeneratorInner() {
         ) : undefined
       }
     >
-      {/* Document Type Header */}
-      <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6 flex items-center gap-4">
-        <div className="text-4xl text-primary">
-          {DOCUMENT_TYPES[formData.documentType]?.icon || DOCUMENT_TYPES['basic'].icon}
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">
-            {DOCUMENT_TYPES[formData.documentType]?.name || DOCUMENT_TYPES['basic'].name}
-          </h2>
-          <p className="text-muted-foreground">
-            {DOCUMENT_TYPES[formData.documentType]?.description || DOCUMENT_TYPES['basic'].description}
-          </p>
-        </div>
-      </div>
-
-      {/* AMHS Editor - Exclusive View */}
-      {formData.documentType === 'amhs' ? (
-        <AMHSEditor 
-          formData={formData} 
-          onUpdate={(data) => setFormData(prev => ({ ...prev, ...data }))} 
-        />
+      {!formData.documentType ? (
+        <LandingPage />
       ) : (
         <>
-          {/* Header Settings (Hidden for AA Form, Page 11, and AMHS) */}
-          {formData.documentType !== 'aa-form' && formData.documentType !== 'page11' && (
-            <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Document Type Header */}
+          <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6 flex items-center gap-4">
+            <div className="text-4xl text-primary">
+              {DOCUMENT_TYPES[formData.documentType]?.icon || DOCUMENT_TYPES['basic'].icon}
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                {DOCUMENT_TYPES[formData.documentType]?.name || DOCUMENT_TYPES['basic'].name}
+              </h2>
+              <p className="text-muted-foreground">
+                {DOCUMENT_TYPES[formData.documentType]?.description || DOCUMENT_TYPES['basic'].description}
+              </p>
+            </div>
+          </div>
+
+          {/* AMHS Editor - Exclusive View */}
+          {formData.documentType === 'amhs' ? (
+            <AMHSEditor 
+              formData={formData} 
+              onUpdate={(data) => setFormData(prev => ({ ...prev, ...data }))} 
+            />
+          ) : (
+            <>
+              {/* Header Settings (Hidden for AA Form, Page 11, and AMHS) */}
+              {formData.documentType !== 'aa-form' && formData.documentType !== 'page11' && (
+                <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Header Type</label>
             <Select
@@ -1219,15 +1238,17 @@ function NavalLetterGeneratorInner() {
         </Card>
       )}
 
-      {/* Dynamic Header Form based on Document Type */}
-      <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6">
-        <DynamicForm 
-          key={`${formData.documentType}-${formKey}`} // Force re-render when type changes or data is imported
-          documentType={DOCUMENT_TYPES[formData.documentType] || DOCUMENT_TYPES['basic']}
-          onSubmit={handleDynamicFormSubmit}
-          defaultValues={formData}
-        />
-      </div>
+      {/* Dynamic Header Form based on Document Type - Hide for AMHS */}
+      {formData.documentType !== 'amhs' && (
+        <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6">
+          <DynamicForm 
+            key={`${formData.documentType}-${formKey}`} // Force re-render when type changes or data is imported
+            documentType={DOCUMENT_TYPES[formData.documentType] || DOCUMENT_TYPES['basic']}
+            onSubmit={handleDynamicFormSubmit}
+            defaultValues={formData}
+          />
+        </div>
+      )}
 
       {/* Legacy Sections wrapped to fit layout - Hide for Page 11 */}
       {formData.documentType !== 'page11' && (
@@ -1318,6 +1339,8 @@ function NavalLetterGeneratorInner() {
         pdfBlob={signaturePdfBlob}
         totalPages={signaturePdfPageCount}
       />
+    </>
+  )}
     </ModernAppShell>
   );
 }

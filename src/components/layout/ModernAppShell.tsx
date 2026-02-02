@@ -28,6 +28,7 @@ interface ModernAppShellProps {
   currentUnitName?: string;
   onExportNldp: () => void;
   onUpdatePreview: () => void;
+  customRightPanel?: React.ReactNode;
 }
 
 export function ModernAppShell({ 
@@ -48,7 +49,8 @@ export function ModernAppShell({
   currentUnitCode,
   currentUnitName,
   onExportNldp,
-  onUpdatePreview
+  onUpdatePreview,
+  customRightPanel,
 }: ModernAppShellProps) {
   const [showPreview, setShowPreview] = React.useState(true);
   const [logoSrc, setLogoSrc] = React.useState('/logo.png');
@@ -84,10 +86,14 @@ export function ModernAppShell({
 
           <div className="hidden sm:flex items-center space-x-2 text-sm">
             <span className="px-2 py-1 rounded bg-primary text-primary-foreground font-medium border border-primary-foreground/20 text-xs shadow-sm">
-              {documentType === 'navmc10274' ? 'AA FORM' : documentType.toUpperCase()}
+              {documentType === 'navmc10274' ? 'AA FORM' : (documentType ? documentType.toUpperCase() : 'HOME')}
             </span>
-            <span className="text-primary-foreground/50">/</span>
-            <span className="text-primary-foreground/70 font-medium text-xs">Draft</span>
+            {documentType && (
+              <>
+                <span className="text-primary-foreground/50">/</span>
+                <span className="text-primary-foreground/70 font-medium text-xs">Draft</span>
+              </>
+            )}
           </div>
         </div>
         
@@ -128,7 +134,7 @@ export function ModernAppShell({
         </main>
 
         {/* Right Pane: Live Preview or Custom Panel */}
-        {showPreview && (
+        {showPreview && documentType && (
           customRightPanel ? (
             customRightPanel
           ) : (

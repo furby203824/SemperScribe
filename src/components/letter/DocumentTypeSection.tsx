@@ -102,7 +102,7 @@ export function DocumentTypeSection({
 
         {/* Standard Correspondence Section */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-muted-foreground uppercase tracking-wider text-sm border-b pb-2">
+          <h3 className="font-semibold text-muted-foreground uppercase tracking-wider text-sm border-b pb-2">
             Standard Correspondence
           </h3>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -164,7 +164,7 @@ export function DocumentTypeSection({
 
         {/* Forms Section */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-muted-foreground uppercase tracking-wider text-sm border-b pb-2">
+          <h3 className="font-semibold text-muted-foreground uppercase tracking-wider text-sm border-b pb-2">
             Forms
           </h3>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
