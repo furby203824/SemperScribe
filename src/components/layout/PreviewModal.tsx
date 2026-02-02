@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { FileText, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -36,13 +36,20 @@ export function PreviewModal({
   onUpdatePreview,
 }: PreviewModalProps) {
   const isAMHS = documentType === 'amhs';
+  const hasTriggeredRefresh = useRef(false);
 
   // Auto-refresh preview when modal opens (for non-AMHS documents)
+  // Only trigger once per modal open
   useEffect(() => {
-    if (open && !isAMHS && onUpdatePreview && !previewUrl && !isLoading) {
+    if (open && !isAMHS && onUpdatePreview && !hasTriggeredRefresh.current) {
+      hasTriggeredRefresh.current = true;
       onUpdatePreview();
     }
-  }, [open, isAMHS, onUpdatePreview, previewUrl, isLoading]);
+    // Reset the flag when modal closes
+    if (!open) {
+      hasTriggeredRefresh.current = false;
+    }
+  }, [open, isAMHS, onUpdatePreview]);
 
   // Generate AMHS message preview
   const amhsMessage = React.useMemo(() => {
