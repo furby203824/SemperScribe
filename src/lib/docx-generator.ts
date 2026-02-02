@@ -152,12 +152,14 @@ export async function generateDocxBlob(
 
   // --- Directive Title Line (between date and From for MCO/Bulletin) ---
   const directiveTitleParagraphs: Paragraph[] = [];
-  if (isDirective && formData.ssic) {
-    const directiveTitle = formData.documentType === 'mco'
-      ? `MARINE CORPS ORDER ${formData.ssic}`
-      : `MARINE CORPS BULLETIN ${formData.ssic}`;
+  if (isDirective && formData.directiveTitle) {
     directiveTitleParagraphs.push(new Paragraph({
-      children: [new TextRun({ text: directiveTitle, font, size: FONT_SIZE_BODY })],
+      children: [new TextRun({
+        text: formData.directiveTitle,
+        font,
+        size: FONT_SIZE_BODY,
+        underline: { type: UnderlineType.SINGLE }
+      })],
       alignment: AlignmentType.LEFT,
       spacing: { after: 240 }
     }));

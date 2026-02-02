@@ -66,6 +66,7 @@ export interface FormData {
   actionNo?: string;
   orgStation?: string; // Can default to line1 + line2 + line3 if not set
   // MCO/Bulletin specific fields
+  directiveTitle?: string;  // Full directive title (e.g., "MARINE CORPS ORDER 5210.11F")
   cancellationDate?: string;
   cancellationType?: 'contingent' | 'fixed';
   distribution?: DistributionData;

@@ -453,12 +453,10 @@ export function NavalLetterPDF({
         )}
 
         {/* Directive Title Line - Between date and From (MCO/Bulletin) */}
-        {isDirective && formData.ssic && (
+        {isDirective && formData.directiveTitle && (
           <View style={{ marginBottom: PDF_SPACING.sectionGap }}>
-            <Text style={styles.addressLine}>
-              {formData.documentType === 'mco'
-                ? `MARINE CORPS ORDER ${formData.ssic}`
-                : `MARINE CORPS BULLETIN ${formData.ssic}`}
+            <Text style={[styles.addressLine, { textDecoration: 'underline' }]}>
+              {formData.directiveTitle}
             </Text>
           </View>
         )}
