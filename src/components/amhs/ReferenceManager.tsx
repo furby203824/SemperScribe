@@ -3,16 +3,34 @@ import { AMHSReference } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Wand2 } from 'lucide-react';
 
 interface ReferenceManagerProps {
   references: AMHSReference[];
   onChange: (refs: AMHSReference[]) => void;
+  narrative?: string;
+  onNarrativeChange?: (narrative: string) => void;
 }
 
-export function ReferenceManager({ references, onChange }: ReferenceManagerProps) {
+export function ReferenceManager({ references, onChange, narrative = '', onNarrativeChange }: ReferenceManagerProps) {
+
+  const generateNarrative = () => {
+    if (!onNarrativeChange) return;
+
+    const narrativeParts = references
+      .filter(ref => ref.title && ref.title.trim().length > 0)
+      .map(ref => `REF ${ref.letter} IS THE ${ref.title.toUpperCase()}`);
+
+    const generatedNarr = narrativeParts.length > 0
+      ? narrativeParts.join('. ') + '.'
+      : '';
+
+    onNarrativeChange(generatedNarr);
+  };
+
   const addReference = () => {
     const newLetter = String.fromCharCode(65 + references.length); // A, B, C...
     const newRef: AMHSReference = {
@@ -105,9 +123,9 @@ export function ReferenceManager({ references, onChange }: ReferenceManagerProps
             </div>
             
             <div className="md:col-span-1 flex items-end justify-center pb-1">
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => removeReference(index)}
                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
               >
@@ -116,6 +134,33 @@ export function ReferenceManager({ references, onChange }: ReferenceManagerProps
             </div>
           </div>
         ))}
+
+        {/* NARR Section */}
+        {onNarrativeChange && (
+          <div className="space-y-2 pt-4 border-t">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Generated Narrative (NARR)</Label>
+              <Button
+                onClick={generateNarrative}
+                size="sm"
+                variant="outline"
+                className="gap-2"
+                disabled={references.length === 0}
+              >
+                <Wand2 className="h-4 w-4" /> Generate NARR
+              </Button>
+            </div>
+            <Textarea
+              value={narrative}
+              onChange={(e) => onNarrativeChange(e.target.value.toUpperCase())}
+              placeholder="Click 'Generate NARR' to auto-generate from reference titles, or type manually..."
+              className="font-mono uppercase text-sm min-h-[80px]"
+            />
+            <p className="text-xs text-muted-foreground">
+              NARR/ and // delimiters are added automatically in the preview.
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
