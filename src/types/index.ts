@@ -21,14 +21,18 @@ export interface ReportData {
   exempt?: boolean;
 }
 
+// Distribution Statement Codes per DoD 5230.24
+export type DistributionStatementCode = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'X' | '';
+
 export interface DistributionData {
   type: 'none' | 'standard' | 'pcn' | 'pcn-with-copy';
   pcn?: string;
   copyTo?: Array<{ code: string; qty: number }>;
-  statementCode?: string;
-  statementReason?: string;
-  statementDate?: string;
-  statementAuthority?: string;
+  // Distribution Statement fields
+  statementCode?: DistributionStatementCode;
+  statementReason?: string;         // For B, C, D, E, F - restriction reason
+  statementDate?: string;           // For C, D, E - determination date
+  statementAuthority?: string;      // For C, D, E - originating command/authority
 }
 
 export interface FormData {

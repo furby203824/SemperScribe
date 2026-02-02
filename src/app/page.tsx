@@ -10,6 +10,7 @@ import { ViaSection } from '@/components/letter/ViaSection';
 import { ReferencesSection } from '@/components/letter/ReferencesSection';
 import { EnclosuresSection } from '@/components/letter/EnclosuresSection';
 import { ReportsSection } from '@/components/letter/ReportsSection';
+import { DistributionStatementSection } from '@/components/letter/DistributionStatementSection';
 import { StructuredReferenceInput } from '@/components/letter/StructuredReferenceInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -1139,10 +1140,16 @@ function NavalLetterGeneratorInner() {
       />
 
       {(formData.documentType === 'mco' || formData.documentType === 'bulletin') && (
-        <ReportsSection 
-          reports={formData.reports || []}
-          onUpdateReports={(reports) => setFormData(prev => ({ ...prev, reports }))}
-        />
+        <>
+          <DistributionStatementSection
+            distribution={formData.distribution || { type: 'none' }}
+            onUpdateDistribution={(distribution) => setFormData(prev => ({ ...prev, distribution }))}
+          />
+          <ReportsSection
+            reports={formData.reports || []}
+            onUpdateReports={(reports) => setFormData(prev => ({ ...prev, reports }))}
+          />
+        </>
       )}
 
       <ParagraphSection 
