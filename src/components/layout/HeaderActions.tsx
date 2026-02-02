@@ -1,17 +1,19 @@
 import React, { useRef } from 'react';
-import { 
-  FileText, 
-  Download, 
-  Save, 
-  FolderOpen, 
-  Upload, 
-  Trash2, 
+import {
+  FileText,
+  Download,
+  Save,
+  FolderOpen,
+  Upload,
+  Trash2,
   File,
   ChevronDown,
   Search,
   LayoutTemplate,
   Eye,
-  EyeOff
+  EyeOff,
+  Link2,
+  Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -55,6 +57,7 @@ interface HeaderActionsProps {
   currentUnitName?: string;
   isGenerating?: boolean;
   onExportNldp?: () => void;
+  onShareLink?: () => void;
   showPreview?: boolean;
   onTogglePreview?: () => void;
   onOpenPreviewModal?: () => void;
@@ -78,6 +81,7 @@ export function HeaderActions({
   currentUnitName,
   isGenerating,
   onExportNldp,
+  onShareLink,
   showPreview,
   onTogglePreview,
   onOpenPreviewModal,
@@ -269,6 +273,16 @@ export function HeaderActions({
             <Download className="w-4 h-4 mr-2" />
             Export Data Package (.nldp)
           </DropdownMenuItem>
+
+          {onShareLink && (
+            <>
+              <DropdownMenuSeparator className="bg-border" />
+              <DropdownMenuItem onClick={onShareLink} className="cursor-pointer focus:bg-accent focus:text-accent-foreground">
+                <Link2 className="w-4 h-4 mr-2" />
+                Copy Share Link
+              </DropdownMenuItem>
+            </>
+          )}
 
           {/* Hidden File Input */}
           <input

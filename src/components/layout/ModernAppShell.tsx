@@ -30,6 +30,8 @@ interface ModernAppShellProps {
   // AMHS Actions
   onCopyAMHS?: () => void;
   onExportAMHS?: () => void;
+  // Share link
+  onShareLink?: () => void;
   // For mobile preview modal
   formData?: FormData;
 }
@@ -56,6 +58,7 @@ export function ModernAppShell({
   customRightPanel,
   onCopyAMHS,
   onExportAMHS,
+  onShareLink,
   formData,
 }: ModernAppShellProps) {
   const [showPreview, setShowPreview] = React.useState(true);
@@ -119,6 +122,7 @@ export function ModernAppShell({
             currentUnitName={currentUnitName}
             isGenerating={isGeneratingPreview}
             onExportNldp={onExportNldp}
+            onShareLink={documentType ? onShareLink : undefined}
             showPreview={showPreview}
             onTogglePreview={() => setShowPreview(!showPreview)}
             onOpenPreviewModal={documentType ? () => setShowPreviewModal(true) : undefined}
