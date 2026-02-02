@@ -43,6 +43,7 @@ import { AMHSPreview } from '@/components/amhs/AMHSPreview';
 import { LandingPage } from '@/components/layout/LandingPage';
 import { generateFullMessage, validateAMHSMessage } from '@/services/amhs/amhsFormatter';
 import { useToast } from '@/hooks/use-toast';
+import { generateShareableUrl, getStateFromUrl, clearShareParam, copyToClipboard, ShareableState } from '@/lib/url-state';
 
 // Inner component that uses useSearchParams (requires Suspense boundary)
 function NavalLetterGeneratorInner() {
@@ -1107,6 +1108,82 @@ function NavalLetterGeneratorInner() {
     debugUserAction('Export Data', { format: 'nldp' });
   };
 
+  // Share Link Handler
+  const handleShareLink = async () => {
+    if (!formData.documentType) {
+      toast({
+        title: "No Document",
+        description: "Please select a document type first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const state: ShareableState = {
+      formData,
+      paragraphs,
+      references,
+      enclosures,
+      vias,
+      copyTos,
+      version: 1
+    };
+
+    const { url, isLong, error } = generateShareableUrl(state);
+
+    if (error && !url) {
+      toast({
+        title: "Failed to Generate Link",
+        description: error,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const success = await copyToClipboard(url);
+
+    if (success) {
+      toast({
+        title: "Link Copied!",
+        description: isLong
+          ? "Link copied. Note: This link is very long and may not work in all applications."
+          : "Share link copied to clipboard. Anyone with this link can view and edit the document.",
+      });
+    } else {
+      toast({
+        title: "Copy Failed",
+        description: "Could not copy to clipboard. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Load shared state from URL on mount
+  useEffect(() => {
+    const sharedState = getStateFromUrl();
+    if (sharedState) {
+      // Load the shared state into the form
+      setFormData(sharedState.formData);
+      if (sharedState.paragraphs) setParagraphs(sharedState.paragraphs);
+      if (sharedState.references) setReferences(sharedState.references);
+      if (sharedState.enclosures) setEnclosures(sharedState.enclosures);
+      if (sharedState.vias) setVias(sharedState.vias);
+      if (sharedState.copyTos) setCopyTos(sharedState.copyTos);
+
+      // Clear the share param from URL to keep it clean
+      clearShareParam();
+
+      // Show a toast notification
+      toast({
+        title: "Document Loaded",
+        description: "Shared document has been loaded. You can view and edit it.",
+      });
+
+      // Force form remount to pick up new values
+      setFormKey(prev => prev + 1);
+    }
+  }, []);
+
   return (
     <ModernAppShell
       documentType={formData.documentType}
@@ -1125,6 +1202,7 @@ function NavalLetterGeneratorInner() {
       currentUnitCode={currentUnitCode}
       currentUnitName={currentUnitName}
       onExportNldp={handleExportNldp}
+      onShareLink={handleShareLink}
       onUpdatePreview={handleUpdatePreview}
       onCopyAMHS={handleCopyAMHS}
       onExportAMHS={handleExportAMHS}
