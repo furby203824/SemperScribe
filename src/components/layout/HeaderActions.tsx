@@ -289,21 +289,27 @@ export function HeaderActions({
       </DropdownMenu>
 
       {/* Export/Generate Buttons */}
-      <div className="flex items-center space-x-2">
-        {/* Mobile Preview Button - opens modal */}
+      <div className="flex items-center space-x-1 sm:space-x-2">
+        {/* Mobile Preview Button - opens modal (shows below xl breakpoint) */}
         {onOpenPreviewModal && (
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={onOpenPreviewModal}
-            className={buttonClass("xl:hidden flex")}
+            className={cn(
+              "xl:hidden flex",
+              className
+                ? "bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-white/10 hover:text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            )}
             title="Show Preview"
           >
-            <Eye className={cn("w-4 h-4", iconClass)} />
+            <Eye className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Preview</span>
           </Button>
         )}
 
-        {/* Desktop Preview Toggle - shows/hides side panel */}
+        {/* Desktop Preview Toggle - shows/hides side panel (shows on xl and above) */}
         {onTogglePreview && (
           <Button
             variant="ghost"
