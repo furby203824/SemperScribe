@@ -1,5 +1,5 @@
-import React from 'react';
-import { FileText, X, RefreshCw, Download, Printer } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { FileText, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -37,6 +37,13 @@ export function PreviewModal({
 }: PreviewModalProps) {
   const isAMHS = documentType === 'amhs';
 
+  // Auto-refresh preview when modal opens (for non-AMHS documents)
+  useEffect(() => {
+    if (open && !isAMHS && onUpdatePreview && !previewUrl && !isLoading) {
+      onUpdatePreview();
+    }
+  }, [open, isAMHS, onUpdatePreview, previewUrl, isLoading]);
+
   // Generate AMHS message preview
   const amhsMessage = React.useMemo(() => {
     if (!isAMHS || !formData) return '';
@@ -58,14 +65,13 @@ export function PreviewModal({
           <div className="flex items-center gap-1">
             {!isAMHS && onUpdatePreview && (
               <Button
-                variant="ghost"
                 size="sm"
                 onClick={onUpdatePreview}
                 disabled={isLoading}
-                className="h-8 px-2 text-xs"
+                className="h-8 px-3 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                <RefreshCw className={cn("w-3.5 h-3.5 mr-1", isLoading && "animate-spin")} />
-                Refresh
+                <RefreshCw className={cn("w-3.5 h-3.5 mr-1.5", isLoading && "animate-spin")} />
+                {isLoading ? 'Generating...' : 'Refresh'}
               </Button>
             )}
           </div>
