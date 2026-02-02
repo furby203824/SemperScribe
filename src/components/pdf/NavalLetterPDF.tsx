@@ -452,6 +452,15 @@ export function NavalLetterPDF({
           </View>
         )}
 
+        {/* Directive Title Line - Between date and From (MCO/Bulletin) */}
+        {isDirective && formData.directiveTitle && (
+          <View style={{ marginBottom: PDF_SPACING.sectionGap }}>
+            <Text style={[styles.addressLine, { textDecoration: 'underline' }]}>
+              {formData.directiveTitle}
+            </Text>
+          </View>
+        )}
+
         {/* From/To/Via */}
         <View style={styles.fromToSection}>
           {formData.bodyFont === 'courier' ? (

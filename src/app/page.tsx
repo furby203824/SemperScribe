@@ -10,7 +10,7 @@ import { ViaSection } from '@/components/letter/ViaSection';
 import { ReferencesSection } from '@/components/letter/ReferencesSection';
 import { EnclosuresSection } from '@/components/letter/EnclosuresSection';
 import { ReportsSection } from '@/components/letter/ReportsSection';
-import { DistributionSection } from '@/components/letter/DistributionSection';
+import { DistributionStatementSection } from '@/components/letter/DistributionStatementSection';
 import { StructuredReferenceInput } from '@/components/letter/StructuredReferenceInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -67,6 +67,7 @@ function NavalLetterGeneratorInner() {
     previousPackagePageCount: 0,
     headerType: 'USMC',
     bodyFont: 'times',
+    directiveTitle: '',
     cancellationDate: '',
     cancellationType: 'fixed',
     distribution: { type: 'none' },
@@ -984,6 +985,7 @@ function NavalLetterGeneratorInner() {
             previousPackagePageCount: 0,
             headerType: 'USMC',
             bodyFont: 'times',
+            directiveTitle: '',
             cancellationDate: '',
             cancellationType: 'fixed',
             distribution: { type: 'none' },
@@ -1337,42 +1339,70 @@ function NavalLetterGeneratorInner() {
         </Card>
       )}
 
-      {/* Dynamic Header Form based on Document Type - Hide for AMHS */}
-      {formData.documentType !== 'amhs' && (
-        <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6">
-          <DynamicForm 
-            key={`${formData.documentType}-${formKey}`} // Force re-render when type changes or data is imported
-            documentType={DOCUMENT_TYPES[formData.documentType] || DOCUMENT_TYPES['basic']}
-            onSubmit={handleDynamicFormSubmit}
-            defaultValues={formData}
-          />
-        </div>
+      {/* Dynamic Header Form based on Document Type */}
+      <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6">
+        <DynamicForm
+          key={`${formData.documentType}-${formKey}`} // Force re-render when type changes or data is imported
+          documentType={DOCUMENT_TYPES[formData.documentType] || DOCUMENT_TYPES['basic']}
+          onSubmit={handleDynamicFormSubmit}
+          defaultValues={formData}
+        />
+      </div>
+
+      {/* Directive Title Input for MCO/Bulletin */}
+      {(formData.documentType === 'mco' || formData.documentType === 'bulletin') && (
+        <Card className="shadow-sm border-border mb-6 border-l-4 border-l-amber-500">
+          <CardHeader className="pb-3 bg-secondary text-secondary-foreground rounded-t-lg">
+            <CardTitle className="text-lg font-semibold font-headline tracking-wide">
+              Directive Title
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">
+                Full Directive Title <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                type="text"
+                value={formData.directiveTitle || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, directiveTitle: e.target.value }))}
+                placeholder="e.g., MARINE CORPS ORDER 5210.11F"
+                className="font-mono"
+              />
+              <p className="text-xs text-muted-foreground">
+                This title will appear underlined between the date and From line. Examples: MCO 5210.11F, NAVMC DIR 5000.1, MCBul 1020
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Legacy Sections wrapped to fit layout - Hide for Page 11 */}
-      {formData.documentType !== 'page11' && (
-        <>
-          <ViaSection vias={vias} setVias={setVias} />
-          <ReferencesSection 
-            references={references} 
-            setReferences={setReferences} 
-            formData={formData}
-            setFormData={setFormData}
-          />
-          <EnclosuresSection 
-            enclosures={enclosures} 
-            setEnclosures={setEnclosures} 
-            formData={formData}
-            setFormData={setFormData}
-          />
-        </>
-      )}
+      {/* Legacy Sections wrapped to fit layout */}
+      <ViaSection vias={vias} setVias={setVias} />
+      <ReferencesSection 
+        references={references} 
+        setReferences={setReferences} 
+        formData={formData}
+        setFormData={setFormData}
+      />
+      <EnclosuresSection 
+        enclosures={enclosures} 
+        setEnclosures={setEnclosures} 
+        formData={formData}
+        setFormData={setFormData}
+      />
 
       {(formData.documentType === 'mco' || formData.documentType === 'bulletin') && (
-        <ReportsSection 
-          reports={formData.reports || []}
-          onUpdateReports={(reports) => setFormData(prev => ({ ...prev, reports }))}
-        />
+        <>
+          <DistributionStatementSection
+            distribution={formData.distribution || { type: 'none' }}
+            onUpdateDistribution={(distribution) => setFormData(prev => ({ ...prev, distribution }))}
+          />
+          <ReportsSection
+            reports={formData.reports || []}
+            onUpdateReports={(reports) => setFormData(prev => ({ ...prev, reports }))}
+          />
+        </>
       )}
 
       {formData.documentType !== 'page11' && (

@@ -239,7 +239,12 @@ export const MCOSchema = BasicLetterSchema.extend({
     copyTo: z.array(z.object({
         code: z.string(),
         qty: z.number()
-    })).optional()
+    })).optional(),
+    // Distribution Statement fields (per DoD 5230.24)
+    statementCode: z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'X', '']).optional(),
+    statementReason: z.string().optional(),
+    statementDate: z.string().optional(),
+    statementAuthority: z.string().optional(),
   }).optional(),
 });
 

@@ -533,19 +533,18 @@ export function DocumentTypeSection({
             <AlertCircle className="w-5 h-5 text-primary-foreground" />
             <h3 className="text-lg font-bold text-primary-foreground font-headline tracking-wide">Bulletin Details</h3>
           </div>
-          
+
           <CardContent className="space-y-6 pt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cancellation Date</Label>
                 <Input
-                  type="text"
-                  placeholder="DD MMM YY"
+                  type="date"
                   value={formData.cancellationDate || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, cancellationDate: e.target.value }))}
                 />
                 <p className="text-xs text-muted-foreground italic">
-                  Typically 12 months from issue date.
+                  Typically 12 months from issue date. Will display as "Mon YYYY" (e.g., Jan 2027).
                 </p>
               </div>
 
@@ -568,6 +567,24 @@ export function DocumentTypeSection({
                 </p>
               </div>
             </div>
+
+            {/* Visual indicator when contingent is selected */}
+            {formData.cancellationType === 'contingent' && (
+              <div className="flex items-center gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg animate-in fade-in slide-in-from-top-2">
+                <div className="flex-shrink-0">
+                  <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                    Cancellation Contingency Paragraph Added
+                  </p>
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
+                    A mandatory "Cancellation Contingency" paragraph has been added to the body section below.
+                    Fill it in to describe when this bulletin will be cancelled.
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
