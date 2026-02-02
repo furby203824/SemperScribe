@@ -212,22 +212,6 @@ export function DistributionStatementSection({
             )}
           </div>
         )}
-
-        {/* Guidance box when no statement selected */}
-        {!statement && (
-          <div className="text-xs text-muted-foreground bg-accent/5 p-3 rounded-md border border-border/50">
-            <p className="font-semibold mb-1">Distribution Statement Guide:</p>
-            <ul className="space-y-1 list-disc list-inside">
-              <li><strong>A</strong> - Approved for public release</li>
-              <li><strong>B</strong> - U.S. Government agencies only</li>
-              <li><strong>C</strong> - U.S. Government agencies and contractors</li>
-              <li><strong>D</strong> - DoD and DoD contractors only</li>
-              <li><strong>E</strong> - DoD components only (most restrictive unclassified)</li>
-              <li><strong>F</strong> - Further dissemination only as directed</li>
-              <li><strong>X</strong> - Export-controlled technical data</li>
-            </ul>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
