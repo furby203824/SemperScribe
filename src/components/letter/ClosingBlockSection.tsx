@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PenLine, UserCheck } from 'lucide-react';
+import { CopyToSection } from './CopyToSection';
 
 interface ClosingBlockSectionProps {
   formData: Pick<FormData, 'sig' | 'delegationText' | 'documentType' | 'distribution'>;
@@ -19,9 +20,12 @@ interface ClosingBlockSectionProps {
 export function ClosingBlockSection({
   formData,
   setFormData,
+  copyTos,
+  setCopyTos,
 }: ClosingBlockSectionProps) {
   const [showDelegation, setShowDelegation] = useState(false);
   const isAAForm = formData.documentType === 'aa-form';
+  const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin';
 
   useEffect(() => {
     setShowDelegation(!!formData.delegationText);
@@ -105,6 +109,12 @@ export function ClosingBlockSection({
               </div>
             )}
           </div>
+        )}
+
+        {!isDirective && !isAAForm && (
+           <div className="pt-6 border-t border-border">
+             <CopyToSection copyTos={copyTos} setCopyTos={setCopyTos} />
+           </div>
         )}
       </CardContent>
     </Card>

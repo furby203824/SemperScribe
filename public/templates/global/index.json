@@ -12,5 +12,19 @@
     "description": "Appointment letter for Command Designated Directives Manager",
     "documentType": "basic",
     "url": "/templates/global/cddm-appointment.nldp"
+  },
+  {
+    "id": "page11-promotion-not-rec",
+    "title": "Page 11 - Promotion Not Recommended",
+    "description": "Standard entry for when a Marine is eligible but not recommended for promotion.",
+    "documentType": "page11",
+    "url": "/templates/global/Promotion Not Recommended.nldp"
+  },
+  {
+    "id": "page11-promotion-rec",
+    "title": "Page 11 - Promotion Recommended",
+    "description": "Standard entry for when a Marine is recommended for promotion.",
+    "documentType": "page11",
+    "url": "/templates/global/Promotion Recommended.nldp"
   }
 ]

@@ -27,6 +27,7 @@ export interface FieldDefinition {
   options?: FieldOption[];
   defaultValue?: any;
   className?: string; // Layout hints (e.g., 'col-span-1', 'md:col-span-2')
+  rows?: number; // For textareas
   required?: boolean;
   
   // Dynamic behavior
@@ -319,11 +320,180 @@ export const BulletinDefinition: DocumentTypeDefinition = {
   ]
 };
 
+// 6. Page 11 (NAVMC 118(11))
+export const Page11Schema = z.object({
+  documentType: z.literal('page11'),
+  name: z.string().min(1, "Name is required"),
+  edipi: z.string().min(1, "DOD ID / EDIPI is required"),
+  remarksLeft: z.string().optional(),
+  remarksRight: z.string().optional(),
+});
+
+export const Page11Definition: DocumentTypeDefinition = {
+  id: 'page11',
+  name: 'NAVMC 118(11) (Page 11)',
+  description: 'Administrative Remarks for service record entries.',
+  icon: '🗂️',
+  schema: Page11Schema,
+  sections: [
+    {
+      id: 'header',
+      title: 'Page 11 Details',
+      fields: [
+        {
+          name: 'name',
+          label: 'Name (LAST, FIRST MI)',
+          type: 'text',
+          placeholder: 'DOE, JOHN A',
+          required: true,
+          className: 'col-span-full'
+        },
+        {
+          name: 'edipi',
+          label: 'DOD ID / EDIPI',
+          type: 'text',
+          placeholder: '1234567890',
+          required: true,
+          className: 'md:col-span-1'
+        }
+      ]
+    },
+    {
+      id: 'remarks',
+      title: 'Remarks',
+      fields: [
+        {
+          name: 'remarksLeft',
+          label: 'Left Column Content',
+          type: 'textarea',
+          placeholder: 'Enter dates or entry headers...',
+          className: 'md:col-span-1 font-mono',
+          rows: 20
+        },
+        {
+          name: 'remarksRight',
+          label: 'Right Column Content',
+          type: 'textarea',
+          placeholder: 'Enter remarks text...',
+          className: 'md:col-span-1 font-mono',
+          rows: 20
+        }
+      ]
+    }
+  ]
+};
+
+// 7. AMHS Message
+export const AMHSSchema = z.object({
+  documentType: z.literal('amhs'),
+  amhsMessageType: z.enum(['GENADMIN', 'MARADMIN', 'ALMAR']),
+  amhsClassification: z.enum(['UNCLASSIFIED', 'CONFIDENTIAL', 'SECRET', 'TOP SECRET']),
+  amhsPrecedence: z.enum(['ROUTINE', 'PRIORITY', 'IMMEDIATE', 'FLASH']),
+  amhsDtg: z.string().min(1, "DTG is required"),
+  amhsOfficeCode: z.string().optional(),
+  originatorCode: z.string().min(1, "Originator (FROM) is required"), // Reusing originatorCode for "FROM" field
+  subj: z.string().min(1, "Subject is required"),
+  amhsPocs: z.array(z.string()).optional(),
+});
+
+export const AMHSDefinition: DocumentTypeDefinition = {
+  id: 'amhs',
+  name: 'AMHS Message',
+  description: 'Automated Message Handling System (GENADMIN/MARADMIN)',
+  icon: '📡',
+  schema: AMHSSchema,
+  sections: [
+    {
+      id: 'classification',
+      title: 'Message Type & Classification',
+      fields: [
+        {
+          name: 'amhsMessageType',
+          label: 'Message Type',
+          type: 'select',
+          options: [
+            { label: 'GENADMIN', value: 'GENADMIN' },
+            { label: 'MARADMIN', value: 'MARADMIN' },
+            { label: 'ALMAR', value: 'ALMAR' }
+          ],
+          defaultValue: 'GENADMIN',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'amhsClassification',
+          label: 'Classification',
+          type: 'select',
+          options: [
+            { label: 'UNCLASSIFIED', value: 'UNCLASSIFIED' },
+            { label: 'CONFIDENTIAL', value: 'CONFIDENTIAL' },
+            { label: 'SECRET', value: 'SECRET' },
+            { label: 'TOP SECRET', value: 'TOP SECRET' }
+          ],
+          defaultValue: 'UNCLASSIFIED',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'amhsPrecedence',
+          label: 'Precedence',
+          type: 'select',
+          options: [
+            { label: 'ROUTINE (R)', value: 'ROUTINE' },
+            { label: 'PRIORITY (P)', value: 'PRIORITY' },
+            { label: 'IMMEDIATE (O)', value: 'IMMEDIATE' },
+            { label: 'FLASH (Z)', value: 'FLASH' }
+          ],
+          defaultValue: 'ROUTINE',
+          className: 'md:col-span-1'
+        }
+      ]
+    },
+    {
+      id: 'header',
+      title: 'Message Header',
+      fields: [
+        {
+          name: 'amhsDtg',
+          label: 'Date-Time Group (DTG)',
+          type: 'text',
+          placeholder: 'DDHHMMZMMMYY',
+          required: true,
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'amhsOfficeCode',
+          label: 'Office Code (Optional)',
+          type: 'text',
+          placeholder: 'MRA MM',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'originatorCode', // Mapped to "FROM"
+          label: 'Originator (FROM)',
+          type: 'text',
+          placeholder: 'CMC WASHINGTON DC',
+          required: true,
+          className: 'col-span-full'
+        },
+        {
+          name: 'subj',
+          label: 'Subject (SUBJ)',
+          type: 'text',
+          placeholder: 'SUBJECT LINE (ALL CAPS)',
+          required: true,
+          className: 'col-span-full'
+        }
+      ]
+    }
+  ]
+};
+
 // Registry of all document types
 export const DOCUMENT_TYPES: Record<string, DocumentTypeDefinition> = {
   basic: BasicLetterDefinition,
   endorsement: EndorsementDefinition,
   'aa-form': AAFormDefinition,
   mco: MCODefinition,
-  bulletin: BulletinDefinition
+  bulletin: BulletinDefinition,
+  page11: Page11Definition,
+  amhs: AMHSDefinition
 };

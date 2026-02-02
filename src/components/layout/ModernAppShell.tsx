@@ -2,9 +2,6 @@ import React from 'react';
 import { Sidebar } from './Sidebar';
 import { LivePreview } from './LivePreview';
 import { HeaderActions } from './HeaderActions';
-import { cn } from '@/lib/utils';
-import { Settings, FileText, Download } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { ParagraphData, SavedLetter } from '@/types';
 import { getBasePath } from '@/lib/path-utils';
 
@@ -28,6 +25,10 @@ interface ModernAppShellProps {
   currentUnitName?: string;
   onExportNldp: () => void;
   onUpdatePreview: () => void;
+  customRightPanel?: React.ReactNode;
+  // AMHS Actions
+  onCopyAMHS?: () => void;
+  onExportAMHS?: () => void;
 }
 
 export function ModernAppShell({ 
@@ -48,7 +49,10 @@ export function ModernAppShell({
   currentUnitCode,
   currentUnitName,
   onExportNldp,
-  onUpdatePreview
+  onUpdatePreview,
+  customRightPanel,
+  onCopyAMHS,
+  onExportAMHS,
 }: ModernAppShellProps) {
   const [showPreview, setShowPreview] = React.useState(true);
   const [logoSrc, setLogoSrc] = React.useState('/logo.png');
@@ -84,31 +88,37 @@ export function ModernAppShell({
 
           <div className="hidden sm:flex items-center space-x-2 text-sm">
             <span className="px-2 py-1 rounded bg-primary text-primary-foreground font-medium border border-primary-foreground/20 text-xs shadow-sm">
-              {documentType === 'navmc10274' ? 'AA FORM' : documentType.toUpperCase()}
+              {documentType === 'navmc10274' ? 'AA FORM' : (documentType ? documentType.toUpperCase() : 'HOME')}
             </span>
-            <span className="text-primary-foreground/50">/</span>
-            <span className="text-primary-foreground/70 font-medium text-xs">Draft</span>
+            {documentType && (
+              <>
+                <span className="text-primary-foreground/50">/</span>
+                <span className="text-primary-foreground/70 font-medium text-xs">Draft</span>
+              </>
+            )}
           </div>
         </div>
         
         <HeaderActions
-          className="text-primary-foreground"
-          onSave={onSave}
-          onLoadDraft={onLoadDraft}
-          onImport={onImport}
-          onExportDocx={onExportDocx}
-          onGeneratePdf={onGeneratePdf}
-          onClearForm={onClearForm}
-          savedLetters={savedLetters}
-          onLoadTemplateUrl={onLoadTemplateUrl}
-          documentType={documentType}
-          currentUnitCode={currentUnitCode}
-          currentUnitName={currentUnitName}
-          isGenerating={isGeneratingPreview}
-          onExportNldp={onExportNldp}
-          showPreview={showPreview}
-          onTogglePreview={() => setShowPreview(!showPreview)}
-        />
+            className="text-primary-foreground"
+            documentType={documentType}
+            onSave={onSave}
+            onLoadDraft={onLoadDraft}
+            onImport={onImport}
+            onExportDocx={onExportDocx}
+            onGeneratePdf={onGeneratePdf}
+            onClearForm={onClearForm}
+            savedLetters={savedLetters}
+            onLoadTemplateUrl={onLoadTemplateUrl}
+            currentUnitCode={currentUnitCode}
+            currentUnitName={currentUnitName}
+            isGenerating={isGeneratingPreview}
+            onExportNldp={onExportNldp}
+            showPreview={showPreview}
+            onTogglePreview={() => setShowPreview(!showPreview)}
+            onCopyAMHS={onCopyAMHS}
+            onExportAMHS={onExportAMHS}
+          />
       </header>
 
       {/* Main Content Area (3-Pane Grid) */}
@@ -127,13 +137,17 @@ export function ModernAppShell({
           </div>
         </main>
 
-        {/* Right Pane: Live Preview */}
-        {showPreview && (
-          <LivePreview 
-            previewUrl={previewUrl}
-            isLoading={isGeneratingPreview}
-            onUpdatePreview={onUpdatePreview}
-          />
+        {/* Right Pane: Live Preview or Custom Panel */}
+        {showPreview && documentType && (
+          customRightPanel ? (
+            customRightPanel
+          ) : (
+            <LivePreview 
+              previewUrl={previewUrl}
+              isLoading={isGeneratingPreview}
+              onUpdatePreview={onUpdatePreview}
+            />
+          )
         )}
       </div>
     </div>

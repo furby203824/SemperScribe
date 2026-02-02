@@ -70,7 +70,7 @@ export function DynamicForm({ documentType, onSubmit, defaultValues }: DynamicFo
               ) : field.type === 'date' ? (
                 <Input type="text" placeholder={field.placeholder || 'DD MMM YY'} {...formField} />
               ) : field.type === 'textarea' ? (
-                <Textarea placeholder={field.placeholder} {...formField} />
+                <Textarea placeholder={field.placeholder} rows={field.rows} {...formField} />
               ) : field.type === 'number' ? (
                  <Input type="number" placeholder={field.placeholder} {...formField} />
               ) : field.type === 'select' ? (

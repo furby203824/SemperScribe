@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { FileText, FileSignature, ClipboardList, ScrollText, AlertCircle, Building2, Type } from 'lucide-react';
+import { FileText, FileSignature, ClipboardList, ScrollText, AlertCircle, Building2, Type, FileCheck, MessageSquare } from 'lucide-react';
 
 interface DocumentTypeSectionProps {
   formData: FormData;
@@ -94,81 +94,203 @@ export function DocumentTypeSection({
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Document Type Selector */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-2 mb-6">
+      <section className="space-y-8">
+        <div className="flex items-center gap-2 mb-2">
           <div className="h-8 w-1 bg-primary rounded-full" />
           <h2 className="text-2xl font-headline tracking-wide text-primary">Document Type</h2>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <DocumentTypeCard
-            type="basic"
-            icon={<FileText className="w-10 h-10" />}
-            title="Basic Letter"
-            description="The standard format for routine correspondence and official communications."
-            note="✓ Most common format"
-            isActive={formData.documentType === 'basic'}
-            onClick={() => setFormData(prev => ({ ...prev, documentType: 'basic' }))}
-          />
+        {/* Standard Correspondence Section */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-muted-foreground uppercase tracking-wider text-sm border-b pb-2">
+            Standard Correspondence
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <DocumentTypeCard
+              type="basic"
+              icon={<FileText className="w-10 h-10" />}
+              title="Basic Letter"
+              description="The standard format for routine correspondence and official communications."
+              note="✓ Most common format"
+              isActive={formData.documentType === 'basic'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'basic' }))}
+            />
 
-          <DocumentTypeCard
-            type="endorsement"
-            icon={<FileSignature className="w-10 h-10" />}
-            title="New-Page Endorsement"
-            description="Forwards correspondence on a new page. Use for longer comments and formal endorsements."
-            note="→ For forwarding documents"
-            isActive={formData.documentType === 'endorsement'}
-            onClick={() => setFormData(prev => ({ ...prev, documentType: 'endorsement' }))}
-          />
+            <DocumentTypeCard
+              type="endorsement"
+              icon={<FileSignature className="w-10 h-10" />}
+              title="New-Page Endorsement"
+              description="Forwards correspondence on a new page. Use for longer comments and formal endorsements."
+              note="→ For forwarding documents"
+              isActive={formData.documentType === 'endorsement'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'endorsement' }))}
+            />
 
-          <DocumentTypeCard
-            type="aa-form"
-            icon={<ClipboardList className="w-10 h-10" />}
-            title="NAVMC 10274 (AA Form)"
-            description="Administrative Action Form. Used for personnel requests and administrative matters."
-            note="→ For admin requests"
-            isActive={formData.documentType === 'aa-form'}
-            onClick={() => setFormData(prev => ({ ...prev, documentType: 'aa-form' }))}
-          />
-
-          <DocumentTypeCard
-            type="mco"
-            icon={<ScrollText className="w-10 h-10" />}
-            title="Marine Corps Order"
-            description="Permanent directives that establish policy or procedures."
-            note="→ For standing orders"
-            isActive={formData.documentType === 'mco'}
-            onClick={() => {
-              setFormData(prev => ({ ...prev, documentType: 'mco', to: prev.to || 'Distribution List' }));
-              if (setParagraphs && formData.documentType !== 'mco') {
-                if (window.confirm('Do you want to load the standard SMEAC structure for this Marine Corps Order? Existing paragraphs will be replaced.')) {
-                  setParagraphs(getMCOParagraphs());
+            <DocumentTypeCard
+              type="mco"
+              icon={<ScrollText className="w-10 h-10" />}
+              title="Order / Directive"
+              description="Directives that establish policy or procedures (e.g. MCO, BnO)."
+              note="→ For standing orders"
+              isActive={formData.documentType === 'mco'}
+              onClick={() => {
+                setFormData(prev => ({ 
+                  ...prev, 
+                  documentType: 'mco', 
+                  to: prev.to || 'Distribution List',
+                  orderPrefix: prev.orderPrefix || 'MCO' 
+                }));
+                if (setParagraphs && formData.documentType !== 'mco') {
+                  if (window.confirm('Do you want to load the standard SMEAC structure for this Order? Existing paragraphs will be replaced.')) {
+                    setParagraphs(getMCOParagraphs());
+                  }
                 }
-              }
-            }}
-          />
+              }}
+            />
 
-          <DocumentTypeCard
-            type="bulletin"
-            icon={<AlertCircle className="w-10 h-10" />}
-            title="Marine Corps Bulletin"
-            description="Directives of a temporary nature (expire after 12 months)."
-            note="→ For temporary orders"
-            isActive={formData.documentType === 'bulletin'}
-            onClick={() => {
-              setFormData(prev => ({ ...prev, documentType: 'bulletin', to: prev.to || 'Distribution List' }));
-              if (setParagraphs && formData.documentType !== 'bulletin') {
-                if (window.confirm('Do you want to load the standard Bulletin structure? Existing paragraphs will be replaced.')) {
-                  setParagraphs(getMCBulParagraphs());
+            <DocumentTypeCard
+              type="bulletin"
+              icon={<AlertCircle className="w-10 h-10" />}
+              title="Marine Corps Bulletin"
+              description="Directives of a temporary nature (expire after 12 months)."
+              note="→ For temporary orders"
+              isActive={formData.documentType === 'bulletin'}
+              onClick={() => {
+                setFormData(prev => ({ ...prev, documentType: 'bulletin', to: prev.to || 'Distribution List' }));
+                if (setParagraphs && formData.documentType !== 'bulletin') {
+                  if (window.confirm('Do you want to load the standard Bulletin structure? Existing paragraphs will be replaced.')) {
+                    setParagraphs(getMCBulParagraphs());
+                  }
                 }
-              }
-            }}
-          />
+              }}
+            />
+          </div>
+
+          {/* MCO Specific Inputs */}
+          {formData.documentType === 'mco' && (
+            <div className="mt-6 p-4 bg-muted/30 rounded-lg border border-border animate-in fade-in slide-in-from-top-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="orderPrefix" className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    Directive Prefix / Short Title
+                  </Label>
+                  <Input
+                    id="orderPrefix"
+                    value={formData.orderPrefix || 'MCO'}
+                    onChange={(e) => setFormData(prev => ({ ...prev, orderPrefix: e.target.value.toUpperCase() }))}
+                    placeholder="e.g. MCO, BnO, RegO, DivO"
+                    className="max-w-xs font-mono"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Determines the export filename (e.g., <strong>{formData.orderPrefix || 'MCO'} {formData.ssic || 'XXXX.X'}</strong>)
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Bulletin Specific Inputs */}
+          {formData.documentType === 'bulletin' && (
+            <div className="mt-6 p-4 bg-muted/30 rounded-lg border border-border animate-in fade-in slide-in-from-top-2">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    Cancellation
+                  </Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                       <Label htmlFor="cancellationType" className="text-xs">Type</Label>
+                       <Select 
+                        value={formData.cancellationType || 'fixed'} 
+                        onValueChange={(val: 'fixed' | 'contingent') => setFormData(prev => ({ ...prev, cancellationType: val }))}
+                       >
+                        <SelectTrigger id="cancellationType">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fixed">Fixed Date</SelectItem>
+                          <SelectItem value="contingent">Contingency</SelectItem>
+                        </SelectContent>
+                       </Select>
+                    </div>
+                    
+                    {formData.cancellationType === 'fixed' ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="cancellationDate" className="text-xs">Cancellation Date</Label>
+                        <Input
+                          id="cancellationDate"
+                          type="date"
+                          value={formData.cancellationDate || ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, cancellationDate: e.target.value }))}
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label htmlFor="cancellationContingency" className="text-xs">Contingency Condition</Label>
+                        <Input
+                          id="cancellationContingency"
+                          value={formData.cancellationContingency || ''}
+                          placeholder="e.g. Upon receipt"
+                          onChange={(e) => setFormData(prev => ({ ...prev, cancellationContingency: e.target.value }))}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Forms Section */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-muted-foreground uppercase tracking-wider text-sm border-b pb-2">
+            Forms
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <DocumentTypeCard
+              type="aa-form"
+              icon={<ClipboardList className="w-10 h-10" />}
+              title="NAVMC 10274 (AA Form)"
+              description="Administrative Action Form. Used for personnel requests and administrative matters."
+              note="→ For admin requests"
+              isActive={formData.documentType === 'aa-form'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'aa-form' }))}
+            />
+
+            <DocumentTypeCard
+              type="page11"
+              icon={<FileCheck className="w-10 h-10" />}
+              title="NAVMC 118(11)"
+              description="Administrative Remarks (Page 11). For permanent service record entries."
+              note="→ For admin remarks"
+              isActive={formData.documentType === 'page11'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'page11' }))}
+            />
+          </div>
+        </div>
+
+        {/* Message Traffic Section */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">
+            Message Traffic
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <DocumentTypeCard
+              type="amhs"
+              icon={<MessageSquare className="w-10 h-10" />}
+              title="AMHS Message"
+              description="Automated Message Handling System format for official organizational messages."
+              note="→ For official traffic"
+              isActive={formData.documentType === 'amhs'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'amhs' }))}
+            />
+          </div>
         </div>
       </section>
 
       {/* Header Type & Body Font - Only for Letters */}
-      {formData.documentType !== 'aa-form' && (
+      {formData.documentType !== 'aa-form' && formData.documentType !== 'page11' && formData.documentType !== 'amhs' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-border/50">
           <Card className="border-border shadow-md bg-card">
             <CardHeader className="py-3 px-4 border-b border-border bg-secondary text-primary-foreground rounded-t-lg">

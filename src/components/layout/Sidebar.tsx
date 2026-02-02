@@ -56,7 +56,7 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Document Type</h3>
           <Accordion
             type="multiple"
-            defaultValue={["standard-letter", "directives", "forms"]}
+            defaultValue={[]}
             className="w-full"
           >
             {/* Standard Letter Group */}
@@ -122,10 +122,29 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
                     onClick={() => onDocumentTypeChange('aa-form')}
                     label="AA Form (NAVMC 10274)"
                   />
+                  <DocumentTypeButton
+                    active={documentType === 'page11'}
+                    onClick={() => onDocumentTypeChange('page11')}
+                    label="Pg. 11 (NAVMC 118(11))"
+                  />
                 </div>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
+
+          {/* AMHS - Single Item Group */}
+          <div className="border-none mt-1">
+            <button
+              onClick={() => onDocumentTypeChange('amhs')}
+              className={cn(
+                "w-full flex items-center py-2 text-sm font-semibold hover:no-underline transition-all text-left",
+                documentType === 'amhs' ? "text-primary" : "text-foreground hover:text-primary/80"
+              )}
+            >
+              <MessageSquare className="w-4 h-4 mr-2 text-primary" />
+              AMHS Message
+            </button>
+          </div>
         </div>
 
         {/* Document Structure */}

@@ -41,7 +41,7 @@ export interface NLDPMetadata {
     /** Subject line from the letter (for quick identification) */
     subject: string;
     /** Document type */
-    documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin';
+    documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11';
     /** Tags for categorization */
     tags?: string[];
   };
