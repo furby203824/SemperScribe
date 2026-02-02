@@ -1130,12 +1130,13 @@ function NavalLetterGeneratorInner() {
       onExportAMHS={handleExportAMHS}
       customRightPanel={
         formData.documentType === 'amhs' ? (
-          <AMHSPreview 
-            formData={formData} 
-            references={formData.amhsReferences || []} 
+          <AMHSPreview
+            formData={formData}
+            references={formData.amhsReferences || []}
           />
         ) : undefined
       }
+      formData={formData}
     >
       {!formData.documentType ? (
         <LandingPage />

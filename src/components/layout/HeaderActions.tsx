@@ -57,6 +57,7 @@ interface HeaderActionsProps {
   onExportNldp?: () => void;
   showPreview?: boolean;
   onTogglePreview?: () => void;
+  onOpenPreviewModal?: () => void;
   className?: string;
   // AMHS Actions
   onCopyAMHS?: () => void;
@@ -79,6 +80,7 @@ export function HeaderActions({
   onExportNldp,
   showPreview,
   onTogglePreview,
+  onOpenPreviewModal,
   className,
   onCopyAMHS,
   onExportAMHS
@@ -288,12 +290,26 @@ export function HeaderActions({
 
       {/* Export/Generate Buttons */}
       <div className="flex items-center space-x-2">
+        {/* Mobile Preview Button - opens modal */}
+        {onOpenPreviewModal && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onOpenPreviewModal}
+            className={buttonClass("xl:hidden flex")}
+            title="Show Preview"
+          >
+            <Eye className={cn("w-4 h-4", iconClass)} />
+          </Button>
+        )}
+
+        {/* Desktop Preview Toggle - shows/hides side panel */}
         {onTogglePreview && (
           <Button
             variant="ghost"
             size="sm"
             onClick={onTogglePreview}
-            className={buttonClass("hidden lg:flex")}
+            className={buttonClass("hidden xl:flex")}
             title={showPreview ? "Hide Preview" : "Show Preview"}
           >
             {showPreview ? (
