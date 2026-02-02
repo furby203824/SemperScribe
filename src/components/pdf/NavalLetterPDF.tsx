@@ -452,6 +452,17 @@ export function NavalLetterPDF({
           </View>
         )}
 
+        {/* Directive Title Line - Between date and From (MCO/Bulletin) */}
+        {isDirective && formData.ssic && (
+          <View style={{ marginBottom: PDF_SPACING.sectionGap }}>
+            <Text style={styles.addressLine}>
+              {formData.documentType === 'mco'
+                ? `MARINE CORPS ORDER ${formData.ssic}`
+                : `MARINE CORPS BULLETIN ${formData.ssic}`}
+            </Text>
+          </View>
+        )}
+
         {/* From/To/Via */}
         <View style={styles.fromToSection}>
           {formData.bodyFont === 'courier' ? (

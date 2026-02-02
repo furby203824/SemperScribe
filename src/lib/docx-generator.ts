@@ -149,7 +149,20 @@ export async function generateDocxBlob(
       spacing: { after: 0 }
     }));
   }
-  
+
+  // --- Directive Title Line (between date and From for MCO/Bulletin) ---
+  const directiveTitleParagraphs: Paragraph[] = [];
+  if (isDirective && formData.ssic) {
+    const directiveTitle = formData.documentType === 'mco'
+      ? `MARINE CORPS ORDER ${formData.ssic}`
+      : `MARINE CORPS BULLETIN ${formData.ssic}`;
+    directiveTitleParagraphs.push(new Paragraph({
+      children: [new TextRun({ text: directiveTitle, font, size: FONT_SIZE_BODY })],
+      alignment: AlignmentType.LEFT,
+      spacing: { after: 240 }
+    }));
+  }
+
   // --- From/To/Via ---
   const addressParagraphs: Paragraph[] = [];
   
@@ -599,6 +612,7 @@ export async function generateDocxBlob(
         ...ssicParagraphs,
         createEmptyLine(font),
         ...endorsementParagraphs,
+        ...directiveTitleParagraphs,
         ...addressParagraphs,
         ...refParagraphs,
         ...enclParagraphs,
