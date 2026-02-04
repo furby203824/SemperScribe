@@ -7,13 +7,13 @@ import React from 'react';
 import { FormData, EndorsementLevel, ParagraphData } from '@/types';
 import { StructuredReferenceInput } from './StructuredReferenceInput';
 import { debugFormChange } from '@/lib/console-utils';
-import { getMCOParagraphs, getMCBulParagraphs } from '@/lib/naval-format-utils';
+import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs } from '@/lib/naval-format-utils';
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { FileText, FileSignature, ClipboardList, ScrollText, AlertCircle, Building2, Type, FileCheck, MessageSquare } from 'lucide-react';
+import { FileText, FileSignature, ClipboardList, ScrollText, AlertCircle, Building2, Type, FileCheck, MessageSquare, Users, Notebook, Handshake } from 'lucide-react';
 
 interface DocumentTypeSectionProps {
   formData: FormData;
@@ -114,6 +114,16 @@ export function DocumentTypeSection({
               note="✓ Most common format"
               isActive={formData.documentType === 'basic'}
               onClick={() => setFormData(prev => ({ ...prev, documentType: 'basic' }))}
+            />
+
+            <DocumentTypeCard
+              type="multiple-address"
+              icon={<Users className="w-10 h-10" />}
+              title="Multiple-Address Letter"
+              description="Same as Standard Letter but addresses multiple recipients (Distribution List)."
+              note="→ For multiple recipients"
+              isActive={formData.documentType === 'multiple-address'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'multiple-address', to: 'DISTRIBUTION LIST' }))}
             />
 
             <DocumentTypeCard
@@ -240,6 +250,78 @@ export function DocumentTypeSection({
               </div>
             </div>
           )}
+        </div>
+
+        {/* Memorandums Section */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-muted-foreground uppercase tracking-wider text-sm border-b pb-2">
+            Memorandums
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <DocumentTypeCard
+              type="from-to-memo"
+              icon={<Notebook className="w-10 h-10" />}
+              title="From-To Memorandum"
+              description="Informal internal correspondence. Uses plain paper or command forms."
+              note="→ For internal routine business"
+              isActive={formData.documentType === 'from-to-memo'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'from-to-memo' }))}
+            />
+
+            <DocumentTypeCard
+              type="mfr"
+              icon={<FileText className="w-10 h-10" />}
+              title="Memorandum for the Record"
+              description="Internal document to record events or decisions. No 'To' line."
+              note="→ For internal records"
+              isActive={formData.documentType === 'mfr'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'mfr' }))}
+            />
+
+            <DocumentTypeCard
+              type="letterhead-memo"
+              icon={<Building2 className="w-10 h-10" />}
+              title="Letterhead Memorandum"
+              description="Formal memorandum. Uses command letterhead."
+              note="→ For formal internal/external use"
+              isActive={formData.documentType === 'letterhead-memo'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'letterhead-memo' }))}
+            />
+
+            <DocumentTypeCard
+              type="moa"
+              icon={<Handshake className="w-10 h-10" />}
+              title="Memorandum of Agreement"
+              description="Agreement between two or more parties (Conditional)."
+              note="→ For binding agreements"
+              isActive={formData.documentType === 'moa'}
+              onClick={() => {
+                setFormData(prev => ({ ...prev, documentType: 'moa' }));
+                if (setParagraphs && formData.documentType !== 'moa') {
+                  if (window.confirm('Do you want to load the standard MOA structure? Existing paragraphs will be replaced.')) {
+                    setParagraphs(getMOAParagraphs());
+                  }
+                }
+              }}
+            />
+
+            <DocumentTypeCard
+              type="mou"
+              icon={<Handshake className="w-10 h-10" />}
+              title="Memorandum of Understanding"
+              description="General understanding between two or more parties (Non-binding)."
+              note="→ For general understanding"
+              isActive={formData.documentType === 'mou'}
+              onClick={() => {
+                setFormData(prev => ({ ...prev, documentType: 'mou' }));
+                if (setParagraphs && formData.documentType !== 'mou') {
+                  if (window.confirm('Do you want to load the standard MOU structure? Existing paragraphs will be replaced.')) {
+                    setParagraphs(getMOAParagraphs());
+                  }
+                }
+              }}
+            />
+          </div>
         </div>
 
         {/* Forms Section */}

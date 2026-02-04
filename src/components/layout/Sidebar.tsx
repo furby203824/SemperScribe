@@ -13,7 +13,8 @@ import {
   Scale,
   Mail,
   ScrollText,
-  ClipboardList
+  ClipboardList,
+  Notebook
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -75,9 +76,53 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
                     label="Basic Letter"
                   />
                   <DocumentTypeButton
+                    active={documentType === 'multiple-address'}
+                    onClick={() => onDocumentTypeChange('multiple-address')}
+                    label="Multiple-Address Letter"
+                  />
+                  <DocumentTypeButton
                     active={documentType === 'endorsement'}
                     onClick={() => onDocumentTypeChange('endorsement')}
                     label="Endorsement"
+                  />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Memorandums Group */}
+            <AccordionItem value="memorandums" className="border-none">
+              <AccordionTrigger className="py-2 text-sm font-semibold text-foreground hover:no-underline">
+                <span className="flex items-center">
+                  <Notebook className="w-4 h-4 mr-2 text-primary" />
+                  Memorandums
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-2">
+                <div className="space-y-1 pl-2">
+                  <DocumentTypeButton
+                    active={documentType === 'mfr'}
+                    onClick={() => onDocumentTypeChange('mfr')}
+                    label="Memorandum for the Record"
+                  />
+                  <DocumentTypeButton
+                    active={documentType === 'from-to-memo'}
+                    onClick={() => onDocumentTypeChange('from-to-memo')}
+                    label="From-To Memorandum"
+                  />
+                  <DocumentTypeButton
+                    active={documentType === 'letterhead-memo'}
+                    onClick={() => onDocumentTypeChange('letterhead-memo')}
+                    label="Letterhead Memorandum"
+                  />
+                  <DocumentTypeButton
+                    active={documentType === 'moa'}
+                    onClick={() => onDocumentTypeChange('moa')}
+                    label="Memorandum of Agreement"
+                  />
+                  <DocumentTypeButton
+                    active={documentType === 'mou'}
+                    onClick={() => onDocumentTypeChange('mou')}
+                    label="Memorandum of Understanding"
                   />
                 </div>
               </AccordionContent>
@@ -180,7 +225,7 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
         <Button 
           variant="ghost" 
           className="w-full justify-start text-muted-foreground hover:text-primary hover:bg-primary/5"
-          onClick={() => window.open('https://semperadmin.github.io/Sentinel/#detail/semper-scribe/todo', '_blank')}
+          onClick={() => window.open('https://semperadmin.github.io/Sentinel/#detail/naval-letter-formatter/todo', '_blank')}
         >
           <MessageSquare className="w-4 h-4 mr-2" />
           Feedback

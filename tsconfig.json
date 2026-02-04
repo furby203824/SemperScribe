@@ -38,6 +38,10 @@
   ],
   "exclude": [
     "node_modules",
+    "semper-scribe",
+    "marine-corps-directives-formatter",
+    "naval-letter-formatter",
+    "naval-letter-formatter - Copy",
     "tests",
     "supabase",
     "**/*.test.ts",

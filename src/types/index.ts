@@ -28,11 +28,12 @@ export interface DistributionData {
   type: 'none' | 'standard' | 'pcn' | 'pcn-with-copy';
   pcn?: string;
   copyTo?: Array<{ code: string; qty: number }>;
+  recipients?: string[]; // For Multiple-Address Letter
   // Distribution Statement fields
   statementCode?: DistributionStatementCode;
-  statementReason?: string;         // For B, C, D, E, F - restriction reason
-  statementDate?: string;           // For C, D, E - determination date
-  statementAuthority?: string;      // For C, D, E - originating command/authority
+  statementReason?: string;
+  statementDate?: string;
+  statementAuthority?: string;
 }
 
 export interface AdminSubsections {
@@ -42,7 +43,7 @@ export interface AdminSubsections {
 }
 
 export interface FormData {
-  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs' | 'order' | 'navmc10274' | '';
+  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs' | 'multiple-address' | 'mfr' | 'from-to-memo' | 'letterhead-memo' | 'moa' | 'mou' | '';
   endorsementLevel: EndorsementLevel;
   basicLetterReference: string;
   basicLetterSsic?: string;
@@ -73,7 +74,6 @@ export interface FormData {
   orgStation?: string; // Can default to line1 + line2 + line3 if not set
   // MCO/Bulletin specific fields
   directiveTitle?: string;  // Full directive title (e.g., "MARINE CORPS ORDER 5210.11F")
-  orderPrefix?: string;
   cancellationDate?: string;
   cancellationType?: 'contingent' | 'fixed';
   cancellationContingency?: string;
@@ -86,7 +86,6 @@ export interface FormData {
   edipi?: string;
   remarksLeft?: string;
   remarksRight?: string;
-  box11?: string;
 
   // AMHS specific fields
   amhsMessageType?: 'GENADMIN' | 'MARADMIN' | 'ALMAR';
@@ -98,6 +97,22 @@ export interface FormData {
   amhsTextBody?: string;
   amhsReferences?: AMHSReference[];
   amhsPocs?: string[];
+
+  // MOA/MOU specific fields
+  moaData?: {
+    activityA: string; // Senior Activity (Right side)
+    activityB: string; // Junior Activity (Left side)
+    seniorSigner: {
+      name: string;
+      title: string;
+      activity: string;
+    };
+    juniorSigner: {
+      name: string;
+      title: string;
+      activity: string;
+    };
+  };
 }
 
 export interface SavedLetter extends FormData {

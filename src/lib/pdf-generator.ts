@@ -32,7 +32,8 @@ export async function generateBasePDFBlob(
   references: string[],
   enclosures: string[],
   copyTos: string[],
-  paragraphs: ParagraphData[]
+  paragraphs: ParagraphData[],
+  distList: string[] = []
 ): Promise<Blob> {
   ensureFontsRegistered();
 
@@ -43,6 +44,7 @@ export async function generateBasePDFBlob(
     enclosures,
     copyTos,
     paragraphs,
+    distList,
   });
 
   return pdf(document as any).toBlob();
@@ -95,6 +97,7 @@ export async function generatePDFBlob(
   enclosures: string[],
   copyTos: string[],
   paragraphs: ParagraphData[],
+  distList: string[] = [],
   manualPosition?: ManualSignaturePosition
 ): Promise<Blob> {
   ensureFontsRegistered();
@@ -107,6 +110,7 @@ export async function generatePDFBlob(
     enclosures,
     copyTos,
     paragraphs,
+    distList,
   });
 
   // Generate initial PDF blob
@@ -151,6 +155,7 @@ export async function downloadPDF(
   enclosures: string[],
   copyTos: string[],
   paragraphs: ParagraphData[],
+  distList: string[] = [],
   manualPosition?: ManualSignaturePosition
 ): Promise<void> {
   const blob = await generatePDFBlob(
@@ -160,6 +165,7 @@ export async function downloadPDF(
     enclosures,
     copyTos,
     paragraphs,
+    distList,
     manualPosition
   );
 

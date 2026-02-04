@@ -9,12 +9,15 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PenLine, UserCheck } from 'lucide-react';
 import { CopyToSection } from './CopyToSection';
+import { ManualDistributionSection } from './ManualDistributionSection';
 
 interface ClosingBlockSectionProps {
   formData: Pick<FormData, 'sig' | 'delegationText' | 'documentType' | 'distribution'>;
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
   copyTos: string[];
   setCopyTos: (copies: string[]) => void;
+  distList: string[];
+  setDistList: (list: string[]) => void;
 }
 
 export function ClosingBlockSection({
@@ -22,10 +25,22 @@ export function ClosingBlockSection({
   setFormData,
   copyTos,
   setCopyTos,
+  distList,
+  setDistList,
 }: ClosingBlockSectionProps) {
   const [showDelegation, setShowDelegation] = useState(false);
   const isAAForm = formData.documentType === 'aa-form';
+  const isMfr = formData.documentType === 'mfr';
   const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin';
+
+  const getShowDistributionOption = () => {
+      if (formData.documentType === 'multiple-address') {
+          const toCount = formData.distribution?.recipients?.length || 0;
+          return toCount <= 1;
+      }
+      return true;
+  };
+  const showDistOption = getShowDistributionOption();
 
   useEffect(() => {
     setShowDelegation(!!formData.delegationText);
@@ -55,21 +70,38 @@ export function ClosingBlockSection({
         
         <div className="space-y-2">
           <Label htmlFor="signature-name" className="text-base font-semibold flex items-center">
-            Signature Name
+            {isMfr ? 'Name' : 'Signature Name'}
           </Label>
           <div className="relative">
             <UserCheck className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               id="signature-name"
               className="pl-9"
-              placeholder="F. M. LASTNAME"
+              placeholder={isMfr ? "I. M. MARINE" : "F. M. LASTNAME"}
               value={formData.sig}
               onChange={(e) => setFormData(prev => ({ ...prev, sig: autoUppercase(e.target.value) }))}
             />
           </div>
         </div>
         
-        {!isAAForm && (
+        {isMfr && (
+           <div className="space-y-2 pt-4 border-t border-border">
+              <Label htmlFor="sig-position" className="text-base font-semibold flex items-center">
+                 Organizational Code / Position
+              </Label>
+              <Input
+                 id="sig-position"
+                 placeholder="Code 123"
+                 value={formData.delegationText}
+                 onChange={(e) => setFormData(prev => ({ ...prev, delegationText: e.target.value }))}
+              />
+              <p className="text-xs text-muted-foreground">
+                 Omit Rank and Functional Title.
+              </p>
+           </div>
+        )}
+
+        {!isAAForm && !isMfr && (
           <div className="space-y-4 pt-4 border-t border-border">
             <Label className="text-base font-semibold flex items-center">
               Delegation of Signature Authority?
@@ -111,10 +143,16 @@ export function ClosingBlockSection({
           </div>
         )}
 
-        {!isDirective && !isAAForm && (
-           <div className="pt-6 border-t border-border">
-             <CopyToSection copyTos={copyTos} setCopyTos={setCopyTos} />
-           </div>
+        {!isDirective && !isMfr && (
+          <div className="pt-6 border-t border-border">
+            {showDistOption && (
+               <ManualDistributionSection 
+                  distList={distList}
+                  setDistList={setDistList}
+               />
+            )}
+            <CopyToSection copyTos={copyTos} setCopyTos={setCopyTos} />
+          </div>
         )}
       </CardContent>
     </Card>

@@ -9,6 +9,7 @@ import { ClosingBlockSection } from '@/components/letter/ClosingBlockSection';
 import { ViaSection } from '@/components/letter/ViaSection';
 import { ReferencesSection } from '@/components/letter/ReferencesSection';
 import { EnclosuresSection } from '@/components/letter/EnclosuresSection';
+import { MOAFormSection } from '@/components/letter/MOAFormSection';
 import { ReportsSection } from '@/components/letter/ReportsSection';
 import { DistributionStatementSection } from '@/components/letter/DistributionStatementSection';
 import { DistributionSection } from '@/components/letter/DistributionSection';
@@ -20,7 +21,7 @@ import { FileSignature } from 'lucide-react';
 import { useEDMSContext, isEditMode } from '@/hooks/useEDMSContext';
 import { UNITS } from '@/lib/units';
 import { getTodaysDate } from '@/lib/date-utils';
-import { getMCOParagraphs, getMCBulParagraphs, getExportFilename, mergeAdminSubsections } from '@/lib/naval-format-utils';
+import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getExportFilename, mergeAdminSubsections } from '@/lib/naval-format-utils';
 import { validateSSIC, validateSubject, validateFromTo } from '@/lib/validation-utils';
 import { loadSavedLetters, saveLetterToStorage, findLetterById } from '@/lib/storage-utils';
 import { generateBasePDFBlob, generatePDFBlob, getPDFPageCount, addMultipleSignaturesToBlob, ManualSignaturePosition } from '@/lib/pdf-generator';
@@ -387,6 +388,8 @@ function NavalLetterGeneratorInner() {
       newParagraphs = getMCOParagraphs();
     } else if (newType === 'bulletin') {
       newParagraphs = getMCBulParagraphs();
+    } else if (newType === 'moa' || newType === 'mou') {
+      newParagraphs = getMOAParagraphs();
     } else {
        if (formData.documentType === 'mco' || formData.documentType === 'bulletin') {
           newParagraphs = [{ id: 1, level: 1, content: '', acronymError: '' }];
@@ -1244,7 +1247,8 @@ function NavalLetterGeneratorInner() {
           ) : (
             <>
               {/* Header Settings (Hidden for AA Form, Page 11, and AMHS) */}
-              {formData.documentType !== 'aa-form' && formData.documentType !== 'page11' && (
+              {/* Header Settings (Hidden for AA Form, Page 11, AMHS, From-To Memo, MOA, MOU) */}
+      {formData.documentType !== 'aa-form' && formData.documentType !== 'page11' && formData.documentType !== 'from-to-memo' && formData.documentType !== 'moa' && formData.documentType !== 'mou' && (
                 <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Header Type</label>
@@ -1299,14 +1303,19 @@ function NavalLetterGeneratorInner() {
         </div>
       )}
 
-      {/* Unit Info / Letterhead - Hide for Page 11 */ }
-      {formData.documentType !== 'page11' && (
+      {/* Unit Info / Letterhead - Hide for Page 11, From-To Memo, MFR */ }
+      {formData.documentType !== 'page11' && formData.documentType !== 'from-to-memo' && formData.documentType !== 'mfr' && (
         <UnitInfoSection
           formData={formData}
           setFormData={setFormData}
           setCurrentUnitCode={setCurrentUnitCode}
           setCurrentUnitName={setCurrentUnitName}
         />
+      )}
+
+      {/* MOA/MOU Form Section */}
+      {(formData.documentType === 'moa' || formData.documentType === 'mou') && (
+        <MOAFormSection formData={formData} setFormData={setFormData} />
       )}
 
 
@@ -1480,19 +1489,30 @@ function NavalLetterGeneratorInner() {
       )}
 
       {/* Legacy Sections wrapped to fit layout */}
-      <ViaSection vias={vias} setVias={setVias} />
-      <ReferencesSection 
-        references={references} 
-        setReferences={setReferences} 
-        formData={formData}
-        setFormData={setFormData}
-      />
-      <EnclosuresSection 
-        enclosures={enclosures} 
-        setEnclosures={setEnclosures} 
-        formData={formData}
-        setFormData={setFormData}
-      />
+      {/* Hide Via for MOA/MOU */}
+      {formData.documentType !== 'moa' && formData.documentType !== 'mou' && (
+        <ViaSection vias={vias} setVias={setVias} />
+      )}
+
+      {/* Hide References for MOA/MOU */}
+      {formData.documentType !== 'moa' && formData.documentType !== 'mou' && (
+        <ReferencesSection 
+          references={references} 
+          setReferences={setReferences} 
+          formData={formData}
+          setFormData={setFormData}
+        />
+      )}
+
+      {/* Hide Enclosures for MOA/MOU */}
+      {formData.documentType !== 'moa' && formData.documentType !== 'mou' && (
+        <EnclosuresSection 
+          enclosures={enclosures} 
+          setEnclosures={setEnclosures} 
+          formData={formData}
+          setFormData={setFormData}
+        />
+      )}
 
       {(formData.documentType === 'mco' || formData.documentType === 'bulletin') && (
         <>
@@ -1523,7 +1543,7 @@ function NavalLetterGeneratorInner() {
         />
       )}
 
-      {formData.documentType !== 'page11' && (
+      {formData.documentType !== 'page11' && formData.documentType !== 'moa' && formData.documentType !== 'mou' && (
         <ClosingBlockSection
           formData={formData}
           setFormData={setFormData}
@@ -1566,9 +1586,6 @@ function NavalLetterGeneratorInner() {
         </CardContent>
       </Card>
 
-      </>
-      )}
-
       {/* Signature Placement Modal */}
       <SignaturePlacementModal
         open={showSignatureModal}
@@ -1577,6 +1594,8 @@ function NavalLetterGeneratorInner() {
         pdfBlob={signaturePdfBlob}
         totalPages={signaturePdfPageCount}
       />
+    </>
+  )}
     </>
   )}
     </ModernAppShell>

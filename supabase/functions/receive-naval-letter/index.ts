@@ -113,12 +113,12 @@ Deno.serve(async (req) => {
       unit_uic: unitCode,
       subject: attachment.subject,
       due_date: null,
-      notes: `Naval letter generated via Semper Scribe. SSIC: ${attachment.ssic}`,
+      notes: `Naval letter generated via NLF. SSIC: ${attachment.ssic}`,
       uploaded_by_id: null, // NLF doesn't have user auth
       current_stage: 'draft',
       request_id: requestId,
       file_url: fileUrl,
-      source: 'semper-scribe'
+      source: 'naval-letter-formatter'
     }
 
     const { error: docInsertError } = await supabase
@@ -159,9 +159,9 @@ Deno.serve(async (req) => {
     const activityEntry = {
       timestamp: new Date().toISOString(),
       action: 'document_added',
-      description: `Naval letter added via Semper Scribe: ${filename}`,
+      description: `Naval letter added via NLF: ${filename}`,
       documentId,
-      source: 'semper-scribe'
+      source: 'naval-letter-formatter'
     }
     const updatedActivity = [...currentActivity, activityEntry]
 

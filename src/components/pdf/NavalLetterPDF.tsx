@@ -39,6 +39,7 @@ interface NavalLetterPDFProps {
   enclosures: string[];
   copyTos: string[];
   paragraphs: ParagraphData[];
+  distList?: string[];
 }
 
 const createStyles = (bodyFont: 'times' | 'courier', accentColor?: string) => {
@@ -141,6 +142,57 @@ const createStyles = (bodyFont: 'times' | 'courier', accentColor?: string) => {
     // Body - uses sectionGap for spacing after
     bodySection: {
       marginBottom: PDF_SPACING.sectionGap,
+    },
+
+    // MOA/MOU Header
+    moaHeader: {
+      textAlign: 'center',
+      marginBottom: PDF_SPACING.sectionGap * 2,
+    },
+    moaTitle: {
+      fontFamily: fontFamily,
+      fontSize: PDF_FONT_SIZES.body,
+      fontWeight: 'bold',
+      marginBottom: 6,
+    },
+    moaBetween: {
+      fontFamily: fontFamily,
+      fontSize: PDF_FONT_SIZES.body,
+      marginBottom: 6,
+    },
+    moaActivity: {
+      fontFamily: fontFamily,
+      fontSize: PDF_FONT_SIZES.body,
+      fontWeight: 'bold',
+      textDecoration: 'underline',
+      marginBottom: 6,
+    },
+    moaAnd: {
+      fontFamily: fontFamily,
+      fontSize: PDF_FONT_SIZES.body,
+      marginBottom: 6,
+    },
+    moaRegarding: {
+      fontFamily: fontFamily,
+      fontSize: PDF_FONT_SIZES.body,
+      marginTop: 6,
+    },
+
+    // MOA/MOU Signatures
+    signatureRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 24,
+      marginBottom: 12,
+    },
+    signatureColumn: {
+      width: '45%',
+      alignItems: 'center',
+    },
+    signatureLine: {
+      fontFamily: fontFamily,
+      fontSize: PDF_FONT_SIZES.body,
+      textAlign: 'center',
     },
     
     // Individual paragraph spacing
@@ -328,6 +380,7 @@ export function NavalLetterPDF({
   enclosures,
   copyTos,
   paragraphs,
+  distList = [],
 }: NavalLetterPDFProps) {
   const styles = createStyles(
     formData.bodyFont || 'times',
@@ -341,10 +394,26 @@ export function NavalLetterPDF({
   const refsWithContent = references.filter((r) => r.trim());
   const enclsWithContent = enclosures.filter((e) => e.trim());
   const copiesWithContent = copyTos.filter((c) => c.trim());
+  const distListWithContent = distList.filter((d) => d.trim());
   const paragraphsWithContent = paragraphs.filter((p) => p.content.trim() || p.title);
 
   const formattedSubjLines = splitSubject(formData.subj.toUpperCase(), PDF_SUBJECT.maxLineLength);
   const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin';
+  const isFromToMemo = formData.documentType === 'from-to-memo';
+  const isMfr = formData.documentType === 'mfr';
+  const isMoaOrMou = formData.documentType === 'moa' || formData.documentType === 'mou';
+  
+  const moaData = formData.moaData || {
+    activityA: '',
+    activityB: '',
+    seniorSigner: { name: '', title: '', activity: '' },
+    juniorSigner: { name: '', title: '', activity: '' }
+  };
+  
+  // Logic to determine if we are in "Multiple Address" mode with MANY recipients (automatic list)
+  // If true, we use the automatic list and HIDE the manual list to avoid duplication.
+  const isMultipleAddressMany = formData.documentType === 'multiple-address' && 
+                               (formData.distribution?.recipients?.filter(r => r && r.trim()).length || 0) > 1;
 
   const getFromToSpacing = (label: string): string => {
     if (formData.bodyFont === 'courier') {
@@ -414,9 +483,10 @@ export function NavalLetterPDF({
         />
         
         {/* Seal - Only on first page */}
-        <Image src={sealDataUrl} style={styles.seal} />
+        {!isFromToMemo && !isMfr && <Image src={sealDataUrl} style={styles.seal} />}
 
         {/* Letterhead - Only on first page */}
+        {!isFromToMemo && !isMfr && (
         <View style={styles.letterhead}>
           <Text style={styles.headerTitle}>
             {formData.headerType === 'USMC'
@@ -427,21 +497,31 @@ export function NavalLetterPDF({
           {formData.line2 && <Text style={styles.headerLine}>{formData.line2}</Text>}
           {formData.line3 && <Text style={styles.headerLine}>{formData.line3}</Text>}
         </View>
+        )}
 
         {/* One empty line after letterhead */}
-        <View style={styles.emptyLine} />
+        {!isFromToMemo && !isMfr && <View style={styles.emptyLine} />}
 
-        {/* SSIC Block */}
-        <View style={styles.addressBlock}>
-          {formData.documentType === 'bulletin' && formData.cancellationDate && (
-            <Text style={styles.addressLine}>
-              Canc: {formatCancellationDate(formData.cancellationDate)}
-            </Text>
-          )}
-          <Text style={styles.addressLine}>{formData.ssic || ''}</Text>
-          <Text style={styles.addressLine}>{formData.originatorCode || ''}</Text>
-          <Text style={styles.addressLine}>{formattedDate}</Text>
-        </View>
+        {/* From-To Memo and MFR Date - Flush Right, top of content */}
+        {(isFromToMemo || isMfr) && (
+            <View style={{ marginBottom: PDF_SPACING.sectionGap, marginTop: 24, alignItems: 'flex-end' }}>
+                <Text style={styles.addressLine}>{formattedDate}</Text>
+            </View>
+        )}
+
+        {/* SSIC Block - Hide for MFR and FromToMemo as they handle Date separately */}
+        {!isFromToMemo && !isMfr && !isMoaOrMou && (
+          <View style={styles.addressBlock}>
+            {formData.documentType === 'bulletin' && formData.cancellationDate && (
+              <Text style={styles.addressLine}>
+                Canc: {formatCancellationDate(formData.cancellationDate)}
+              </Text>
+            )}
+            <Text style={styles.addressLine}>{formData.ssic || ''}</Text>
+            <Text style={styles.addressLine}>{formData.originatorCode || ''}</Text>
+            <Text style={styles.addressLine}>{formattedDate}</Text>
+          </View>
+        )}
 
         {/* Endorsement Identification Line - Between date and From */}
         {isEndorsement && formData.endorsementLevel && formData.basicLetterReference && (
@@ -461,27 +541,115 @@ export function NavalLetterPDF({
           </View>
         )}
 
-        {/* From/To/Via */}
+        {/* MFR Title */}
+        {formData.documentType === 'mfr' && (
+          <View style={{ marginBottom: PDF_SPACING.sectionGap }}>
+            <Text style={[styles.addressLine, { textAlign: 'left' }]}>
+              MEMORANDUM FOR THE RECORD
+            </Text>
+          </View>
+        )}
+
+        {/* From-To Memo Title */}
+        {isFromToMemo && (
+          <View style={{ marginBottom: PDF_SPACING.sectionGap, marginTop: 12, alignItems: 'flex-start' }}>
+            <Text style={[styles.addressLine, { textAlign: 'left' }]}>
+              MEMORANDUM
+            </Text>
+          </View>
+        )}
+
+        {/* Letterhead Memo Title - Between date and MEMORANDUM FOR */}
+        {formData.documentType === 'letterhead-memo' && (
+          <View style={{ marginBottom: PDF_SPACING.sectionGap }}>
+             <Text style={[styles.addressLine, { textAlign: 'left' }]}>
+              MEMORANDUM
+            </Text>
+          </View>
+        )}
+
+        {/* MOA/MOU Header */}
+        {isMoaOrMou && (
+            <View style={styles.moaHeader}>
+                <Text style={styles.moaTitle}>
+                    {formData.documentType === 'moa' ? 'MEMORANDUM OF AGREEMENT' : 'MEMORANDUM OF UNDERSTANDING'}
+                </Text>
+                <Text style={styles.moaBetween}>BETWEEN</Text>
+                <Text style={styles.moaActivity}>{moaData.activityA.toUpperCase()}</Text>
+                <Text style={styles.moaAnd}>AND</Text>
+                <Text style={styles.moaActivity}>{moaData.activityB.toUpperCase()}</Text>
+                <Text style={styles.moaRegarding}>REGARDING {formData.subj?.toUpperCase()}</Text>
+            </View>
+        )}
+
+        {/* From/To/Via - Hide for MFR and MOA/MOU */}
+        {formData.documentType !== 'mfr' && !isMoaOrMou && (
         <View style={styles.fromToSection}>
+          {/* From Line - Common */}
           {formData.bodyFont === 'courier' ? (
-            <>
-              <Text style={styles.addressLine}>{getFromToSpacing('From')}{formData.from}</Text>
-              <Text style={styles.addressLine}>{getFromToSpacing('To')}{formData.to}</Text>
-            </>
+             <Text style={styles.addressLine}>{getFromToSpacing('From')}{formData.from}</Text>
           ) : (
-            <>
-              <View style={styles.fromToLine}>
+             <View style={styles.fromToLine}>
                 <Text style={styles.fromToLabel}>From:</Text>
                 <Text>{formData.from}</Text>
-              </View>
-              <View style={styles.fromToLine}>
-                <Text style={styles.fromToLabel}>To:</Text>
-                <Text>{formData.to}</Text>
-              </View>
-            </>
+             </View>
           )}
 
-          {viasWithContent.map((via, i) => (
+          {/* To Line(s) */}
+          {formData.documentType === 'multiple-address' ? (
+             // Multiple Address Logic
+             (() => {
+                const recipients = formData.distribution?.recipients || (formData.to ? [formData.to] : ["Addressee"]);
+                const recipientsWithContent = recipients.filter(r => r && r.trim());
+                if (recipientsWithContent.length === 0) recipientsWithContent.push("Addressee");
+
+                if (recipientsWithContent.length > 1) {
+                    // > 1 Recipients: "See Distribution"
+                    return formData.bodyFont === 'courier' ? (
+                         <Text style={styles.addressLine}>{getFromToSpacing('To')}See Distribution</Text>
+                    ) : (
+                         <View style={styles.fromToLine}>
+                            <Text style={styles.fromToLabel}>To:</Text>
+                            <Text>See Distribution</Text>
+                         </View>
+                    );
+                } else {
+                    // 1 Recipient: Stacked (which is just one)
+                    return formData.bodyFont === 'courier' ? (
+                        <>
+                          {recipientsWithContent.map((r, i) => (
+                             <Text key={i} style={styles.addressLine}>
+                               {i === 0 ? getFromToSpacing('To') : '       '}
+                               {r}
+                             </Text>
+                          ))}
+                        </>
+                     ) : (
+                        <View style={styles.fromToLine}>
+                           <Text style={styles.fromToLabel}>To:</Text>
+                           <View style={{ flex: 1 }}>
+                              {recipientsWithContent.map((r, i) => (
+                                 <Text key={i} style={{ marginBottom: 0 }}>{r}</Text>
+                              ))}
+                           </View>
+                        </View>
+                     );
+                }
+             })()
+          ) : (
+             // Standard Logic
+             formData.bodyFont === 'courier' ? (
+                <Text style={styles.addressLine}>{getFromToSpacing('To')}{formData.to}</Text>
+             ) : (
+                <View style={styles.fromToLine}>
+                    <Text style={styles.fromToLabel}>To:</Text>
+                    <Text>{formData.to}</Text>
+                </View>
+             )
+          )}
+
+          {/* Via Lines - Only if NOT multiple-address */}
+          {formData.documentType !== 'multiple-address' && viasWithContent.map((via, i) => (
             formData.bodyFont === 'courier' ? (
               <Text key={i} style={styles.addressLine}>
                 {getViaSpacing(i, viasWithContent.length)}{via}
@@ -498,8 +666,11 @@ export function NavalLetterPDF({
             )
           ))}
         </View>
+        )}
 
         {/* Subject */}
+        {/* Subject Line - Hide for MOA/MOU (handled in header) */}
+        {!isMoaOrMou && (
         <View style={styles.subjectSection}>
           {formData.bodyFont === 'courier' ? (
             <>
@@ -522,6 +693,7 @@ export function NavalLetterPDF({
             </>
           )}
         </View>
+        )}
 
         {/* References */}
         {refsWithContent.length > 0 && (
@@ -600,15 +772,41 @@ export function NavalLetterPDF({
           </View>
         )}
 
-        {/* Signature block */}
-        {formData.sig && (
+        {/* Signature block - Standard */}
+        {!isMoaOrMou && formData.sig && (
           <View style={styles.signatureBlock}>
             <View style={styles.emptyLine} />
             <View style={styles.emptyLine} />
+            <View style={styles.emptyLine} />
             <Text style={styles.signatureLine}>{formData.sig.toUpperCase()}</Text>
-            {formData.delegationText && (
+            {!isFromToMemo && formData.delegationText && (
               <Text style={styles.signatureLine}>{formData.delegationText}</Text>
             )}
+          </View>
+        )}
+
+        {/* MOA/MOU Signature Block */}
+        {isMoaOrMou && (
+          <View style={styles.signatureRow}>
+            {/* Junior Signer (Left) */}
+            <View style={styles.signatureColumn}>
+              <View style={styles.emptyLine} />
+              <View style={styles.emptyLine} />
+              <View style={styles.emptyLine} />
+              <Text style={styles.signatureLine}>{moaData.juniorSigner.name.toUpperCase()}</Text>
+              <Text style={styles.signatureLine}>{moaData.juniorSigner.title}</Text>
+              <Text style={styles.signatureLine}>{moaData.juniorSigner.activity}</Text>
+            </View>
+
+            {/* Senior Signer (Right) */}
+            <View style={styles.signatureColumn}>
+              <View style={styles.emptyLine} />
+              <View style={styles.emptyLine} />
+              <View style={styles.emptyLine} />
+              <Text style={styles.signatureLine}>{moaData.seniorSigner.name.toUpperCase()}</Text>
+              <Text style={styles.signatureLine}>{moaData.seniorSigner.title}</Text>
+              <Text style={styles.signatureLine}>{moaData.seniorSigner.activity}</Text>
+            </View>
           </View>
         )}
 
@@ -660,9 +858,42 @@ export function NavalLetterPDF({
             </View>
         )}
 
+
+
+        {/* Distribution List for Multiple-Address Letter (Automatic) */}
+        {isMultipleAddressMany && (
+            <View style={styles.copyToSection}>
+                <View style={styles.emptyLine} />
+                <Text style={styles.copyToLabel}>Distribution:</Text>
+                {formData.distribution?.recipients?.filter(r => r && r.trim()).map((r, i) => (
+                    <Text key={i} style={styles.copyToLine}>
+                        {r}
+                    </Text>
+                ))}
+            </View>
+        )}
+
+        {/* Manual Distribution List (Standard Letter or Multiple-Address with <= 1 recipient) */}
+        {!isDirective && !isMultipleAddressMany && distListWithContent.length > 0 && (
+          <View style={styles.copyToSection}>
+            <Text style={styles.copyToLabel}>
+              {formData.bodyFont === 'courier' ? 'Distribution:  ' : 'Distribution:'}
+            </Text>
+            {distListWithContent.map((dist, i) => (
+              <Text key={i} style={styles.copyToLine}>
+                {formData.bodyFont === 'courier' ? '             ' : ''}{dist}
+              </Text>
+            ))}
+          </View>
+        )}
+
         {/* Copy to (Standard Letter) */}
         {!isDirective && copiesWithContent.length > 0 && (
           <View style={styles.copyToSection}>
+            {/* Add full space if any distribution list was rendered above */}
+            {(isMultipleAddressMany || (distListWithContent.length > 0)) && (
+               <View style={styles.emptyLine} />
+            )}
             <Text style={styles.copyToLabel}>
               {formData.bodyFont === 'courier' ? 'Copy to:  ' : 'Copy to:'}
             </Text>

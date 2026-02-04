@@ -132,7 +132,31 @@ export const BasicLetterDefinition: DocumentTypeDefinition = {
   ]
 };
 
-// 2. Endorsement
+// 2. Multiple-Address Letter
+export const MultipleAddressLetterSchema = BasicLetterSchema.extend({
+  documentType: z.literal('multiple-address'),
+  to: z.string().optional(), // 'to' is optional because we use distribution.recipients
+});
+
+export const MultipleAddressLetterDefinition: DocumentTypeDefinition = {
+  id: 'multiple-address',
+  name: 'Multiple-Address Letter',
+  description: 'Letter addressed to two or more commands/activities.',
+  icon: '📨',
+  schema: MultipleAddressLetterSchema,
+  sections: [
+    {
+      id: 'header',
+      title: 'Header Information',
+      fields: [
+        // Exclude 'to' because we handle it with a custom section
+        ...BasicLetterDefinition.sections[0].fields.filter(f => f.name !== 'to')
+      ]
+    }
+  ]
+};
+
+// 3. Endorsement
 export const EndorsementSchema = BasicLetterSchema.extend({
   documentType: z.literal('endorsement'),
   endorsementLevel: z.enum(['FIRST', 'SECOND', 'THIRD', 'FOURTH', 'FIFTH', 'SIXTH', 'SEVENTH', 'EIGHTH', 'NINTH', 'TENTH', '']),
@@ -479,13 +503,199 @@ export const AMHSDefinition: DocumentTypeDefinition = {
   ]
 };
 
+// 8. Memorandum for the Record (MFR)
+export const MFRSchema = BasicLetterSchema.omit({ from: true, to: true, ssic: true, originatorCode: true }).extend({
+  documentType: z.literal('mfr'),
+  from: z.string().optional(),
+  to: z.string().optional(),
+  ssic: z.string().optional(),
+  originatorCode: z.string().optional(),
+});
+
+export const MFRDefinition: DocumentTypeDefinition = {
+  id: 'mfr',
+  name: 'Memorandum for the Record',
+  description: 'Internal document to record events or decisions. No "To" line.',
+  icon: '📝',
+  schema: MFRSchema,
+  sections: [
+    {
+      id: 'header',
+      title: 'MFR Details',
+      fields: [
+        // Include basic fields but exclude From/To, SSIC, and Originator Code
+        ...BasicLetterDefinition.sections[0].fields.filter(f => 
+          f.name !== 'from' && f.name !== 'to' && f.name !== 'ssic' && f.name !== 'originatorCode'
+        )
+      ]
+    }
+  ]
+};
+
+// 9. From-To Memorandum
+export const FromToMemoSchema = BasicLetterSchema.extend({
+  documentType: z.literal('from-to-memo'),
+  ssic: z.string().optional(),
+  originatorCode: z.string().optional(),
+});
+
+export const FromToMemoDefinition: DocumentTypeDefinition = {
+  id: 'from-to-memo',
+  name: 'From-To Memorandum',
+  description: 'Informal internal correspondence on plain paper.',
+  icon: '📨',
+  schema: FromToMemoSchema,
+  sections: [
+    {
+      id: 'header',
+      title: 'Header Information',
+      fields: [
+        {
+          name: 'date',
+          label: 'Date',
+          type: 'date',
+          placeholder: 'DD Mmm YY',
+          required: true,
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'from',
+          label: 'From',
+          type: 'text',
+          placeholder: 'Name (Grade, First MI Last)',
+          required: true,
+          className: 'col-span-full'
+        },
+        {
+          name: 'to',
+          label: 'To',
+          type: 'text',
+          placeholder: 'Commanding Officer...',
+          required: true,
+          className: 'col-span-full'
+        },
+        {
+          name: 'subj',
+          label: 'Subject',
+          type: 'text',
+          placeholder: 'SUBJECT LINE (ALL CAPS)',
+          required: true,
+          className: 'col-span-full'
+        }
+      ]
+    }
+  ]
+};
+
+// 10. Letterhead Memorandum
+export const LetterheadMemoSchema = BasicLetterSchema.extend({
+  documentType: z.literal('letterhead-memo'),
+});
+
+export const LetterheadMemoDefinition: DocumentTypeDefinition = {
+  id: 'letterhead-memo',
+  name: 'Letterhead Memorandum',
+  description: 'Formal memorandum used for correspondence within the activity or with other federal agencies.',
+  icon: '🏛️',
+  schema: LetterheadMemoSchema,
+  sections: [
+    ...BasicLetterDefinition.sections
+  ]
+};
+
+// 11. Memorandum of Agreement (MOA)
+export const MOASchema = z.object({
+  documentType: z.literal('moa'),
+  date: z.string().min(1, "Date is required"),
+  subj: z.string().min(1, "Subject (REGARDING) is required").transform(val => val.toUpperCase()),
+  moaData: z.object({
+    activityA: z.string().min(1, "Senior Activity is required"),
+    activityB: z.string().min(1, "Junior Activity is required"),
+    seniorSigner: z.object({
+      name: z.string().min(1, "Name is required"),
+      title: z.string().min(1, "Title is required"),
+      activity: z.string().min(1, "Activity is required"),
+    }),
+    juniorSigner: z.object({
+      name: z.string().min(1, "Name is required"),
+      title: z.string().min(1, "Title is required"),
+      activity: z.string().min(1, "Activity is required"),
+    }),
+  }),
+  ssic: z.string().optional(),
+  originatorCode: z.string().optional(),
+});
+
+export const MOADefinition: DocumentTypeDefinition = {
+  id: 'moa',
+  name: 'Memorandum of Agreement',
+  description: 'Agreement between two or more parties (Conditional).',
+  icon: '🤝',
+  schema: MOASchema,
+  sections: [
+    {
+      id: 'moa-header',
+      title: 'Agreement Details',
+      fields: [
+         {
+          name: 'date',
+          label: 'Date',
+          type: 'date',
+          required: true,
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'ssic',
+          label: 'SSIC',
+          type: 'combobox',
+          placeholder: 'Search SSIC...',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'originatorCode',
+          label: 'Originator Code',
+          type: 'text',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'subj',
+          label: 'Subject (REGARDING)',
+          type: 'text',
+          required: true,
+          className: 'col-span-full',
+          placeholder: 'SUBJECT OF AGREEMENT'
+        }
+      ]
+    }
+  ]
+};
+
+// 12. Memorandum of Understanding (MOU)
+export const MOUSchema = MOASchema.extend({
+  documentType: z.literal('mou'),
+});
+
+export const MOUDefinition: DocumentTypeDefinition = {
+  ...MOADefinition,
+  id: 'mou',
+  name: 'Memorandum of Understanding',
+  description: 'General understanding between two or more parties (Non-binding).',
+  schema: MOUSchema,
+};
+
 // Registry of all document types
 export const DOCUMENT_TYPES: Record<string, DocumentTypeDefinition> = {
   basic: BasicLetterDefinition,
+  'multiple-address': MultipleAddressLetterDefinition,
   endorsement: EndorsementDefinition,
   'aa-form': AAFormDefinition,
   mco: MCODefinition,
   bulletin: BulletinDefinition,
   page11: Page11Definition,
-  amhs: AMHSDefinition
+  mfr: MFRDefinition,
+  'from-to-memo': FromToMemoDefinition,
+  'letterhead-memo': LetterheadMemoDefinition,
+  amhs: AMHSDefinition,
+  moa: MOADefinition,
+  mou: MOUDefinition
 };

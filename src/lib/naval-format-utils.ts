@@ -184,6 +184,19 @@ export function getMCBulParagraphs(): ParagraphData[] {
 }
 
 /**
+ * Standard MOA/MOU Paragraphs
+ */
+export function getMOAParagraphs(): ParagraphData[] {
+  return [
+    { id: 1, level: 1, content: '', title: 'Purpose' },
+    { id: 2, level: 1, content: '', title: 'Problem' },
+    { id: 3, level: 1, content: '', title: 'Scope' },
+    { id: 4, level: 1, content: '', title: 'Agreement' },
+    { id: 5, level: 1, content: '', title: 'Effective Date' },
+  ];
+}
+
+/**
  * Generates a standardized filename for exports
  */
 export function getExportFilename(formData: FormData, extension: 'pdf' | 'docx' | 'txt'): string {
@@ -223,6 +236,12 @@ export function getExportFilename(formData: FormData, extension: 'pdf' | 'docx' 
   // AMHS
   if (formData.documentType === 'amhs') {
     return `AMHS - ${subject}.${extension}`;
+  }
+
+  // MOA/MOU
+  if (formData.documentType === 'moa' || formData.documentType === 'mou') {
+    const type = formData.documentType.toUpperCase();
+    return `${type} - ${subject}.${extension}`;
   }
 
   // Default Basic Letter
