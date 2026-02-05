@@ -73,7 +73,7 @@ export async function generateDocxBlob(
   const headerColor = getHeaderColor(formData.accentColor);
   const sealBuffer = await getDoDSealBufferSync(formData.headerType as 'USMC' | 'DON');
   const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin';
-  const isStaffingPaper = ['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType);
+  const isStaffingPaper = ['talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType);
   const isFromToMemo = formData.documentType === 'from-to-memo';
   const isMfr = formData.documentType === 'mfr';
   const isMoaOrMou = formData.documentType === 'moa' || formData.documentType === 'mou';

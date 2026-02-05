@@ -7,7 +7,7 @@ import React from 'react';
 import { FormData, EndorsementLevel, ParagraphData } from '@/types';
 import { StructuredReferenceInput } from './StructuredReferenceInput';
 import { debugFormChange } from '@/lib/console-utils';
-import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getPointPaperParagraphs, getTalkingPaperParagraphs, getBriefingPaperParagraphs, getPositionPaperParagraphs, getTripReportParagraphs } from '@/lib/naval-format-utils';
+import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getTalkingPaperParagraphs, getBriefingPaperParagraphs, getPositionPaperParagraphs, getTripReportParagraphs } from '@/lib/naval-format-utils';
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";

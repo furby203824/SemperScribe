@@ -67,7 +67,6 @@ export const BasicLetterSchema = z.object({
   to: z.string().min(1, "To line is required"),
   subj: z.string().min(1, "Subject is required").transform(val => val.toUpperCase()),
   documentType: z.literal('basic'),
-  policyMode: z.boolean().optional(),
 });
 
 export const BasicLetterDefinition: DocumentTypeDefinition = {
@@ -104,13 +103,6 @@ export const BasicLetterDefinition: DocumentTypeDefinition = {
           placeholder: 'DD Mmm YY',
           required: true,
           className: 'md:col-span-1'
-        },
-        {
-          name: 'policyMode',
-          label: 'Policy/Instruction Mode',
-          type: 'checkbox',
-          description: 'Pre-fill with standard policy paragraphs',
-          className: 'md:col-span-1 flex items-center mt-8'
         },
         {
           name: 'from',
@@ -688,7 +680,7 @@ export const MOUDefinition: DocumentTypeDefinition = {
 
 // 13. Staffing Papers (Point, Talking, Briefing, Position, Trip Report)
 export const StaffingPaperSchema = z.object({
-  documentType: z.enum(['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report']),
+  documentType: z.enum(['talking-paper', 'briefing-paper', 'position-paper', 'trip-report']),
   subj: z.string().min(1, "Subject is required").transform(val => val.toUpperCase()),
   date: z.string().min(1, "Date is required"),
   drafterName: z.string().min(1, "Drafter Name is required"),
@@ -749,18 +741,6 @@ const StaffingPaperFooterFields: FieldDefinition[] = [
     className: 'md:col-span-1'
   }
 ];
-
-export const PointPaperDefinition: DocumentTypeDefinition = {
-  id: 'point-paper',
-  name: 'Point Paper',
-  description: 'Concise, bulleted paper on a single issue (1-Page Limit).',
-  icon: '⚡',
-  schema: StaffingPaperSchema,
-  sections: [
-    { id: 'header', title: 'Paper Details', fields: StaffingPaperFields },
-    { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
-  ]
-};
 
 export const TalkingPaperDefinition: DocumentTypeDefinition = {
   id: 'talking-paper',

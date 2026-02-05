@@ -208,7 +208,7 @@ export function getExportFilename(formData: FormData, extension: 'pdf' | 'docx' 
 
   // Order / Directive
   if (formData.documentType === 'mco') {
-    const prefix = sanitize(formData.orderPrefix) || 'MCO';
+    const prefix = sanitize(formData.orderPrefix ?? '') || 'MCO';
     return `${prefix} ${ssic} - ${subject}.${extension}`;
   }
 
@@ -231,7 +231,7 @@ export function getExportFilename(formData: FormData, extension: 'pdf' | 'docx' 
 
   // Page 11
   if (formData.documentType === 'page11') {
-    const name = sanitize(formData.name) || 'Marine';
+    const name = sanitize(formData.name ?? '') || 'Marine';
     return `NAVMC 118(11) - ${name}.${extension}`;
   }
 
@@ -247,7 +247,7 @@ export function getExportFilename(formData: FormData, extension: 'pdf' | 'docx' 
   }
 
   // Staffing Papers
-  if (['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType)) {
+  if (['talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType)) {
     const type = formData.documentType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     return `${type} - ${subject}.${extension}`;
   }
@@ -316,44 +316,36 @@ export function mergeAdminSubsections(
   return newParagraphs;
 }
 
-export function getPointPaperParagraphs(): ParagraphData[] {
-  return [
-    { id: 1, level: 0, content: 'Use this section to briefly state the history or context of the issue.', title: 'Background', isMandatory: true },
-    { id: 2, level: 0, content: 'State the current problem or topic requiring attention.', title: 'Issue', isMandatory: true },
-    { id: 3, level: 0, content: 'State the desired outcome or the main takeaway for the reader.', title: 'Recommendation', isMandatory: true },
-  ];
-}
-
 export function getTalkingPaperParagraphs(): ParagraphData[] {
   return [
-    { id: 1, level: 0, content: '', title: 'Background', isMandatory: true },
-    { id: 2, level: 0, content: '', title: 'Discussion', isMandatory: true },
+    { id: 1, level: 1, content: '', title: 'Background', isMandatory: true },
+    { id: 2, level: 1, content: '', title: 'Discussion', isMandatory: true },
   ];
 }
 
 export function getBriefingPaperParagraphs(): ParagraphData[] {
   return [
-    { id: 1, level: 0, content: '', title: 'Background', isMandatory: true },
-    { id: 2, level: 0, content: '', title: 'Discussion', isMandatory: true },
-    { id: 3, level: 0, content: '', title: 'Conclusion', isMandatory: true },
+    { id: 1, level: 1, content: '', title: 'Background', isMandatory: true },
+    { id: 2, level: 1, content: '', title: 'Discussion', isMandatory: true },
+    { id: 3, level: 1, content: '', title: 'Conclusion', isMandatory: true },
   ];
 }
 
 export function getPositionPaperParagraphs(): ParagraphData[] {
   return [
-    { id: 1, level: 0, content: '', title: 'Issue', isMandatory: true },
-    { id: 2, level: 0, content: '', title: 'Position', isMandatory: true },
-    { id: 3, level: 0, content: '', title: 'Discussion', isMandatory: true },
-    { id: 4, level: 0, content: '', title: 'Recommendation', isMandatory: true },
+    { id: 1, level: 1, content: '', title: 'Issue', isMandatory: true },
+    { id: 2, level: 1, content: '', title: 'Position', isMandatory: true },
+    { id: 3, level: 1, content: '', title: 'Discussion', isMandatory: true },
+    { id: 4, level: 1, content: '', title: 'Recommendation', isMandatory: true },
   ];
 }
 
 export function getTripReportParagraphs(): ParagraphData[] {
   return [
-    { id: 1, level: 0, content: '', title: 'Purpose', isMandatory: true },
-    { id: 2, level: 0, content: '', title: 'Travelers', isMandatory: true },
-    { id: 3, level: 0, content: '', title: 'Itinerary', isMandatory: true },
-    { id: 4, level: 0, content: '', title: 'Discussion', isMandatory: true },
-    { id: 5, level: 0, content: '', title: 'Action Items', isMandatory: true },
+    { id: 1, level: 1, content: '', title: 'Purpose', isMandatory: true },
+    { id: 2, level: 1, content: '', title: 'Travelers', isMandatory: true },
+    { id: 3, level: 1, content: '', title: 'Itinerary', isMandatory: true },
+    { id: 4, level: 1, content: '', title: 'Discussion', isMandatory: true },
+    { id: 5, level: 1, content: '', title: 'Action Items', isMandatory: true },
   ];
 }

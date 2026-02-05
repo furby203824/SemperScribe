@@ -12,10 +12,7 @@ const nextConfig: NextConfig = {
   output: isProd ? 'export' : undefined,
   trailingSlash: true,
   typescript: {
-    ignoreBuildErrors: true, 
-  },
-  eslint: {
-    ignoreDuringBuilds: true, 
+    ignoreBuildErrors: false,
   },
   images: {
     unoptimized: true, 

@@ -43,7 +43,7 @@ export interface AdminSubsections {
 }
 
 export interface FormData {
-  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs' | 'multiple-address' | 'mfr' | 'from-to-memo' | 'letterhead-memo' | 'moa' | 'mou' | 'point-paper' | 'talking-paper' | 'briefing-paper' | 'position-paper' | 'trip-report' | '';
+  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs' | 'multiple-address' | 'mfr' | 'from-to-memo' | 'letterhead-memo' | 'moa' | 'mou' | 'talking-paper' | 'briefing-paper' | 'position-paper' | 'trip-report' | '';
   endorsementLevel: EndorsementLevel;
   basicLetterReference: string;
   basicLetterSsic?: string;
@@ -73,6 +73,7 @@ export interface FormData {
   actionNo?: string;
   orgStation?: string; // Can default to line1 + line2 + line3 if not set
   // MCO/Bulletin specific fields
+  orderPrefix?: string;  // Directive prefix (e.g., "MCO", "BnO", "DivO")
   directiveTitle?: string;  // Full directive title (e.g., "MARINE CORPS ORDER 5210.11F")
   cancellationDate?: string;
   cancellationType?: 'contingent' | 'fixed';
