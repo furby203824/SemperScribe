@@ -11,6 +11,7 @@ export interface ShareableState {
   enclosures?: string[];
   vias?: string[];
   copyTos?: string[];
+  distList?: string[];
   version: number; // For future compatibility
 }
 

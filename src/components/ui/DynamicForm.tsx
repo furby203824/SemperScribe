@@ -118,7 +118,7 @@ export function DynamicForm({ documentType, onSubmit, defaultValues }: DynamicFo
                 {section.description && <p className="text-sm text-secondary-foreground/80">{section.description}</p>}
              </CardHeader>
              <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className={`grid gap-6 ${section.className || 'grid-cols-1 md:grid-cols-2'}`}>
                   {section.fields.map(renderField)}
                 </div>
              </CardContent>

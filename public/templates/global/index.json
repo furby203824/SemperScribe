@@ -26,5 +26,12 @@
     "description": "Standard entry for when a Marine is recommended for promotion.",
     "documentType": "page11",
     "url": "/templates/global/Promotion Recommended.nldp"
+  },
+  {
+    "id": "moa-template",
+    "title": "Memorandum of Agreement Template",
+    "description": "Standard MOA template with participating activities and signatories.",
+    "documentType": "moa",
+    "url": "/templates/global/moa-template.nldp"
   }
 ]

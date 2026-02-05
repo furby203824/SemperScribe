@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { FormData } from '@/types';
 import { Handshake } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker';
+import { format } from 'date-fns';
 
 interface MOAFormSectionProps {
   formData: FormData;
@@ -12,11 +14,22 @@ interface MOAFormSectionProps {
 }
 
 export function MOAFormSection({ formData, setFormData }: MOAFormSectionProps) {
-  const moaData = formData.moaData || {
-    activityA: '',
-    activityB: '',
-    seniorSigner: { name: '', title: '', activity: '' },
-    juniorSigner: { name: '', title: '', activity: '' }
+  const defaultMoaData = {
+    activityA: '', // Unused in UI, kept for compatibility
+    activityB: '', // Unused in UI, kept for compatibility
+    seniorSigner: { name: '', title: '', activity: '', activitySymbol: '', date: '' },
+    juniorSigner: { name: '', title: '', activity: '', activitySymbol: '', date: '' },
+    activityAHeader: { ssic: '', serial: '', date: '' },
+    activityBHeader: { ssic: '', serial: '', date: '' }
+  };
+
+  const moaData = {
+    ...defaultMoaData,
+    ...(formData.moaData || {}),
+    seniorSigner: { ...defaultMoaData.seniorSigner, ...(formData.moaData?.seniorSigner || {}) },
+    juniorSigner: { ...defaultMoaData.juniorSigner, ...(formData.moaData?.juniorSigner || {}) },
+    activityAHeader: { ...defaultMoaData.activityAHeader, ...(formData.moaData?.activityAHeader || {}) },
+    activityBHeader: { ...defaultMoaData.activityBHeader, ...(formData.moaData?.activityBHeader || {}) }
   };
 
   const updateMoaData = (field: string, value: any) => {
@@ -25,8 +38,10 @@ export function MOAFormSection({ formData, setFormData }: MOAFormSectionProps) {
     // Handle nested updates
     if (field.includes('.')) {
       const [parent, child] = field.split('.');
-      if (parent === 'seniorSigner' || parent === 'juniorSigner') {
+      if (['seniorSigner', 'juniorSigner', 'activityAHeader', 'activityBHeader'].includes(parent)) {
+        // @ts-ignore
         newMoaData[parent] = {
+          // @ts-ignore
           ...newMoaData[parent],
           [child]: value
         };
@@ -41,6 +56,13 @@ export function MOAFormSection({ formData, setFormData }: MOAFormSectionProps) {
       moaData: newMoaData
     }));
   };
+
+  const parseDate = (str: string | undefined): Date | undefined => {
+    if (!str) return undefined;
+    const d = new Date(str);
+    return isNaN(d.getTime()) ? undefined : d;
+  };
+
 
   return (
     <Card className="border-primary/20 shadow-md overflow-hidden">
@@ -61,8 +83,34 @@ export function MOAFormSection({ formData, setFormData }: MOAFormSectionProps) {
               <Input
                 value={moaData.activityB}
                 onChange={(e) => updateMoaData('activityB', e.target.value)}
-                placeholder="e.g. NAVAL SUPPORT ACTIVITY"
+                placeholder="Full Name (e.g. NAVAL SUPPORT ACTIVITY)"
               />
+              <div className="grid grid-cols-4 gap-2 mt-2">
+                <Input
+                  value={moaData.juniorSigner.activitySymbol || ''}
+                  onChange={(e) => updateMoaData('juniorSigner.activitySymbol', e.target.value)}
+                  placeholder="Symbol (e.g. NSA)"
+                  className="h-8 text-xs"
+                />
+                <Input 
+                  placeholder="SSIC (e.g. 5216)" 
+                  value={moaData.activityBHeader?.ssic || ''} 
+                  onChange={(e) => updateMoaData('activityBHeader.ssic', e.target.value)} 
+                  className="h-8 text-xs" 
+                />
+                <Input 
+                  placeholder="Serial (e.g. Ser N02/234)" 
+                  value={moaData.activityBHeader?.serial || ''} 
+                  onChange={(e) => updateMoaData('activityBHeader.serial', e.target.value)} 
+                  className="h-8 text-xs" 
+                />
+                <DatePicker 
+                  placeholder="Date" 
+                  date={parseDate(moaData.activityBHeader?.date)}
+                  setDate={(date) => updateMoaData('activityBHeader.date', date ? format(date, "d MMM yy") : '')}
+                  className="h-8 text-xs" 
+                />
+              </div>
               <p className="text-xs text-muted-foreground">Appears second in header, signs on LEFT.</p>
             </div>
             <div className="space-y-2">
@@ -70,8 +118,34 @@ export function MOAFormSection({ formData, setFormData }: MOAFormSectionProps) {
               <Input
                 value={moaData.activityA}
                 onChange={(e) => updateMoaData('activityA', e.target.value)}
-                placeholder="e.g. NAVAL DISTRICT WASHINGTON"
+                placeholder="Full Name (e.g. NAVAL DISTRICT WASHINGTON)"
               />
+              <div className="grid grid-cols-4 gap-2 mt-2">
+                <Input
+                  value={moaData.seniorSigner.activitySymbol || ''}
+                  onChange={(e) => updateMoaData('seniorSigner.activitySymbol', e.target.value)}
+                  placeholder="Symbol (e.g. NDW)"
+                  className="h-8 text-xs"
+                />
+                <Input 
+                  placeholder="SSIC (e.g. 5216)" 
+                  value={moaData.activityAHeader?.ssic || ''} 
+                  onChange={(e) => updateMoaData('activityAHeader.ssic', e.target.value)} 
+                  className="h-8 text-xs" 
+                />
+                <Input 
+                  placeholder="Serial (e.g. Ser N02/234)" 
+                  value={moaData.activityAHeader?.serial || ''} 
+                  onChange={(e) => updateMoaData('activityAHeader.serial', e.target.value)} 
+                  className="h-8 text-xs" 
+                />
+                <DatePicker 
+                  placeholder="Date" 
+                  date={parseDate(moaData.activityAHeader?.date)}
+                  setDate={(date) => updateMoaData('activityAHeader.date', date ? format(date, "d MMM yy") : '')}
+                  className="h-8 text-xs" 
+                />
+              </div>
               <p className="text-xs text-muted-foreground">Appears first in header, signs on RIGHT.</p>
             </div>
           </div>
@@ -102,14 +176,6 @@ export function MOAFormSection({ formData, setFormData }: MOAFormSectionProps) {
                   placeholder="Commanding Officer"
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Activity</Label>
-                <Input
-                  value={moaData.juniorSigner.activity}
-                  onChange={(e) => updateMoaData('juniorSigner.activity', e.target.value)}
-                  placeholder="Activity Name"
-                />
-              </div>
             </div>
 
             {/* Senior Signer (Right) */}
@@ -130,14 +196,6 @@ export function MOAFormSection({ formData, setFormData }: MOAFormSectionProps) {
                   value={moaData.seniorSigner.title}
                   onChange={(e) => updateMoaData('seniorSigner.title', e.target.value)}
                   placeholder="Commanding General"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Activity</Label>
-                <Input
-                  value={moaData.seniorSigner.activity}
-                  onChange={(e) => updateMoaData('seniorSigner.activity', e.target.value)}
-                  placeholder="Activity Name"
                 />
               </div>
             </div>

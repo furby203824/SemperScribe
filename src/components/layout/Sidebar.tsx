@@ -128,6 +128,41 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
               </AccordionContent>
             </AccordionItem>
 
+            {/* Staffing Papers Group */}
+            <AccordionItem value="staffing-papers" className="border-none">
+              <AccordionTrigger className="py-2 text-sm font-semibold text-foreground hover:no-underline">
+                <span className="flex items-center">
+                  <FileText className="w-4 h-4 mr-2 text-primary" />
+                  Staffing Papers
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-2">
+                <div className="space-y-1 pl-2">
+
+                  <DocumentTypeButton
+                    active={documentType === 'talking-paper'}
+                    onClick={() => onDocumentTypeChange('talking-paper')}
+                    label="Talking Paper"
+                  />
+                  <DocumentTypeButton
+                    active={documentType === 'briefing-paper'}
+                    onClick={() => onDocumentTypeChange('briefing-paper')}
+                    label="Briefing Paper"
+                  />
+                  <DocumentTypeButton
+                    active={documentType === 'position-paper'}
+                    onClick={() => onDocumentTypeChange('position-paper')}
+                    label="Position Paper"
+                  />
+                  <DocumentTypeButton
+                    active={documentType === 'trip-report'}
+                    onClick={() => onDocumentTypeChange('trip-report')}
+                    label="Trip Report"
+                  />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
             {/* Directives Group */}
             <AccordionItem value="directives" className="border-none">
               <AccordionTrigger className="py-2 text-sm font-semibold text-foreground hover:no-underline">

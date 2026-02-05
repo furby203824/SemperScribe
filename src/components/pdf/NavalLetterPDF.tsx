@@ -147,12 +147,11 @@ const createStyles = (bodyFont: 'times' | 'courier', accentColor?: string) => {
     // MOA/MOU Header
     moaHeader: {
       textAlign: 'center',
-      marginBottom: PDF_SPACING.sectionGap * 2,
+      marginBottom: 0,
     },
     moaTitle: {
       fontFamily: fontFamily,
       fontSize: PDF_FONT_SIZES.body,
-      fontWeight: 'bold',
       marginBottom: 6,
     },
     moaBetween: {
@@ -163,8 +162,6 @@ const createStyles = (bodyFont: 'times' | 'courier', accentColor?: string) => {
     moaActivity: {
       fontFamily: fontFamily,
       fontSize: PDF_FONT_SIZES.body,
-      fontWeight: 'bold',
-      textDecoration: 'underline',
       marginBottom: 6,
     },
     moaAnd: {
@@ -181,12 +178,11 @@ const createStyles = (bodyFont: 'times' | 'courier', accentColor?: string) => {
     // MOA/MOU Signatures
     signatureRow: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginTop: 24,
+      marginTop: 0,
       marginBottom: 12,
     },
     signatureColumn: {
-      width: '45%',
+      width: '50%',
       alignItems: 'center',
     },
     signatureLine: {
@@ -253,6 +249,45 @@ const createStyles = (bodyFont: 'times' | 'courier', accentColor?: string) => {
     continuationSubjText: {
       flex: 1,
     },
+
+    // Staffing Paper Header
+    staffingPaperHeader: {
+      textAlign: 'center',
+      marginBottom: PDF_SPACING.sectionGap * 2,
+    },
+    staffingPaperTitle: {
+      fontFamily: PDF_FONTS.SERIF, // Usually Courier for these, but let's respect bodyFont or default to standard
+      fontSize: PDF_FONT_SIZES.title,
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+      textDecoration: 'underline', // MCO 5216.20A often shows underlined title for Point Papers
+      marginBottom: 12,
+    },
+    staffingPaperOn: {
+      fontFamily: fontFamily,
+      fontSize: PDF_FONT_SIZES.body,
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+      marginBottom: 12,
+    },
+    staffingPaperSubject: {
+      fontFamily: fontFamily,
+      fontSize: PDF_FONT_SIZES.body,
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+    },
+
+    staffingPaperFooter: {
+      position: 'absolute',
+      bottom: PDF_MARGINS.bottom,
+      right: PDF_MARGINS.right,
+      textAlign: 'right',
+    },
+    staffingPaperFooterLine: {
+      fontFamily: fontFamily,
+      fontSize: PDF_FONT_SIZES.body,
+      textAlign: 'right',
+    },
   });
 };
 
@@ -307,19 +342,25 @@ function ParagraphItem({
   index,
   allParagraphs,
   bodyFont,
+  shouldBoldTitle = true,
+  shouldUppercaseTitle = true,
 }: {
   paragraph: ParagraphData;
   index: number;
   allParagraphs: ParagraphData[];
   bodyFont: 'times' | 'courier';
+  shouldBoldTitle?: boolean;
+  shouldUppercaseTitle?: boolean;
 }) {
   const citation = generateCitation(paragraph, index, allParagraphs);
   const level = paragraph.level;
-  const tabs = PDF_PARAGRAPH_TABS[level as keyof typeof PDF_PARAGRAPH_TABS];
+  const tabs = PDF_PARAGRAPH_TABS[level as keyof typeof PDF_PARAGRAPH_TABS] || PDF_PARAGRAPH_TABS[1];
   const isUnderlined = level >= 5 && level <= 8;
 
   // Calculate left margin for this paragraph level
   const leftMargin = tabs.citation;
+  
+  const titleText = shouldUppercaseTitle && paragraph.title ? paragraph.title.toUpperCase() : paragraph.title;
 
   if (bodyFont === 'courier') {
     const spacesAfterCitation = citation.endsWith('.') ? '\u00A0\u00A0' : '\u00A0';
@@ -339,7 +380,7 @@ function ParagraphItem({
           )}
           {spacesAfterCitation}
           {paragraph.title && (
-            <Text style={{ fontWeight: 'bold' }}>{paragraph.title.toUpperCase()}.{paragraph.content ? '\u00A0\u00A0' : ''}</Text>
+            <Text>{titleText}{paragraph.content ? '.' : ''}{paragraph.content ? '\u00A0\u00A0' : ''}</Text>
           )}
           {parseFormattedText(paragraph.content)}
         </Text>
@@ -365,7 +406,7 @@ function ParagraphItem({
         )}
         {'\u00A0\u00A0'}
         {paragraph.title && (
-            <Text style={{ fontWeight: 'bold' }}>{paragraph.title.toUpperCase()}.{paragraph.content ? '\u00A0\u00A0' : ''}</Text>
+            <Text style={shouldBoldTitle ? { fontWeight: 'bold' } : {}}>{titleText}{paragraph.content ? '.' : ''}{paragraph.content ? '\u00A0\u00A0' : ''}</Text>
         )}
         {parseFormattedText(paragraph.content)}
       </Text>
@@ -397,17 +438,24 @@ export function NavalLetterPDF({
   const distListWithContent = distList.filter((d) => d.trim());
   const paragraphsWithContent = paragraphs.filter((p) => p.content.trim() || p.title);
 
-  const formattedSubjLines = splitSubject(formData.subj.toUpperCase(), PDF_SUBJECT.maxLineLength);
+  const formattedSubjLines = splitSubject((formData.subj || '').toUpperCase(), PDF_SUBJECT.maxLineLength);
   const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin';
   const isFromToMemo = formData.documentType === 'from-to-memo';
   const isMfr = formData.documentType === 'mfr';
   const isMoaOrMou = formData.documentType === 'moa' || formData.documentType === 'mou';
+  const isStaffingPaper = ['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType);
   
+  // Determine if standard header (Seal + Letterhead) should be shown
+  // STRICTLY HIDDEN for Staffing Papers (Point Paper, etc.), MFR, and From-To Memo
+  const showStandardHeader = !isFromToMemo && !isMfr && !isStaffingPaper;
+
   const moaData = formData.moaData || {
     activityA: '',
     activityB: '',
-    seniorSigner: { name: '', title: '', activity: '' },
-    juniorSigner: { name: '', title: '', activity: '' }
+    activityAHeader: { ssic: '', serial: '', date: '' },
+    activityBHeader: { ssic: '', serial: '', date: '' },
+    seniorSigner: { name: '', title: '', activity: '', date: '' },
+    juniorSigner: { name: '', title: '', activity: '', date: '' }
   };
   
   // Logic to determine if we are in "Multiple Address" mode with MANY recipients (automatic list)
@@ -446,6 +494,8 @@ export function NavalLetterPDF({
     ? parseInt(formData.startingEnclosureNumber, 10)
     : 1;
 
+  const fontFamily = getPDFBodyFont(formData.bodyFont || 'times');
+
   return (
     <Document
       title={formData.subj || 'Naval Letter'}
@@ -482,11 +532,11 @@ export function NavalLetterPDF({
           )}
         />
         
-        {/* Seal - Only on first page */}
-        {!isFromToMemo && !isMfr && <Image src={sealDataUrl} style={styles.seal} />}
+        {/* Seal - Only on first page, skip for Staffing Papers */}
+        {showStandardHeader && <Image src={sealDataUrl} style={styles.seal} />}
 
-        {/* Letterhead - Only on first page */}
-        {!isFromToMemo && !isMfr && (
+        {/* Letterhead - Only on first page, skip for Staffing Papers */}
+        {showStandardHeader && (
         <View style={styles.letterhead}>
           <Text style={styles.headerTitle}>
             {formData.headerType === 'USMC'
@@ -500,7 +550,7 @@ export function NavalLetterPDF({
         )}
 
         {/* One empty line after letterhead */}
-        {!isFromToMemo && !isMfr && <View style={styles.emptyLine} />}
+        {showStandardHeader && <View style={styles.emptyLine} />}
 
         {/* From-To Memo and MFR Date - Flush Right, top of content */}
         {(isFromToMemo || isMfr) && (
@@ -509,8 +559,8 @@ export function NavalLetterPDF({
             </View>
         )}
 
-        {/* SSIC Block - Hide for MFR and FromToMemo as they handle Date separately */}
-        {!isFromToMemo && !isMfr && !isMoaOrMou && (
+        {/* SSIC Block - Hide for MFR, FromToMemo, Staffing Papers */}
+        {!isFromToMemo && !isMfr && !isMoaOrMou && !isStaffingPaper && (
           <View style={styles.addressBlock}>
             {formData.documentType === 'bulletin' && formData.cancellationDate && (
               <Text style={styles.addressLine}>
@@ -570,20 +620,87 @@ export function NavalLetterPDF({
 
         {/* MOA/MOU Header */}
         {isMoaOrMou && (
-            <View style={styles.moaHeader}>
+            <View>
+              {/* Side-by-Side Activity Header */}
+              <View style={{ 
+                flexDirection: 'row', 
+                marginBottom: 14, 
+                marginTop: 12,
+                fontFamily: fontFamily,
+                fontSize: PDF_FONT_SIZES.body 
+              }}>
+                 {/* Left Side: Activity B (Junior) - Starts at left margin */}
+                 <View style={{ width: '50%' }}>
+                   <Text>{(moaData.juniorSigner.activitySymbol || moaData.activityB || '').toUpperCase()}</Text>
+                   {moaData.activityBHeader?.ssic && <Text>{moaData.activityBHeader.ssic}</Text>}
+                   {moaData.activityBHeader?.serial && <Text>{moaData.activityBHeader.serial}</Text>}
+                   {moaData.activityBHeader?.date && <Text>{moaData.activityBHeader.date}</Text>}
+                 </View>
+
+                 {/* Right Side: Activity A (Senior) - Dynamically placed based on longest line (Flush Right block, Left Text) */}
+                 <View style={{ width: '50%', alignItems: 'flex-end' }}>
+                   <View style={{ alignItems: 'flex-start' }}>
+                     <Text>{(moaData.seniorSigner.activitySymbol || moaData.activityA || '').toUpperCase()}</Text>
+                     {moaData.activityAHeader?.ssic && <Text>{moaData.activityAHeader.ssic}</Text>}
+                     {moaData.activityAHeader?.serial && <Text>{moaData.activityAHeader.serial}</Text>}
+                     {moaData.activityAHeader?.date && <Text>{moaData.activityAHeader.date}</Text>}
+                   </View>
+                 </View>
+              </View>
+
+              <View style={styles.moaHeader}>
                 <Text style={styles.moaTitle}>
                     {formData.documentType === 'moa' ? 'MEMORANDUM OF AGREEMENT' : 'MEMORANDUM OF UNDERSTANDING'}
                 </Text>
                 <Text style={styles.moaBetween}>BETWEEN</Text>
-                <Text style={styles.moaActivity}>{moaData.activityA.toUpperCase()}</Text>
+                <Text style={styles.moaActivity}>{(moaData.activityA || '').toUpperCase()}</Text>
                 <Text style={styles.moaAnd}>AND</Text>
-                <Text style={styles.moaActivity}>{moaData.activityB.toUpperCase()}</Text>
-                <Text style={styles.moaRegarding}>REGARDING {formData.subj?.toUpperCase()}</Text>
+                <Text style={styles.moaActivity}>{(moaData.activityB || '').toUpperCase()}</Text>
+              </View>
+              
+              {/* Subj line for MOA/MOU - Standard format instead of REGARDING */}
+              <View style={[styles.subjectSection, { marginTop: 8 }]}>
+                {formData.bodyFont === 'courier' ? (
+                  <>
+                    <Text style={styles.subjectLine}>
+                      {'Subj:\u00A0\u00A0\u00A0' + formattedSubjLines[0]}
+                    </Text>
+                    {formattedSubjLines.slice(1).map((line, i) => (
+                      <Text key={i} style={styles.subjectLine}>
+                        {'       ' + line}
+                      </Text>
+                    ))}
+                  </>
+                ) : (
+                  <View style={styles.subjectLine}>
+                    <Text style={styles.subjectLabel}>Subj:</Text>
+                    <View style={{ flex: 1 }}>
+                      {formattedSubjLines.map((line, i) => (
+                        <Text key={i}>{line}</Text>
+                      ))}
+                    </View>
+                  </View>
+                )}
+              </View>
             </View>
         )}
 
-        {/* From/To/Via - Hide for MFR and MOA/MOU */}
-        {formData.documentType !== 'mfr' && !isMoaOrMou && (
+        {/* Staffing Paper Header */}
+        {isStaffingPaper && (
+          <View style={styles.staffingPaperHeader}>
+            <Text style={styles.staffingPaperTitle}>
+               {formData.documentType.replace('-', ' ').toUpperCase()}
+            </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+               <Text style={styles.staffingPaperSubject}>
+                  Subj: {formData.subj ? formData.subj.toUpperCase() : ''}
+               </Text>
+            </View>
+          </View>
+        )}
+
+        {/* From/To/Via - Hide for MFR, MOA/MOU, and Staffing Papers */}
+        {formData.documentType !== 'mfr' && !isMoaOrMou && !isStaffingPaper && (
         <View style={styles.fromToSection}>
           {/* From Line - Common */}
           {formData.bodyFont === 'courier' ? (
@@ -746,6 +863,8 @@ export function NavalLetterPDF({
               index={i}
               allParagraphs={paragraphsWithContent}
               bodyFont={formData.bodyFont}
+              shouldBoldTitle={!['moa', 'mou'].includes(formData.documentType)}
+              shouldUppercaseTitle={!['moa', 'mou'].includes(formData.documentType)}
             />
           ))}
         </View>
@@ -772,8 +891,8 @@ export function NavalLetterPDF({
           </View>
         )}
 
-        {/* Signature block - Standard */}
-        {!isMoaOrMou && formData.sig && (
+        {/* Signature block - Standard (Hide for MOA/MOU, Staffing Papers usually don't have this block, or different) */}
+        {!isMoaOrMou && !isStaffingPaper && formData.sig && (
           <View style={styles.signatureBlock}>
             <View style={styles.emptyLine} />
             <View style={styles.emptyLine} />
@@ -792,20 +911,20 @@ export function NavalLetterPDF({
             <View style={styles.signatureColumn}>
               <View style={styles.emptyLine} />
               <View style={styles.emptyLine} />
-              <View style={styles.emptyLine} />
-              <Text style={styles.signatureLine}>{moaData.juniorSigner.name.toUpperCase()}</Text>
-              <Text style={styles.signatureLine}>{moaData.juniorSigner.title}</Text>
-              <Text style={styles.signatureLine}>{moaData.juniorSigner.activity}</Text>
+              <View style={{ borderBottomWidth: 1, borderBottomColor: 'black', width: '80%', marginBottom: 4 }} />
+              <Text style={styles.signatureLine}>{(moaData.juniorSigner?.name || '').toUpperCase()}</Text>
+              <Text style={styles.signatureLine}>{moaData.juniorSigner?.title || ''}</Text>
+              <Text style={styles.signatureLine}>{(moaData.juniorSigner?.activitySymbol || moaData.activityB || '').toUpperCase()}</Text>
             </View>
 
             {/* Senior Signer (Right) */}
             <View style={styles.signatureColumn}>
               <View style={styles.emptyLine} />
               <View style={styles.emptyLine} />
-              <View style={styles.emptyLine} />
-              <Text style={styles.signatureLine}>{moaData.seniorSigner.name.toUpperCase()}</Text>
-              <Text style={styles.signatureLine}>{moaData.seniorSigner.title}</Text>
-              <Text style={styles.signatureLine}>{moaData.seniorSigner.activity}</Text>
+              <View style={{ borderBottomWidth: 1, borderBottomColor: 'black', width: '80%', marginBottom: 4 }} />
+              <Text style={styles.signatureLine}>{(moaData.seniorSigner?.name || '').toUpperCase()}</Text>
+              <Text style={styles.signatureLine}>{moaData.seniorSigner?.title || ''}</Text>
+              <Text style={styles.signatureLine}>{(moaData.seniorSigner?.activitySymbol || moaData.activityA || '').toUpperCase()}</Text>
             </View>
           </View>
         )}
@@ -915,6 +1034,15 @@ export function NavalLetterPDF({
           }}
           fixed
         />
+
+        {/* Staffing Paper Footer */}
+        {isStaffingPaper && (
+          <View style={styles.staffingPaperFooter}>
+            <Text style={styles.staffingPaperFooterLine}>{formData.drafterName || ''} {formData.drafterRank || ''}</Text>
+            <Text style={styles.staffingPaperFooterLine}>{formData.drafterOfficeCode || ''} {formData.drafterPhone ? `/ ${formData.drafterPhone}` : ''}</Text>
+            <Text style={styles.staffingPaperFooterLine}>{formattedDate}</Text>
+          </View>
+        )}
       </Page>
     </Document>
   );

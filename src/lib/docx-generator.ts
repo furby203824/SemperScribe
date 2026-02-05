@@ -73,6 +73,7 @@ export async function generateDocxBlob(
   const headerColor = getHeaderColor(formData.accentColor);
   const sealBuffer = await getDoDSealBufferSync(formData.headerType as 'USMC' | 'DON');
   const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin';
+  const isStaffingPaper = ['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType);
   const isFromToMemo = formData.documentType === 'from-to-memo';
   const isMfr = formData.documentType === 'mfr';
   const isMoaOrMou = formData.documentType === 'moa' || formData.documentType === 'mou';
@@ -106,7 +107,7 @@ export async function generateDocxBlob(
   // Note: Seal is placed in the Section Header (headers.first), text is in the Body
   const letterheadParagraphs: Paragraph[] = [];
 
-  if (!isFromToMemo && !isMfr) {
+  if (!isFromToMemo && !isMfr && !isStaffingPaper) {
       // Department Header Text
       const headerText = formData.headerType === 'USMC' 
         ? 'UNITED STATES MARINE CORPS' 
@@ -142,7 +143,7 @@ export async function generateDocxBlob(
           alignment: AlignmentType.RIGHT,
           spacing: { before: 1440, after: 0 } // 1 inch top spacing
        }));
-  } else if (!isMoaOrMou) {
+  } else if (!isMoaOrMou && !isStaffingPaper) {
       const ssicBlock = [];
       if (formData.documentType === 'bulletin') {
         if (formData.cancellationType === 'contingent' && formData.cancellationContingency) {
@@ -172,12 +173,83 @@ export async function generateDocxBlob(
   }
 
   // --- MOA/MOU Header ---
-  const moaHeaderParagraphs: Paragraph[] = [];
+  const moaHeaderParagraphs: (Paragraph | Table)[] = [];
   if (isMoaOrMou) {
+    // Side-by-Side Activity Header
+    const headerTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: {
+            top: { style: BorderStyle.NONE, size: 0, color: "auto" },
+            bottom: { style: BorderStyle.NONE, size: 0, color: "auto" },
+            left: { style: BorderStyle.NONE, size: 0, color: "auto" },
+            right: { style: BorderStyle.NONE, size: 0, color: "auto" },
+            insideHorizontal: { style: BorderStyle.NONE, size: 0, color: "auto" },
+            insideVertical: { style: BorderStyle.NONE, size: 0, color: "auto" },
+        },
+        rows: [
+            new TableRow({
+                children: [
+                    // Left Column (Activity B / Junior)
+                    new TableCell({
+                        width: { size: 50, type: WidthType.PERCENTAGE },
+                        children: [
+                            new Paragraph({ children: [new TextRun({ text: (moaData.juniorSigner?.activitySymbol || moaData.activityB || '').toUpperCase(), font, size: FONT_SIZE_BODY })], spacing: { after: 0 } }),
+                            ...(moaData.activityBHeader?.ssic ? [new Paragraph({ children: [new TextRun({ text: moaData.activityBHeader.ssic, font, size: FONT_SIZE_BODY })], spacing: { after: 0 } })] : []),
+                            ...(moaData.activityBHeader?.serial ? [new Paragraph({ children: [new TextRun({ text: moaData.activityBHeader.serial, font, size: FONT_SIZE_BODY })], spacing: { after: 0 } })] : []),
+                            ...(moaData.activityBHeader?.date ? [new Paragraph({ children: [new TextRun({ text: moaData.activityBHeader.date, font, size: FONT_SIZE_BODY })], spacing: { after: 0 } })] : []),
+                        ],
+                    }),
+                    // Right Column (Activity A / Senior) - Nested table for Flush Right alignment
+                    new TableCell({
+                        width: { size: 50, type: WidthType.PERCENTAGE },
+                        children: [
+                            new Table({
+                                width: { size: 0, type: WidthType.AUTO },
+                                alignment: AlignmentType.RIGHT,
+                                borders: {
+                                    top: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                                    bottom: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                                    left: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                                    right: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                                    insideHorizontal: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                                    insideVertical: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                                },
+                                rows: [
+                                    new TableRow({
+                                        children: [
+                                            new TableCell({
+                                                width: { size: 0, type: WidthType.AUTO },
+                                                borders: {
+                                                    top: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                                                    bottom: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                                                    left: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                                                    right: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                                                },
+                                                children: [
+                                                    new Paragraph({ children: [new TextRun({ text: (moaData.seniorSigner?.activitySymbol || moaData.activityA || '').toUpperCase(), font, size: FONT_SIZE_BODY })], spacing: { after: 0 } }),
+                                                    ...(moaData.activityAHeader?.ssic ? [new Paragraph({ children: [new TextRun({ text: moaData.activityAHeader.ssic, font, size: FONT_SIZE_BODY })], spacing: { after: 0 } })] : []),
+                                                    ...(moaData.activityAHeader?.serial ? [new Paragraph({ children: [new TextRun({ text: moaData.activityAHeader.serial, font, size: FONT_SIZE_BODY })], spacing: { after: 0 } })] : []),
+                                                    ...(moaData.activityAHeader?.date ? [new Paragraph({ children: [new TextRun({ text: moaData.activityAHeader.date, font, size: FONT_SIZE_BODY })], spacing: { after: 0 } })] : []),
+                                                ],
+                                            }),
+                                        ],
+                                    }),
+                                ],
+                            }),
+                        ],
+                    }),
+                ],
+            }),
+        ],
+    });
+    
+    moaHeaderParagraphs.push(headerTable);
+    moaHeaderParagraphs.push(createEmptyLine(font));
+
     moaHeaderParagraphs.push(new Paragraph({
-      children: [new TextRun({ text: formData.documentType === 'moa' ? 'MEMORANDUM OF AGREEMENT' : 'MEMORANDUM OF UNDERSTANDING', font, bold: true, size: FONT_SIZE_BODY })],
+      children: [new TextRun({ text: formData.documentType === 'moa' ? 'MEMORANDUM OF AGREEMENT' : 'MEMORANDUM OF UNDERSTANDING', font, size: FONT_SIZE_BODY })],
       alignment: AlignmentType.CENTER,
-      spacing: { after: 120, before: 240 } // Reduced top margin as letterhead is present
+      spacing: { after: 120, before: 0 }
     }));
     moaHeaderParagraphs.push(new Paragraph({
       children: [new TextRun({ text: 'BETWEEN', font, size: FONT_SIZE_BODY })],
@@ -185,7 +257,7 @@ export async function generateDocxBlob(
       spacing: { after: 120 }
     }));
     moaHeaderParagraphs.push(new Paragraph({
-      children: [new TextRun({ text: moaData.activityA.toUpperCase(), font, bold: true, underline: { type: UnderlineType.SINGLE }, size: FONT_SIZE_BODY })],
+      children: [new TextRun({ text: (moaData.activityA || '').toUpperCase(), font, size: FONT_SIZE_BODY })],
       alignment: AlignmentType.CENTER,
       spacing: { after: 120 }
     }));
@@ -195,15 +267,78 @@ export async function generateDocxBlob(
       spacing: { after: 120 }
     }));
     moaHeaderParagraphs.push(new Paragraph({
-      children: [new TextRun({ text: moaData.activityB.toUpperCase(), font, bold: true, underline: { type: UnderlineType.SINGLE }, size: FONT_SIZE_BODY })],
+      children: [new TextRun({ text: (moaData.activityB || '').toUpperCase(), font, size: FONT_SIZE_BODY })],
       alignment: AlignmentType.CENTER,
-      spacing: { after: 120 }
+      spacing: { after: 0 }
     }));
+    
+    // Add Subj line using standard formatting
+    const subjLabel = getSubjSpacing(formData.bodyFont);
+    const subjLines = splitSubject((formData.subj || '').toUpperCase(), 57);
+    
+    subjLines.forEach((line, index) => {
+      let children: TextRun[] = [];
+      if (index === 0) {
+          children = [
+              new TextRun({ text: subjLabel, font, size: FONT_SIZE_BODY }),
+              new TextRun({ text: line, font, size: FONT_SIZE_BODY }),
+          ];
+      } else {
+          if (formData.bodyFont === 'courier') {
+              children = [
+                  new TextRun({ text: '       ' + line, font, size: FONT_SIZE_BODY }),
+              ];
+          } else {
+              children = [
+                  new TextRun({ text: "\t" + line, font, size: FONT_SIZE_BODY }),
+              ];
+          }
+      }
+
+      moaHeaderParagraphs.push(new Paragraph({
+        children,
+        tabStops: [{ type: TabStopType.LEFT, position: tabPosition }],
+        indent: isDirective ? subjectIndent : undefined,
+        spacing: { before: index === 0 ? 240 : 0 } // Add space before first line
+      }));
+    });
+    
+    // Add extra space after subject block
     moaHeaderParagraphs.push(new Paragraph({
-      children: [new TextRun({ text: `REGARDING ${formData.subj?.toUpperCase()}`, font, size: FONT_SIZE_BODY })],
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 480 } // Double spacing after header
+      text: "",
+      spacing: { after: 240 }
     }));
+  }
+
+  // --- Staffing Paper Header ---
+  const staffingHeaderParagraphs: Paragraph[] = [];
+  if (isStaffingPaper) {
+      const title = formData.documentType.split('-').map(w => w.toUpperCase()).join(' ');
+      
+      staffingHeaderParagraphs.push(new Paragraph({
+          children: [new TextRun({ 
+              text: title, 
+              font, 
+              bold: true, 
+              size: FONT_SIZE_BODY,
+              underline: { type: UnderlineType.SINGLE }
+          })],
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 0, after: 120 }
+      }));
+      
+      // Removed "ON" paragraph to match MCO 5216.20A and PDF preview
+      
+      staffingHeaderParagraphs.push(new Paragraph({
+          children: [new TextRun({ 
+            text: `Subj: ${formData.subj ? formData.subj.toUpperCase() : ''}`, 
+            font, 
+            size: FONT_SIZE_BODY,
+            bold: true 
+          })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 480 } // Double space after header
+      }));
   }
 
   // --- Endorsement Identification Line (between date and From) ---
@@ -249,7 +384,7 @@ export async function generateDocxBlob(
       alignment: AlignmentType.LEFT,
       spacing: { after: 240 } // Double space after title
     }));
-  } else if (!isMoaOrMou) {
+  } else if (!isMoaOrMou && !isStaffingPaper) {
     // Standard Letter / Directive: From/To/Via
 
     // Letterhead Memorandum Title
@@ -393,11 +528,11 @@ export async function generateDocxBlob(
   }
 
   // --- Subject ---
-  if (!isMoaOrMou) {
+  if (!isMoaOrMou && !isStaffingPaper) {
     addressParagraphs.push(createEmptyLine(font));
     
     const subjLabel = getSubjSpacing(formData.bodyFont);
-    const subjLines = splitSubject(formData.subj.toUpperCase(), 57);
+    const subjLines = splitSubject((formData.subj || '').toUpperCase(), 57);
     
     subjLines.forEach((line, index) => {
       let children: TextRun[] = [];
@@ -431,7 +566,7 @@ export async function generateDocxBlob(
   // --- References ---
   const refParagraphs: Paragraph[] = [];
   const refs = references.filter(r => r.trim());
-  if (refs.length > 0) {
+  if (refs.length > 0 && !isStaffingPaper) {
     const startCharCode = (formData.startingReferenceLevel || 'a').charCodeAt(0);
     
     refs.forEach((ref, index) => {
@@ -462,7 +597,7 @@ export async function generateDocxBlob(
   // --- Enclosures ---
   const enclParagraphs: Paragraph[] = [];
   const encls = enclosures.filter(e => e.trim());
-  if (encls.length > 0) {
+  if (encls.length > 0 && !isStaffingPaper) {
     const startNum = parseInt(formData.startingEnclosureNumber || '1', 10);
     
     encls.forEach((encl, index) => {
@@ -499,7 +634,9 @@ export async function generateDocxBlob(
     // 1. Citation generation (1., a., (1), etc.)
     // 2. Tab stops and indentation per SECNAV M-5216.5
     // 3. Bold/Italic parsing
-    bodyParagraphs.push(createFormattedParagraph(p, index, paragraphsWithContent, font, "000000", isDirective));
+    const shouldBoldTitle = !['moa', 'mou'].includes(formData.documentType);
+    const shouldUppercaseTitle = !['moa', 'mou'].includes(formData.documentType);
+    bodyParagraphs.push(createFormattedParagraph(p, index, paragraphsWithContent, font, "000000", isDirective, shouldBoldTitle, shouldUppercaseTitle));
     
     // Add spacing after paragraph
     bodyParagraphs.push(new Paragraph({
@@ -537,7 +674,7 @@ export async function generateDocxBlob(
   const signatureParagraphs: (Paragraph | Table)[] = [];
   
   if (isMoaOrMou) {
-      // 2-Column Table for MOA Signatures
+      // 2-Column Table for MOA/MOU Signatures
       // Senior Right, Junior Left
       const table = new Table({
           width: { size: 100, type: WidthType.PERCENTAGE },
@@ -550,11 +687,7 @@ export async function generateDocxBlob(
               insideVertical: { style: BorderStyle.NONE, size: 0, color: "auto" },
           },
           rows: [
-              // Empty rows for spacing (approx 3 lines)
-              new TableRow({ children: [ 
-                  new TableCell({ children: [createEmptyLine(font)], borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } } }), 
-                  new TableCell({ children: [createEmptyLine(font)], borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } } }) 
-              ] }),
+              // Empty rows for spacing (2 lines to match PDF's 3-line total gap: 1 body + 2 here)
               new TableRow({ children: [ 
                   new TableCell({ children: [createEmptyLine(font)], borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } } }), 
                   new TableCell({ children: [createEmptyLine(font)], borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } } }) 
@@ -564,6 +697,22 @@ export async function generateDocxBlob(
                   new TableCell({ children: [createEmptyLine(font)], borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } } }) 
               ] }),
               
+              // Signature Line
+              new TableRow({
+                  children: [
+                      new TableCell({
+                          children: [new Paragraph({ children: [new TextRun({ text: "______________________", font, size: FONT_SIZE_BODY })], alignment: AlignmentType.CENTER })],
+                          width: { size: 50, type: WidthType.PERCENTAGE },
+                          borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
+                      }),
+                      new TableCell({
+                          children: [new Paragraph({ children: [new TextRun({ text: "______________________", font, size: FONT_SIZE_BODY })], alignment: AlignmentType.CENTER })],
+                          width: { size: 50, type: WidthType.PERCENTAGE },
+                          borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
+                      })
+                  ]
+              }),
+
               // Names
               new TableRow({
                   children: [
@@ -595,24 +744,24 @@ export async function generateDocxBlob(
                   ]
               }),
               // Activities
-              new TableRow({
-                  children: [
-                      new TableCell({
-                          children: [new Paragraph({ children: [new TextRun({ text: moaData.juniorSigner.activity, font, size: FONT_SIZE_BODY })], alignment: AlignmentType.CENTER })],
-                          width: { size: 50, type: WidthType.PERCENTAGE },
-                          borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
-                      }),
-                      new TableCell({
-                          children: [new Paragraph({ children: [new TextRun({ text: moaData.seniorSigner.activity, font, size: FONT_SIZE_BODY })], alignment: AlignmentType.CENTER })],
-                          width: { size: 50, type: WidthType.PERCENTAGE },
-                          borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
-                      })
-                  ]
-              })
+               new TableRow({
+                   children: [
+                       new TableCell({
+                           children: [new Paragraph({ children: [new TextRun({ text: (moaData.juniorSigner?.activitySymbol || moaData.activityB || '').toUpperCase(), font, size: FONT_SIZE_BODY })], alignment: AlignmentType.CENTER })],
+                           width: { size: 50, type: WidthType.PERCENTAGE },
+                           borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
+                       }),
+                       new TableCell({
+                           children: [new Paragraph({ children: [new TextRun({ text: (moaData.seniorSigner?.activitySymbol || moaData.activityA || '').toUpperCase(), font, size: FONT_SIZE_BODY })], alignment: AlignmentType.CENTER })],
+                           width: { size: 50, type: WidthType.PERCENTAGE },
+                           borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
+                       })
+                   ]
+               })
           ]
       });
       signatureParagraphs.push(table);
-  } else if (formData.sig) {
+  } else if (formData.sig && !isStaffingPaper) {
     signatureParagraphs.push(createEmptyLine(font));
     signatureParagraphs.push(createEmptyLine(font));
     signatureParagraphs.push(createEmptyLine(font));
@@ -681,7 +830,7 @@ export async function generateDocxBlob(
               spacing: { after: 120 }
           }));
       }
-  } else {
+  } else if (!isStaffingPaper) {
       // 1. Multiple-Address Distribution List (> 1 recipient)
       if (formData.documentType === 'multiple-address') {
           const recipients = formData.distribution?.recipients || [];
@@ -791,10 +940,36 @@ export async function generateDocxBlob(
 
   }
 
+  // --- Staffing Paper Footer ---
+  let staffingFooter: Footer | undefined;
+  // Keep variable to avoid breaking children array until updated
+  const staffingFooterParagraphs: Paragraph[] = []; 
+
+  if (isStaffingPaper) {
+      const footerLines: Paragraph[] = [];
+      const drafterInfo = [
+          `${formData.drafterName || ''} ${formData.drafterRank || ''}`,
+          `${formData.drafterOfficeCode || ''} ${formData.drafterPhone ? '/ ' + formData.drafterPhone : ''}`,
+          formData.date || ''
+      ];
+
+      drafterInfo.forEach(line => {
+          footerLines.push(new Paragraph({
+              children: [new TextRun({ text: line, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.RIGHT,
+              spacing: { after: 0 }
+          }));
+      });
+      
+      staffingFooter = new Footer({
+          children: footerLines
+      });
+  }
+
   // --- Header for First Page (Seal) ---
   let firstPageHeader: Header;
   
-  if (sealBuffer && !isFromToMemo && !isMfr) {
+  if (sealBuffer && !isFromToMemo && !isMfr && !isStaffingPaper) {
       firstPageHeader = new Header({
           children: [
               new Paragraph({
@@ -923,7 +1098,7 @@ export async function generateDocxBlob(
         default: defaultHeader,
       },
       footers: {
-        first: showPageNumberOnFirstPage ? footer : new Footer({ children: [] }),
+        first: isStaffingPaper && staffingFooter ? staffingFooter : (showPageNumberOnFirstPage ? footer : new Footer({ children: [] })),
         default: footer,
       },
       children: [
@@ -931,6 +1106,7 @@ export async function generateDocxBlob(
         ...ssicParagraphs,
         ...(isMoaOrMou ? [] : [createEmptyLine(font)]),
         ...moaHeaderParagraphs,
+        ...staffingHeaderParagraphs,
         ...endorsementParagraphs,
         ...directiveTitleParagraphs,
         ...addressParagraphs,

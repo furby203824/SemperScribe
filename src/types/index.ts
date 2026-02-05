@@ -43,7 +43,7 @@ export interface AdminSubsections {
 }
 
 export interface FormData {
-  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs' | 'multiple-address' | 'mfr' | 'from-to-memo' | 'letterhead-memo' | 'moa' | 'mou' | '';
+  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs' | 'multiple-address' | 'mfr' | 'from-to-memo' | 'letterhead-memo' | 'moa' | 'mou' | 'point-paper' | 'talking-paper' | 'briefing-paper' | 'position-paper' | 'trip-report' | '';
   endorsementLevel: EndorsementLevel;
   basicLetterReference: string;
   basicLetterSsic?: string;
@@ -97,20 +97,41 @@ export interface FormData {
   amhsTextBody?: string;
   amhsReferences?: AMHSReference[];
   amhsPocs?: string[];
+  
+  // Staffing Paper specific fields
+  drafterName?: string;
+  drafterRank?: string;
+  drafterOfficeCode?: string;
+  drafterPhone?: string;
 
   // MOA/MOU specific fields
   moaData?: {
     activityA: string; // Senior Activity (Right side)
     activityB: string; // Junior Activity (Left side)
+    // Optional Header Details for side-by-side display
+    activityAHeader?: {
+        ssic?: string;
+        serial?: string;
+        date?: string;
+    };
+    activityBHeader?: {
+        ssic?: string;
+        serial?: string;
+        date?: string;
+    };
     seniorSigner: {
       name: string;
       title: string;
       activity: string;
+      activitySymbol?: string;
+      date?: string;
     };
     juniorSigner: {
       name: string;
       title: string;
       activity: string;
+      activitySymbol?: string;
+      date?: string;
     };
   };
 }
@@ -122,6 +143,7 @@ export interface SavedLetter extends FormData {
   references: string[];
   enclosures: string[];
   copyTos: string[];
+  distList?: string[];
   paragraphs: ParagraphData[];
 }
 

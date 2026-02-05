@@ -7,13 +7,13 @@ import React from 'react';
 import { FormData, EndorsementLevel, ParagraphData } from '@/types';
 import { StructuredReferenceInput } from './StructuredReferenceInput';
 import { debugFormChange } from '@/lib/console-utils';
-import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs } from '@/lib/naval-format-utils';
+import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getPointPaperParagraphs, getTalkingPaperParagraphs, getBriefingPaperParagraphs, getPositionPaperParagraphs, getTripReportParagraphs } from '@/lib/naval-format-utils';
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { FileText, FileSignature, ClipboardList, ScrollText, AlertCircle, Building2, Type, FileCheck, MessageSquare, Users, Notebook, Handshake } from 'lucide-react';
+import { FileText, FileSignature, ClipboardList, ScrollText, AlertCircle, Building2, Type, FileCheck, MessageSquare, Users, Notebook, Handshake, Lightbulb, Mic, BookOpen, Flag, Plane } from 'lucide-react';
 
 interface DocumentTypeSectionProps {
   formData: FormData;
@@ -299,7 +299,7 @@ export function DocumentTypeSection({
                 setFormData(prev => ({ ...prev, documentType: 'moa' }));
                 if (setParagraphs && formData.documentType !== 'moa') {
                   if (window.confirm('Do you want to load the standard MOA structure? Existing paragraphs will be replaced.')) {
-                    setParagraphs(getMOAParagraphs());
+                    setParagraphs(getMOAParagraphs('moa'));
                   }
                 }
               }}
@@ -316,8 +316,78 @@ export function DocumentTypeSection({
                 setFormData(prev => ({ ...prev, documentType: 'mou' }));
                 if (setParagraphs && formData.documentType !== 'mou') {
                   if (window.confirm('Do you want to load the standard MOU structure? Existing paragraphs will be replaced.')) {
-                    setParagraphs(getMOAParagraphs());
+                    setParagraphs(getMOAParagraphs('mou'));
                   }
+                }
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Staffing Papers Section */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-muted-foreground uppercase tracking-wider text-sm border-b pb-2">
+            Staffing Papers (USMC Specific)
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+
+            <DocumentTypeCard
+              type="talking-paper"
+              icon={<Mic className="w-10 h-10" />}
+              title="Talking Paper"
+              description="Narrative outline (script-like). Guide a discussion."
+              note="→ For guided discussion"
+              isActive={formData.documentType === 'talking-paper'}
+              onClick={() => {
+                setFormData(prev => ({ ...prev, documentType: 'talking-paper' }));
+                if (setParagraphs && formData.documentType !== 'talking-paper') {
+                  setParagraphs(getTalkingPaperParagraphs());
+                }
+              }}
+            />
+
+            <DocumentTypeCard
+              type="briefing-paper"
+              icon={<BookOpen className="w-10 h-10" />}
+              title="Briefing Paper"
+              description="Detailed version of Talking Paper. Background and discussion."
+              note="→ For detailed briefs"
+              isActive={formData.documentType === 'briefing-paper'}
+              onClick={() => {
+                setFormData(prev => ({ ...prev, documentType: 'briefing-paper' }));
+                if (setParagraphs && formData.documentType !== 'briefing-paper') {
+                   setParagraphs(getBriefingPaperParagraphs());
+                }
+              }}
+            />
+
+            <DocumentTypeCard
+              type="position-paper"
+              icon={<Flag className="w-10 h-10" />}
+              title="Position Paper"
+              description="Articulates official stance on a specific issue."
+              note="→ For official stance"
+              isActive={formData.documentType === 'position-paper'}
+              onClick={() => {
+                setFormData(prev => ({ ...prev, documentType: 'position-paper' }));
+                if (setParagraphs && formData.documentType !== 'position-paper') {
+                  setParagraphs(getPositionPaperParagraphs());
+                }
+              }}
+            />
+
+             <DocumentTypeCard
+              type="trip-report"
+              icon={<Plane className="w-10 h-10" />}
+              title="Trip Report"
+              description="Reports results of official travel."
+              note="→ For travel reports"
+              isActive={formData.documentType === 'trip-report'}
+              onClick={() => {
+                setFormData(prev => ({ ...prev, documentType: 'trip-report' }));
+                if (setParagraphs && formData.documentType !== 'trip-report') {
+                  setParagraphs(getTripReportParagraphs());
                 }
               }}
             />
@@ -374,58 +444,6 @@ export function DocumentTypeSection({
       {/* Header Type & Body Font - Only for Letters */}
       {formData.documentType !== 'aa-form' && formData.documentType !== 'page11' && formData.documentType !== 'amhs' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-border/50">
-          <Card className="border-border shadow-md bg-card">
-            <CardHeader className="py-3 px-4 border-b border-border bg-secondary text-primary-foreground rounded-t-lg">
-              <CardTitle className="text-sm font-bold flex items-center uppercase tracking-wider">
-                <Building2 className="w-4 h-4 mr-2 text-primary-foreground" />
-                Header Type
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="space-y-3">
-                <label className={cn(
-                  "flex items-center p-3 rounded-lg border cursor-pointer transition-all",
-                  formData.headerType === 'USMC' 
-                    ? "bg-primary/10 border-primary ring-1 ring-primary" 
-                    : "bg-background border-input hover:bg-accent/50"
-                )}>
-                  <input
-                    type="radio"
-                    name="headerType"
-                    value="USMC"
-                    checked={formData.headerType === 'USMC'}
-                    onChange={() => {
-                      setFormData({ ...formData, headerType: 'USMC' });
-                      debugFormChange('Header Type', 'USMC');
-                    }}
-                    className="w-4 h-4 text-primary border-primary focus:ring-primary"
-                  />
-                  <span className="ml-3 font-medium">United States Marine Corps</span>
-                </label>
-                
-                <label className={cn(
-                  "flex items-center p-3 rounded-lg border cursor-pointer transition-all",
-                  formData.headerType === 'DON' 
-                    ? "bg-primary/5 border-primary ring-1 ring-primary" 
-                    : "bg-background border-input hover:bg-accent/50"
-                )}>
-                  <input
-                    type="radio"
-                    name="headerType"
-                    value="DON"
-                    checked={formData.headerType === 'DON'}
-                    onChange={() => {
-                      setFormData({ ...formData, headerType: 'DON' });
-                      debugFormChange('Header Type', 'DON');
-                    }}
-                    className="w-4 h-4 text-primary border-primary focus:ring-primary"
-                  />
-                  <span className="ml-3 font-medium">Department of the Navy</span>
-                </label>
-              </div>
-            </CardContent>
-          </Card>
-
           <Card className="border-border shadow-sm bg-card/50">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold text-muted-foreground flex items-center uppercase tracking-wider">

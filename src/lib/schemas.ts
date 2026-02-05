@@ -39,6 +39,7 @@ export interface SectionDefinition {
   title: string;
   description?: string;
   fields: FieldDefinition[];
+  className?: string; // Optional override for the grid layout (e.g. "grid-cols-1")
 }
 
 export interface DocumentTypeDefinition {
@@ -66,6 +67,7 @@ export const BasicLetterSchema = z.object({
   to: z.string().min(1, "To line is required"),
   subj: z.string().min(1, "Subject is required").transform(val => val.toUpperCase()),
   documentType: z.literal('basic'),
+  policyMode: z.boolean().optional(),
 });
 
 export const BasicLetterDefinition: DocumentTypeDefinition = {
@@ -102,6 +104,13 @@ export const BasicLetterDefinition: DocumentTypeDefinition = {
           placeholder: 'DD Mmm YY',
           required: true,
           className: 'md:col-span-1'
+        },
+        {
+          name: 'policyMode',
+          label: 'Policy/Instruction Mode',
+          type: 'checkbox',
+          description: 'Pre-fill with standard policy paragraphs',
+          className: 'md:col-span-1 flex items-center mt-8'
         },
         {
           name: 'from',
@@ -606,20 +615,32 @@ export const LetterheadMemoDefinition: DocumentTypeDefinition = {
 // 11. Memorandum of Agreement (MOA)
 export const MOASchema = z.object({
   documentType: z.literal('moa'),
-  date: z.string().min(1, "Date is required"),
+  date: z.string().optional(),
   subj: z.string().min(1, "Subject (REGARDING) is required").transform(val => val.toUpperCase()),
   moaData: z.object({
     activityA: z.string().min(1, "Senior Activity is required"),
     activityB: z.string().min(1, "Junior Activity is required"),
+    activityAHeader: z.object({
+        ssic: z.string().optional(),
+        serial: z.string().optional(),
+        date: z.string().optional(),
+    }).optional(),
+    activityBHeader: z.object({
+        ssic: z.string().optional(),
+        serial: z.string().optional(),
+        date: z.string().optional(),
+    }).optional(),
     seniorSigner: z.object({
       name: z.string().min(1, "Name is required"),
       title: z.string().min(1, "Title is required"),
       activity: z.string().min(1, "Activity is required"),
+      date: z.string().optional(),
     }),
     juniorSigner: z.object({
       name: z.string().min(1, "Name is required"),
       title: z.string().min(1, "Title is required"),
       activity: z.string().min(1, "Activity is required"),
+      date: z.string().optional(),
     }),
   }),
   ssic: z.string().optional(),
@@ -636,33 +657,15 @@ export const MOADefinition: DocumentTypeDefinition = {
     {
       id: 'moa-header',
       title: 'Agreement Details',
+      className: 'grid-cols-1',
       fields: [
-         {
-          name: 'date',
-          label: 'Date',
-          type: 'date',
-          required: true,
-          className: 'md:col-span-1'
-        },
-        {
-          name: 'ssic',
-          label: 'SSIC',
-          type: 'combobox',
-          placeholder: 'Search SSIC...',
-          className: 'md:col-span-1'
-        },
-        {
-          name: 'originatorCode',
-          label: 'Originator Code',
-          type: 'text',
-          className: 'md:col-span-1'
-        },
         {
           name: 'subj',
           label: 'Subject (REGARDING)',
-          type: 'text',
+          type: 'textarea',
+          rows: 3,
           required: true,
-          className: 'col-span-full',
+          className: 'col-span-1',
           placeholder: 'SUBJECT OF AGREEMENT'
         }
       ]
@@ -683,6 +686,130 @@ export const MOUDefinition: DocumentTypeDefinition = {
   schema: MOUSchema,
 };
 
+// 13. Staffing Papers (Point, Talking, Briefing, Position, Trip Report)
+export const StaffingPaperSchema = z.object({
+  documentType: z.enum(['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report']),
+  subj: z.string().min(1, "Subject is required").transform(val => val.toUpperCase()),
+  date: z.string().min(1, "Date is required"),
+  drafterName: z.string().min(1, "Drafter Name is required"),
+  drafterRank: z.string().min(1, "Drafter Rank is required"),
+  drafterOfficeCode: z.string().min(1, "Office Code is required"),
+  drafterPhone: z.string().min(1, "Phone Extension is required"),
+});
+
+const StaffingPaperFields: FieldDefinition[] = [
+  {
+    name: 'subj',
+    label: 'Subject',
+    type: 'text',
+    placeholder: 'SUBJECT (ALL CAPS)',
+    required: true,
+    className: 'col-span-full'
+  },
+  {
+    name: 'date',
+    label: 'Date',
+    type: 'date',
+    required: true,
+    className: 'md:col-span-1'
+  }
+];
+
+const StaffingPaperFooterFields: FieldDefinition[] = [
+  {
+    name: 'drafterName',
+    label: 'Drafter Name',
+    type: 'text',
+    placeholder: 'J. M. DOE',
+    required: true,
+    className: 'md:col-span-1'
+  },
+  {
+    name: 'drafterRank',
+    label: 'Drafter Rank',
+    type: 'text',
+    placeholder: 'LtCol',
+    required: true,
+    className: 'md:col-span-1'
+  },
+  {
+    name: 'drafterOfficeCode',
+    label: 'Office Code',
+    type: 'text',
+    placeholder: 'G-1',
+    required: true,
+    className: 'md:col-span-1'
+  },
+  {
+    name: 'drafterPhone',
+    label: 'Phone Extension',
+    type: 'text',
+    placeholder: '555-1234',
+    required: true,
+    className: 'md:col-span-1'
+  }
+];
+
+export const PointPaperDefinition: DocumentTypeDefinition = {
+  id: 'point-paper',
+  name: 'Point Paper',
+  description: 'Concise, bulleted paper on a single issue (1-Page Limit).',
+  icon: '⚡',
+  schema: StaffingPaperSchema,
+  sections: [
+    { id: 'header', title: 'Paper Details', fields: StaffingPaperFields },
+    { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
+  ]
+};
+
+export const TalkingPaperDefinition: DocumentTypeDefinition = {
+  id: 'talking-paper',
+  name: 'Talking Paper',
+  description: 'Narrative outline for speaking engagements.',
+  icon: '🗣️',
+  schema: StaffingPaperSchema,
+  sections: [
+    { id: 'header', title: 'Paper Details', fields: StaffingPaperFields },
+    { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
+  ]
+};
+
+export const BriefingPaperDefinition: DocumentTypeDefinition = {
+  id: 'briefing-paper',
+  name: 'Briefing Paper',
+  description: 'Detailed information paper.',
+  icon: '📊',
+  schema: StaffingPaperSchema,
+  sections: [
+    { id: 'header', title: 'Paper Details', fields: StaffingPaperFields },
+    { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
+  ]
+};
+
+export const PositionPaperDefinition: DocumentTypeDefinition = {
+  id: 'position-paper',
+  name: 'Position Paper',
+  description: 'Advocates a specific position or solution.',
+  icon: '📍',
+  schema: StaffingPaperSchema,
+  sections: [
+    { id: 'header', title: 'Paper Details', fields: StaffingPaperFields },
+    { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
+  ]
+};
+
+export const TripReportDefinition: DocumentTypeDefinition = {
+  id: 'trip-report',
+  name: 'Trip Report',
+  description: 'Report on official travel.',
+  icon: '✈️',
+  schema: StaffingPaperSchema,
+  sections: [
+    { id: 'header', title: 'Report Details', fields: StaffingPaperFields },
+    { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
+  ]
+};
+
 // Registry of all document types
 export const DOCUMENT_TYPES: Record<string, DocumentTypeDefinition> = {
   basic: BasicLetterDefinition,
@@ -697,5 +824,10 @@ export const DOCUMENT_TYPES: Record<string, DocumentTypeDefinition> = {
   'letterhead-memo': LetterheadMemoDefinition,
   amhs: AMHSDefinition,
   moa: MOADefinition,
-  mou: MOUDefinition
+  mou: MOUDefinition,
+
+  'talking-paper': TalkingPaperDefinition,
+  'briefing-paper': BriefingPaperDefinition,
+  'position-paper': PositionPaperDefinition,
+  'trip-report': TripReportDefinition
 };

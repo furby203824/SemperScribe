@@ -36,6 +36,7 @@ interface ParagraphItemProps {
   onRemove: (id: number) => void;
   onFocus: (id: number) => void;
   isFocused: boolean;
+  documentType?: string;
 }
 
 export function ParagraphItem({
@@ -53,7 +54,8 @@ export function ParagraphItem({
   onAddParagraph,
   onRemove,
   onFocus,
-  isFocused
+  isFocused,
+  documentType
 }: ParagraphItemProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [localContent, setLocalContent] = useState(paragraph.content || '');
@@ -136,9 +138,10 @@ export function ParagraphItem({
               L{paragraph.level} • {citation}
             </Badge>
 
+            {/* Ensure MOU displays "UNDERSTANDING" for paragraph 4, even if data says "AGREEMENT" due to legacy state */}
             {paragraph.title && (
               <Badge variant="secondary" className="bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20">
-                {paragraph.title}
+                {documentType === 'mou' && paragraph.title === 'AGREEMENT' ? 'UNDERSTANDING' : paragraph.title}
               </Badge>
             )}
           </div>

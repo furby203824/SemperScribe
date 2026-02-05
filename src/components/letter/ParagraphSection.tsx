@@ -190,23 +190,24 @@ export function ParagraphSection({
             
             return (
               <ParagraphItem
-                key={paragraph.id}
-                paragraph={paragraph}
-                index={index}
-                totalParagraphs={paragraphs.length}
-                activeVoiceInput={activeVoiceInput}
-                citation={citation}
-                levelColor={getLevelColor(paragraph.level)}
-                titleBadgeColor="bg-primary/10 text-primary border-primary/20"
-                onUpdateContent={updateParagraphContent}
-                onMoveUp={moveParagraphUp}
-                onMoveDown={moveParagraphDown}
-                onToggleVoice={toggleVoiceInput}
-                onAddParagraph={addParagraph}
-                onRemove={removeParagraph}
-                onFocus={setFocusedId}
-                isFocused={focusedId === paragraph.id}
-              />
+            key={paragraph.id}
+            paragraph={paragraph}
+            index={index}
+            totalParagraphs={paragraphs.length}
+            activeVoiceInput={activeVoiceInput}
+            citation={getUiCitation(paragraph, index, paragraphs)}
+            levelColor={getLevelColor(paragraph.level)}
+            titleBadgeColor="bg-primary/10 text-primary border border-primary/20"
+            onUpdateContent={updateParagraphContent}
+            onMoveUp={moveParagraphUp}
+            onMoveDown={moveParagraphDown}
+            onToggleVoice={toggleVoiceInput}
+            onAddParagraph={addParagraph}
+            onRemove={removeParagraph}
+            onFocus={setFocusedId}
+            isFocused={focusedId === paragraph.id}
+            documentType={documentType}
+          />
             );
           })}
         </div>

@@ -1,0 +1,127 @@
+{ 
+   "metadata": { 
+     "packageId": "export_1770264882689", 
+     "formatVersion": "1.0.0", 
+     "createdAt": "2026-02-05T04:14:42.689Z", 
+     "author": { 
+       "name": "Unknown" 
+     }, 
+     "package": { 
+       "title": "MEMORANDUM OF AGREEMENT TEMPLATE", 
+       "description": "Test Template for MOA with Header Blocks", 
+       "subject": "MEMORANDUM OF AGREEMENT TEMPLATE", 
+       "documentType": "moa" 
+     } 
+   }, 
+   "data": { 
+     "formData": { 
+       "documentType": "moa", 
+       "endorsementLevel": "", 
+       "basicLetterReference": "", 
+       "basicLetterSsic": "", 
+       "referenceWho": "", 
+       "referenceType": "", 
+       "referenceDate": "", 
+       "startingReferenceLevel": "a", 
+       "startingEnclosureNumber": "1", 
+       "line1": "1ST LAAD BN MACG-18 1ST MAW", 
+       "line2": "MCBH BOX 63002", 
+       "line3": "KANEOHE BAY HI 96863-3002", 
+       "ssic": "1000", 
+       "originatorCode": "CO", 
+       "date": "4 Feb 26", 
+       "from": "", 
+       "to": "", 
+       "subj": "MEMORANDUM OF AGREEMENT BETWEEN MCESG AND RFF", 
+       "sig": "", 
+       "delegationText": "", 
+       "startingPageNumber": 1, 
+       "previousPackagePageCount": 0, 
+       "headerType": "USMC", 
+       "bodyFont": "times", 
+       "directiveTitle": "", 
+       "cancellationDate": "", 
+       "cancellationType": "fixed", 
+       "distribution": { 
+         "type": "none" 
+       }, 
+       "reports": [], 
+       "adminSubsections": { 
+         "recordsManagement": { 
+           "show": false, 
+           "content": "", 
+           "order": 0 
+         }, 
+         "privacyAct": { 
+           "show": false, 
+           "content": "", 
+           "order": 0 
+         }, 
+         "reportsRequired": { 
+           "show": false, 
+           "content": "None.", 
+           "order": 0 
+         } 
+       }, 
+       "actionNo": "", 
+       "orgStation": "", 
+       "name": "", 
+       "edipi": "", 
+       "box11": "", 
+       "moaData": { 
+         "activityA": "MARINE CORPS EMBASSY SECURITY PROGRAMS AND RESOURCES, RESOURCES FISCAL FINANCE", 
+         "activityB": "MARINE CORPS EMBASSY SECURITY GROUP", 
+         "seniorSigner": { 
+           "name": "I. M. DIRECTOR", 
+           "title": "Director", 
+           "activity": "RFF", 
+           "activitySymbol": "RFF",
+           "date": "1 Feb 26" 
+         }, 
+         "juniorSigner": { 
+           "name": "I. M. COMMANDER", 
+           "title": "Commanding Officer", 
+           "activity": "MCESG", 
+           "activitySymbol": "MCESG",
+           "date": "1 Feb 26" 
+         }, 
+         "activityAHeader": { 
+           "ssic": "1000", 
+           "serial": "RFF", 
+           "date": "1 Feb 26" 
+         }, 
+         "activityBHeader": { 
+           "ssic": "1000", 
+           "serial": "CO", 
+           "date": "1 Feb 26" 
+         } 
+       } 
+     }, 
+     "vias": [ 
+       "" 
+     ], 
+     "references": [ 
+       "" 
+     ], 
+     "enclosures": [ 
+       "" 
+     ], 
+     "copyTos": [ 
+       "" 
+     ], 
+     "paragraphs": [ 
+       { 
+        "id": "p1", 
+        "text": "1.  Purpose.  To establish the agreement between the parties.", 
+        "level": 1, 
+        "content": "Purpose.  To establish the agreement between the parties." 
+      },
+      {
+        "id": "p2",
+        "text": "2.  Background.  This is a test template.",
+        "level": 1,
+        "content": "Background.  This is a test template."
+      }
+     ] 
+   } 
+}

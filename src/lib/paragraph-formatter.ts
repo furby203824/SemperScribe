@@ -124,7 +124,9 @@ export function createFormattedParagraph(
   allParagraphs: ParagraphData[],
   font: string = "Times New Roman",
   color: string = "000000",
-  isDirective: boolean = false
+  isDirective: boolean = false,
+  shouldBoldTitle: boolean = true,
+  shouldUppercaseTitle: boolean = true
 ): Paragraph {
     const { content, level } = paragraph;
     const { citation } = generateCitation(paragraph, index, allParagraphs);
@@ -166,6 +168,11 @@ export function createFormattedParagraph(
         citationRuns = [new TextRun({ text: citation, font: font, size: 24, color })];
     }
     
+    // Helper to process title
+    const processTitle = (title: string) => {
+        return shouldUppercaseTitle ? title.toUpperCase() : title;
+    };
+    
     // For Courier New, use non-breaking spaces instead of tabs
     if (isCourier) {
         // Calculate leading spaces based on level using non-breaking spaces
@@ -182,7 +189,9 @@ export function createFormattedParagraph(
         ];
 
         if (paragraph.title) {
-            children.push(new TextRun({ text: paragraph.title.toUpperCase() + '.', font: font, size: 24, bold: true, color }));
+            // Only add period if content exists (standard naval letter)
+            const suffix = content ? '.' : '';
+            children.push(new TextRun({ text: processTitle(paragraph.title) + suffix, font: font, size: 24, bold: shouldBoldTitle, color }));
             if (content) children.push(new TextRun({ text: '\u00A0\u00A0', font: font, size: 24, color }));
         }
         children.push(...parseContentToRuns(content, font, 24, color));
@@ -210,7 +219,9 @@ export function createFormattedParagraph(
         }
 
         if (paragraph.title) {
-            children.push(new TextRun({ text: paragraph.title.toUpperCase() + '.', font: font, size: 24, bold: true, color }));
+            // Only add period if content exists (standard naval letter)
+            const suffix = content ? '.' : '';
+            children.push(new TextRun({ text: processTitle(paragraph.title) + suffix, font: font, size: 24, bold: shouldBoldTitle, color }));
             if (content) children.push(new TextRun({ text: '\u00A0\u00A0', font: font, size: 24, color }));
         }
         children.push(...parseContentToRuns(content, font, 24, color));
@@ -233,7 +244,9 @@ export function createFormattedParagraph(
         children.push(new TextRun({ text: '\t', font: font, size: 24, color }));
         
         if (paragraph.title) {
-            children.push(new TextRun({ text: paragraph.title.toUpperCase() + '.', font: font, size: 24, bold: true, color }));
+            // Only add period if content exists (standard naval letter)
+            const suffix = content ? '.' : '';
+            children.push(new TextRun({ text: processTitle(paragraph.title) + suffix, font: font, size: 24, bold: shouldBoldTitle, color }));
             if (content) children.push(new TextRun({ text: '\u00A0\u00A0', font: font, size: 24, color }));
         }
         children.push(...parseContentToRuns(content, font, 24, color));
@@ -256,7 +269,7 @@ export function createFormattedParagraph(
     ];
 
     if (paragraph.title) {
-        children.push(new TextRun({ text: paragraph.title.toUpperCase() + '.', font: font, size: 24, bold: true, color }));
+        children.push(new TextRun({ text: paragraph.title.toUpperCase() + '.', font: font, size: 24, color }));
         if (content) children.push(new TextRun({ text: '\u00A0\u00A0', font: font, size: 24, color }));
     }
     children.push(...parseContentToRuns(content, font, 24, color));

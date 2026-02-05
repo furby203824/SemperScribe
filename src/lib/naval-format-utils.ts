@@ -186,13 +186,15 @@ export function getMCBulParagraphs(): ParagraphData[] {
 /**
  * Standard MOA/MOU Paragraphs
  */
-export function getMOAParagraphs(): ParagraphData[] {
+export function getMOAParagraphs(type: 'moa' | 'mou' = 'moa'): ParagraphData[] {
   return [
-    { id: 1, level: 1, content: '', title: 'Purpose' },
-    { id: 2, level: 1, content: '', title: 'Problem' },
-    { id: 3, level: 1, content: '', title: 'Scope' },
-    { id: 4, level: 1, content: '', title: 'Agreement' },
-    { id: 5, level: 1, content: '', title: 'Effective Date' },
+    { id: 1, level: 1, content: 'To define the inter-service support agreement between [Activity A] and [Activity B] regarding', title: 'Purpose' },
+    { id: 2, level: 1, content: 'The [Activity A] requires support from [Activity B] to', title: 'Problem' },
+    { id: 3, level: 1, content: 'This agreement applies to', title: 'Scope' },
+    { id: 4, level: 1, content: '', title: type === 'moa' ? 'Agreement' : 'Understanding' },
+    { id: 5, level: 2, content: 'The [Activity A] agrees to', title: '' },
+    { id: 6, level: 2, content: 'The [Activity B] agrees to', title: '' },
+    { id: 7, level: 1, content: 'This agreement is effective upon signature by both parties and will remain in effect until', title: 'Effective Date' },
   ];
 }
 
@@ -241,6 +243,12 @@ export function getExportFilename(formData: FormData, extension: 'pdf' | 'docx' 
   // MOA/MOU
   if (formData.documentType === 'moa' || formData.documentType === 'mou') {
     const type = formData.documentType.toUpperCase();
+    return `${type} - ${subject}.${extension}`;
+  }
+
+  // Staffing Papers
+  if (['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType)) {
+    const type = formData.documentType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     return `${type} - ${subject}.${extension}`;
   }
 
@@ -306,4 +314,46 @@ export function mergeAdminSubsections(
   newParagraphs.splice(adminParaIndex + 1, 0, ...subsectionsToInsert);
 
   return newParagraphs;
+}
+
+export function getPointPaperParagraphs(): ParagraphData[] {
+  return [
+    { id: 1, level: 0, content: 'Use this section to briefly state the history or context of the issue.', title: 'Background', isMandatory: true },
+    { id: 2, level: 0, content: 'State the current problem or topic requiring attention.', title: 'Issue', isMandatory: true },
+    { id: 3, level: 0, content: 'State the desired outcome or the main takeaway for the reader.', title: 'Recommendation', isMandatory: true },
+  ];
+}
+
+export function getTalkingPaperParagraphs(): ParagraphData[] {
+  return [
+    { id: 1, level: 0, content: '', title: 'Background', isMandatory: true },
+    { id: 2, level: 0, content: '', title: 'Discussion', isMandatory: true },
+  ];
+}
+
+export function getBriefingPaperParagraphs(): ParagraphData[] {
+  return [
+    { id: 1, level: 0, content: '', title: 'Background', isMandatory: true },
+    { id: 2, level: 0, content: '', title: 'Discussion', isMandatory: true },
+    { id: 3, level: 0, content: '', title: 'Conclusion', isMandatory: true },
+  ];
+}
+
+export function getPositionPaperParagraphs(): ParagraphData[] {
+  return [
+    { id: 1, level: 0, content: '', title: 'Issue', isMandatory: true },
+    { id: 2, level: 0, content: '', title: 'Position', isMandatory: true },
+    { id: 3, level: 0, content: '', title: 'Discussion', isMandatory: true },
+    { id: 4, level: 0, content: '', title: 'Recommendation', isMandatory: true },
+  ];
+}
+
+export function getTripReportParagraphs(): ParagraphData[] {
+  return [
+    { id: 1, level: 0, content: '', title: 'Purpose', isMandatory: true },
+    { id: 2, level: 0, content: '', title: 'Travelers', isMandatory: true },
+    { id: 3, level: 0, content: '', title: 'Itinerary', isMandatory: true },
+    { id: 4, level: 0, content: '', title: 'Discussion', isMandatory: true },
+    { id: 5, level: 0, content: '', title: 'Action Items', isMandatory: true },
+  ];
 }
