@@ -3,6 +3,7 @@ import { Sidebar } from './Sidebar';
 import { LivePreview } from './LivePreview';
 import { HeaderActions } from './HeaderActions';
 import { PreviewModal } from './PreviewModal';
+import { ThemeToggle } from './ThemeToggle';
 import { ParagraphData, SavedLetter, FormData } from '@/types';
 import { getBasePath } from '@/lib/path-utils';
 
@@ -106,7 +107,11 @@ export function ModernAppShell({
             )}
           </div>
         </div>
-        
+
+        <div className="flex items-center">
+          <ThemeToggle />
+        </div>
+
         <HeaderActions
             className="text-primary-foreground"
             documentType={documentType}
