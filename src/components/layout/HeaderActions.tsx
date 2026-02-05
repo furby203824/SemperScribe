@@ -97,8 +97,8 @@ export function HeaderActions({
   } = useTemplates({ documentType, currentUnitCode, currentUnitName });
   
   // Helper to merge classes for buttons
-  const buttonClass = (baseClass: string) => cn(baseClass, className ? "text-primary-foreground hover:text-primary-foreground hover:bg-white/10" : "text-muted-foreground hover:text-foreground");
-  const iconClass = className ? "text-primary-foreground/80" : "text-muted-foreground";
+  const buttonClass = (baseClass: string) => cn(baseClass, className ? "text-secondary-foreground hover:text-primary hover:bg-white/10" : "text-muted-foreground hover:text-foreground");
+  const iconClass = className ? "text-secondary-foreground/80" : "text-muted-foreground";
 
   const [isTemplateOpen, setIsTemplateOpen] = React.useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -313,7 +313,7 @@ export function HeaderActions({
             className={cn(
               "xl:hidden flex",
               className
-                ? "bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-white/10 hover:text-primary-foreground"
+                ? "bg-transparent text-secondary-foreground border-secondary-foreground/30 hover:bg-white/10 hover:text-primary"
                 : "text-muted-foreground hover:text-foreground"
             )}
             title="Show Preview"
@@ -348,12 +348,12 @@ export function HeaderActions({
               className={cn(
                 "hidden sm:flex",
                 className
-                  ? "bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-white/10 hover:text-primary-foreground"
+                  ? "bg-transparent text-secondary-foreground border-secondary-foreground/30 hover:bg-white/10 hover:text-primary"
                   : ""
               )}
               onClick={onCopyAMHS}
             >
-              <FileText className={cn("mr-2 w-4 h-4", className ? "text-primary-foreground" : "text-primary")} />
+              <FileText className={cn("mr-2 w-4 h-4", className ? "text-secondary-foreground" : "text-primary")} />
               Copy
             </Button>
             <Button
@@ -374,13 +374,13 @@ export function HeaderActions({
                 className={cn(
                   "hidden sm:flex",
                   className
-                    ? "bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-white/10 hover:text-primary-foreground"
+                    ? "bg-transparent text-secondary-foreground border-secondary-foreground/30 hover:bg-white/10 hover:text-primary"
                     : ""
                 )}
                 onClick={onExportDocx}
                 disabled={isGenerating}
               >
-                <FileText className={cn("mr-2 w-4 h-4", className ? "text-primary-foreground" : "text-primary")} />
+                <FileText className={cn("mr-2 w-4 h-4", className ? "text-secondary-foreground" : "text-primary")} />
                 Export .docx
               </Button>
             )}

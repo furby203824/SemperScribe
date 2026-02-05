@@ -88,7 +88,7 @@ export function ModernAppShell({
             </div>
             
             <div className="flex flex-col">
-              <h1 className="text-primary-foreground font-bold text-lg leading-tight tracking-tight font-headline">Semper Scribe</h1>
+              <h1 className="text-primary font-bold text-lg leading-tight tracking-tight font-headline">Semper Scribe</h1>
             </div>
           </div>
 
