@@ -200,11 +200,7 @@ const createStyles = (bodyFont: 'times' | 'courier', accentColor?: string) => {
       marginTop: 0,
       marginLeft: PDF_INDENTS.signature,
     },
-    signatureLine: {
-      fontFamily: fontFamily,
-      fontSize: PDF_FONT_SIZES.body,
-    },
-    
+
     copyToSection: {
       marginTop: 0,
     },
@@ -443,7 +439,7 @@ export function NavalLetterPDF({
   const isFromToMemo = formData.documentType === 'from-to-memo';
   const isMfr = formData.documentType === 'mfr';
   const isMoaOrMou = formData.documentType === 'moa' || formData.documentType === 'mou';
-  const isStaffingPaper = ['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType);
+  const isStaffingPaper = ['talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType);
   
   // Determine if standard header (Seal + Letterhead) should be shown
   // STRICTLY HIDDEN for Staffing Papers (Point Paper, etc.), MFR, and From-To Memo

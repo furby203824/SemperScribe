@@ -41,7 +41,7 @@ export interface NLDPMetadata {
     /** Subject line from the letter (for quick identification) */
     subject: string;
     /** Document type */
-    documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs' | 'multiple-address' | 'mfr' | 'from-to-memo' | 'letterhead-memo' | 'moa' | 'mou' | 'point-paper' | 'talking-paper' | 'briefing-paper' | 'position-paper' | 'trip-report' | '';
+    documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs' | 'multiple-address' | 'mfr' | 'from-to-memo' | 'letterhead-memo' | 'moa' | 'mou' | 'talking-paper' | 'briefing-paper' | 'position-paper' | 'trip-report' | '';
     /** Tags for categorization */
     tags?: string[];
   };

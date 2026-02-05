@@ -257,7 +257,6 @@ export function createFormattedParagraph(
                 { type: TabStopType.LEFT, position: spec.text },
             ],
             alignment: AlignmentType.JUSTIFIED,
-            // Legacy: No hanging indent for body paragraphs
         });
     }
 
@@ -281,6 +280,5 @@ export function createFormattedParagraph(
             { type: TabStopType.LEFT, position: spec.text },
         ],
         alignment: AlignmentType.JUSTIFIED,
-        // Legacy: No hanging indent for body paragraphs
     });
 }

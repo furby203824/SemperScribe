@@ -1,0 +1,376 @@
+import { describe, it, expect } from 'vitest';
+import {
+  getBodyFont,
+  getFromToSpacing,
+  getViaSpacing,
+  getSubjSpacing,
+  getRefSpacing,
+  getEnclSpacing,
+  getCopySpacing,
+  splitSubject,
+  formatCancellationDate,
+  getMCOParagraphs,
+  getMCBulParagraphs,
+  getMOAParagraphs,
+  getExportFilename,
+  mergeAdminSubsections,
+  getTalkingPaperParagraphs,
+  getBriefingPaperParagraphs,
+  getPositionPaperParagraphs,
+  getTripReportParagraphs,
+} from '@/lib/naval-format-utils';
+import { FormData, ParagraphData, AdminSubsections } from '@/types';
+
+describe('getBodyFont', () => {
+  it('returns "Times New Roman" for times', () => {
+    expect(getBodyFont('times')).toBe('Times New Roman');
+  });
+
+  it('returns "Courier New" for courier', () => {
+    expect(getBodyFont('courier')).toBe('Courier New');
+  });
+});
+
+describe('getFromToSpacing', () => {
+  it('uses tabs for Times New Roman', () => {
+    expect(getFromToSpacing('From', 'times')).toBe('From:\t');
+    expect(getFromToSpacing('To', 'times')).toBe('To:\t');
+  });
+
+  it('uses fixed spaces for Courier', () => {
+    expect(getFromToSpacing('From', 'courier')).toBe('From:  ');
+    expect(getFromToSpacing('To', 'courier')).toBe('To:    ');
+  });
+});
+
+describe('getViaSpacing', () => {
+  it('includes "Via:" label for first entry (times)', () => {
+    const result = getViaSpacing(0, 'times');
+    expect(result).toContain('Via:');
+    expect(result).toContain('(1)');
+  });
+
+  it('omits "Via:" for subsequent entries (times)', () => {
+    const result = getViaSpacing(1, 'times');
+    expect(result).not.toContain('Via:');
+    expect(result).toContain('(2)');
+  });
+
+  it('uses non-breaking spaces for courier', () => {
+    const result = getViaSpacing(0, 'courier');
+    expect(result).toContain('Via:');
+    expect(result).toContain('\u00A0');
+  });
+});
+
+describe('getSubjSpacing', () => {
+  it('uses tab for Times', () => {
+    expect(getSubjSpacing('times')).toBe('Subj:\t');
+  });
+
+  it('uses spaces for Courier', () => {
+    expect(getSubjSpacing('courier')).toBe('Subj:  ');
+  });
+});
+
+describe('getRefSpacing', () => {
+  it('includes "Ref:" for first reference (times)', () => {
+    const result = getRefSpacing('a', 0, 'times');
+    expect(result).toContain('Ref:');
+    expect(result).toContain('(a)');
+  });
+
+  it('omits "Ref:" for subsequent references', () => {
+    const result = getRefSpacing('b', 1, 'times');
+    expect(result).not.toContain('Ref:');
+    expect(result).toContain('(b)');
+  });
+
+  it('handles courier spacing with non-breaking spaces', () => {
+    const result = getRefSpacing('a', 0, 'courier');
+    expect(result).toContain('Ref:');
+    expect(result).toContain('\u00A0');
+  });
+});
+
+describe('getEnclSpacing', () => {
+  it('includes "Encl:" for first enclosure (times)', () => {
+    const result = getEnclSpacing(1, 0, 'times');
+    expect(result).toContain('Encl:');
+    expect(result).toContain('(1)');
+  });
+
+  it('omits "Encl:" for subsequent enclosures', () => {
+    const result = getEnclSpacing(2, 1, 'times');
+    expect(result).not.toContain('Encl:');
+    expect(result).toContain('(2)');
+  });
+});
+
+describe('getCopySpacing', () => {
+  it('returns "Copy to:" for both fonts', () => {
+    expect(getCopySpacing('times')).toBe('Copy to:');
+    expect(getCopySpacing('courier')).toBe('Copy to:');
+  });
+});
+
+describe('splitSubject', () => {
+  it('returns empty array for empty subject', () => {
+    expect(splitSubject('')).toEqual([]);
+  });
+
+  it('keeps short subjects on one line', () => {
+    expect(splitSubject('SHORT SUBJECT')).toEqual(['SHORT SUBJECT']);
+  });
+
+  it('splits long subjects at word boundaries', () => {
+    const longSubject = 'THIS IS A VERY LONG SUBJECT LINE THAT SHOULD BE SPLIT INTO MULTIPLE LINES FOR PROPER FORMATTING';
+    const result = splitSubject(longSubject, 60);
+    result.forEach(line => {
+      expect(line.length).toBeLessThanOrEqual(60);
+    });
+    expect(result.join(' ')).toBe(longSubject);
+  });
+
+  it('respects custom max length', () => {
+    const subject = 'WORD1 WORD2 WORD3 WORD4 WORD5';
+    const result = splitSubject(subject, 15);
+    result.forEach(line => {
+      expect(line.length).toBeLessThanOrEqual(15);
+    });
+  });
+});
+
+describe('formatCancellationDate', () => {
+  it('returns empty string for empty input', () => {
+    expect(formatCancellationDate('')).toBe('');
+  });
+
+  it('formats ISO dates to "Mon YYYY"', () => {
+    expect(formatCancellationDate('2025-06-15')).toBe('Jun 2025');
+  });
+
+  it('returns original string for invalid dates', () => {
+    expect(formatCancellationDate('not-a-date')).toBe('not-a-date');
+  });
+});
+
+describe('Standard paragraph templates', () => {
+  describe('getMCOParagraphs', () => {
+    it('returns 5-paragraph SMEAC structure', () => {
+      const paras = getMCOParagraphs();
+      expect(paras).toHaveLength(5);
+      expect(paras[0].title).toBe('Situation');
+      expect(paras[1].title).toBe('Mission');
+      expect(paras[2].title).toBe('Execution');
+      expect(paras[3].title).toBe('Administration and Logistics');
+      expect(paras[4].title).toBe('Command and Signal');
+    });
+
+    it('sets all paragraphs to level 1', () => {
+      getMCOParagraphs().forEach(p => {
+        expect(p.level).toBe(1);
+      });
+    });
+  });
+
+  describe('getMCBulParagraphs', () => {
+    it('returns 5 standard bulletin paragraphs', () => {
+      const paras = getMCBulParagraphs();
+      expect(paras).toHaveLength(5);
+      expect(paras[0].title).toBe('Purpose');
+      expect(paras[4].title).toBe('Cancellation');
+    });
+  });
+
+  describe('getMOAParagraphs', () => {
+    it('returns MOA paragraphs with "Agreement" title by default', () => {
+      const paras = getMOAParagraphs();
+      expect(paras.find(p => p.title === 'Agreement')).toBeDefined();
+    });
+
+    it('returns MOU paragraphs with "Understanding" title', () => {
+      const paras = getMOAParagraphs('mou');
+      expect(paras.find(p => p.title === 'Understanding')).toBeDefined();
+    });
+
+    it('includes required sections: Purpose, Problem, Scope, Effective Date', () => {
+      const paras = getMOAParagraphs();
+      const titles = paras.map(p => p.title).filter(Boolean);
+      expect(titles).toContain('Purpose');
+      expect(titles).toContain('Problem');
+      expect(titles).toContain('Scope');
+      expect(titles).toContain('Effective Date');
+    });
+  });
+
+  describe('Staffing paper templates', () => {
+    it('getTalkingPaperParagraphs returns Background and Discussion at level 1', () => {
+      const paras = getTalkingPaperParagraphs();
+      expect(paras).toHaveLength(2);
+      expect(paras[0].title).toBe('Background');
+      expect(paras[1].title).toBe('Discussion');
+      paras.forEach(p => expect(p.level).toBe(1));
+    });
+
+    it('getBriefingPaperParagraphs includes Conclusion', () => {
+      const paras = getBriefingPaperParagraphs();
+      expect(paras).toHaveLength(3);
+      expect(paras[2].title).toBe('Conclusion');
+      paras.forEach(p => expect(p.level).toBe(1));
+    });
+
+    it('getPositionPaperParagraphs includes Issue, Position, Discussion, Recommendation', () => {
+      const paras = getPositionPaperParagraphs();
+      expect(paras).toHaveLength(4);
+      expect(paras.map(p => p.title)).toEqual(['Issue', 'Position', 'Discussion', 'Recommendation']);
+      paras.forEach(p => expect(p.level).toBe(1));
+    });
+
+    it('getTripReportParagraphs includes all required sections', () => {
+      const paras = getTripReportParagraphs();
+      expect(paras).toHaveLength(5);
+      expect(paras.map(p => p.title)).toEqual([
+        'Purpose', 'Travelers', 'Itinerary', 'Discussion', 'Action Items'
+      ]);
+      paras.forEach(p => expect(p.level).toBe(1));
+    });
+
+    it('all staffing paper paragraphs are mandatory', () => {
+      const allPapers = [
+        ...getTalkingPaperParagraphs(),
+        ...getBriefingPaperParagraphs(),
+        ...getPositionPaperParagraphs(),
+        ...getTripReportParagraphs(),
+      ];
+      allPapers.forEach(p => expect(p.isMandatory).toBe(true));
+    });
+  });
+});
+
+describe('getExportFilename', () => {
+  const baseForm: FormData = {
+    documentType: 'basic',
+    endorsementLevel: '',
+    basicLetterReference: '',
+    referenceWho: '',
+    referenceType: '',
+    referenceDate: '',
+    startingReferenceLevel: '',
+    startingEnclosureNumber: '',
+    line1: '',
+    line2: '',
+    line3: '',
+    ssic: '5216',
+    originatorCode: '',
+    date: '',
+    from: '',
+    to: '',
+    subj: 'TEST SUBJECT',
+    sig: '',
+    delegationText: '',
+    startingPageNumber: 1,
+    previousPackagePageCount: 0,
+    headerType: 'USMC',
+    bodyFont: 'times',
+  };
+
+  it('generates basic letter filename', () => {
+    expect(getExportFilename(baseForm, 'pdf')).toBe('Letter 5216 - TEST SUBJECT.pdf');
+  });
+
+  it('generates MCO filename with prefix', () => {
+    const form = { ...baseForm, documentType: 'mco' as const, orderPrefix: 'MCO' };
+    expect(getExportFilename(form, 'pdf')).toBe('MCO 5216 - TEST SUBJECT.pdf');
+  });
+
+  it('generates MCO filename with custom prefix', () => {
+    const form = { ...baseForm, documentType: 'mco' as const, orderPrefix: 'BnO' };
+    expect(getExportFilename(form, 'pdf')).toBe('BnO 5216 - TEST SUBJECT.pdf');
+  });
+
+  it('generates bulletin filename', () => {
+    const form = { ...baseForm, documentType: 'bulletin' as const };
+    expect(getExportFilename(form, 'docx')).toBe('MCBul 5216 - TEST SUBJECT.docx');
+  });
+
+  it('generates endorsement filename', () => {
+    const form = {
+      ...baseForm,
+      documentType: 'endorsement' as const,
+      endorsementLevel: 'FIRST' as const,
+      basicLetterReference: 'CO ltr 5216',
+    };
+    expect(getExportFilename(form, 'pdf')).toBe('FIRST on CO ltr 5216.pdf');
+  });
+
+  it('generates MOA/MOU filename', () => {
+    const moaForm = { ...baseForm, documentType: 'moa' as const };
+    expect(getExportFilename(moaForm, 'pdf')).toBe('MOA - TEST SUBJECT.pdf');
+
+    const mouForm = { ...baseForm, documentType: 'mou' as const };
+    expect(getExportFilename(mouForm, 'pdf')).toBe('MOU - TEST SUBJECT.pdf');
+  });
+
+  it('generates staffing paper filenames', () => {
+    const form = { ...baseForm, documentType: 'talking-paper' as const };
+    expect(getExportFilename(form, 'pdf')).toBe('Talking Paper - TEST SUBJECT.pdf');
+  });
+
+  it('falls back to "Draft" when SSIC is empty', () => {
+    const form = { ...baseForm, ssic: '' };
+    expect(getExportFilename(form, 'pdf')).toBe('Letter Draft - TEST SUBJECT.pdf');
+  });
+});
+
+describe('mergeAdminSubsections', () => {
+  const baseParagraphs: ParagraphData[] = [
+    { id: 1, level: 1, content: '', title: 'Situation' },
+    { id: 2, level: 1, content: '', title: 'Mission' },
+    { id: 3, level: 1, content: '', title: 'Execution' },
+    { id: 4, level: 1, content: '', title: 'Administration and Logistics' },
+    { id: 5, level: 1, content: '', title: 'Command and Signal' },
+  ];
+
+  it('returns original paragraphs when no admin subsections', () => {
+    expect(mergeAdminSubsections(baseParagraphs)).toEqual(baseParagraphs);
+    expect(mergeAdminSubsections(baseParagraphs, undefined)).toEqual(baseParagraphs);
+  });
+
+  it('inserts Records Management subsection after Admin paragraph', () => {
+    const admin: AdminSubsections = {
+      recordsManagement: { show: true, content: 'RM content', order: 1 },
+      privacyAct: { show: false, content: '', order: 2 },
+      reportsRequired: { show: false, content: '', order: 3 },
+    };
+    const result = mergeAdminSubsections(baseParagraphs, admin);
+    expect(result).toHaveLength(6);
+    expect(result[4].content).toContain('Records Management');
+    expect(result[4].level).toBe(2);
+  });
+
+  it('inserts multiple subsections in order', () => {
+    const admin: AdminSubsections = {
+      recordsManagement: { show: true, content: 'RM content', order: 1 },
+      privacyAct: { show: true, content: 'PA content', order: 2 },
+      reportsRequired: { show: true, content: 'RR content', order: 3 },
+    };
+    const result = mergeAdminSubsections(baseParagraphs, admin);
+    expect(result).toHaveLength(8);
+    expect(result[4].content).toContain('Records Management');
+    expect(result[5].content).toContain('Privacy Act');
+    expect(result[6].content).toContain('Reports Required');
+  });
+
+  it('returns original paragraphs if Admin section is not found', () => {
+    const noParagraphs: ParagraphData[] = [
+      { id: 1, level: 1, content: '', title: 'Purpose' },
+    ];
+    const admin: AdminSubsections = {
+      recordsManagement: { show: true, content: 'RM', order: 1 },
+      privacyAct: { show: false, content: '', order: 2 },
+      reportsRequired: { show: false, content: '', order: 3 },
+    };
+    expect(mergeAdminSubsections(noParagraphs, admin)).toEqual(noParagraphs);
+  });
+});
