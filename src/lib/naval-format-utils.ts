@@ -455,6 +455,105 @@ export function mergeAdminSubsections(
   return newParagraphs;
 }
 
+/**
+ * Validates acronym first-use per MCO 5215.1K para 16.
+ * Rules:
+ * - On first use, spell out the term followed by the acronym in parentheses
+ * - After first use, the acronym alone may be used
+ *
+ * @returns Map of paragraph ID to error message string
+ */
+export function validateAcronymFirstUse(paragraphs: ParagraphData[]): Map<number, string> {
+  // Well-known abbreviations exempt from spell-out requirement
+  const EXEMPT = new Set([
+    // Government/Military organizations
+    'USMC', 'DOD', 'DON', 'CMC', 'HQMC', 'MCO', 'NAVMC',
+    'SECNAV', 'SECDEF', 'MARADMIN', 'ALMAR', 'GENADMIN',
+    'NATO', 'TECOM', 'MCCDC', 'MARCENT', 'MARFOR',
+    // Common correspondence terms
+    'NLT', 'IAW', 'POC', 'IOT', 'IRT', 'DTG', 'SSIC', 'PCN',
+    'SMEAC', 'FOUO', 'CUI', 'PII', 'OPSEC',
+    // Ranks, grades, designations
+    'SNCO', 'NCO', 'MOS', 'EDIPI', 'SSN',
+    // Fiscal/Admin
+    'USD', 'GAO', 'OMB', 'OPM',
+    // Standard abbreviations
+    'SOP', 'POA', 'PPE', 'TBD', 'TTP', 'MEF',
+    'FBI', 'CIA', 'NSA', 'DHS', 'OSD',
+    'USA', 'USN', 'USCG', 'USAF',
+    // Common short forms
+    'PDF', 'URL',
+  ]);
+
+  // Detect acronyms: 3+ consecutive uppercase letters at word boundaries
+  const acronymRegex = /\b([A-Z]{3,})\b/g;
+
+  // Detect definitions: "Words In Mixed Case (ACRONYM)" pattern
+  const definitionRegex = /[A-Z][a-z]+(?:[\s\-\/]+[A-Za-z]+)*\s*\(([A-Z]{3,})\)/g;
+
+  // Track where each acronym is first defined and all uses
+  const definedAt: Map<string, number> = new Map();
+  const firstUseAt: Map<string, number> = new Map();
+  const useCount: Map<string, number> = new Map();
+
+  paragraphs.forEach((paragraph, index) => {
+    const text = paragraph.content || '';
+    if (!text.trim()) return;
+
+    // Find definitions
+    let match;
+    definitionRegex.lastIndex = 0;
+    while ((match = definitionRegex.exec(text)) !== null) {
+      const acronym = match[1];
+      if (!definedAt.has(acronym)) {
+        definedAt.set(acronym, index);
+      }
+    }
+
+    // Find uses (only in content, not in brackets/placeholders)
+    const cleanText = text.replace(/\[[^\]]*\]/g, ''); // Remove bracketed placeholders
+    acronymRegex.lastIndex = 0;
+    while ((match = acronymRegex.exec(cleanText)) !== null) {
+      const acronym = match[1];
+      if (EXEMPT.has(acronym)) continue;
+
+      useCount.set(acronym, (useCount.get(acronym) || 0) + 1);
+      if (!firstUseAt.has(acronym)) {
+        firstUseAt.set(acronym, index);
+      }
+    }
+  });
+
+  // Generate errors
+  const errorsByParagraph: Map<number, string[]> = new Map();
+
+  for (const [acronym, firstIdx] of firstUseAt) {
+    const defIdx = definedAt.get(acronym);
+    const paraId = paragraphs[firstIdx].id;
+
+    // Not defined anywhere
+    if (defIdx === undefined) {
+      const msgs = errorsByParagraph.get(paraId) || [];
+      msgs.push(`"${acronym}" not spelled out on first use (para 16)`);
+      errorsByParagraph.set(paraId, msgs);
+    }
+    // Defined, but after first use
+    else if (defIdx > firstIdx) {
+      const msgs = errorsByParagraph.get(paraId) || [];
+      msgs.push(`"${acronym}" used before its definition (para 16)`);
+      errorsByParagraph.set(paraId, msgs);
+    }
+  }
+
+  // Convert to Map<number, string>
+  const result: Map<number, string> = new Map();
+  for (const [id, msgs] of errorsByParagraph) {
+    result.set(id, msgs.join('; '));
+  }
+
+  return result;
+}
+
 export function getPositionPaperParagraphs(): ParagraphData[] {
   return [
     { 
