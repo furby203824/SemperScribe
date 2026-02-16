@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { DOCUMENT_TYPES } from '@/lib/schemas';
+import { getTemplateForType } from '@/lib/templates';
 import { DynamicForm } from '@/components/ui/DynamicForm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
