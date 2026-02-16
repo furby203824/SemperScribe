@@ -52,6 +52,7 @@ import { useDocumentExport } from '@/hooks/useDocumentExport';
 import { useImportExport } from '@/hooks/useImportExport';
 
 import { CopyToSection } from '@/components/letter/CopyToSection';
+import { BatchGenerateModal } from '@/components/BatchGenerateModal';
 
 // Inner component that uses useSearchParams (requires Suspense boundary)
 const initialState: FormData = {
@@ -136,6 +137,9 @@ function NavalLetterGeneratorInner() {
   const [currentUnitCode, setCurrentUnitCode] = useState<string | undefined>(undefined);
   const [currentUnitName, setCurrentUnitName] = useState<string | undefined>(undefined);
   const [isLoadingFromEDMS, setIsLoadingFromEDMS] = useState(false);
+
+  // Batch Generate
+  const [showBatchModal, setShowBatchModal] = useState(false);
 
   // Load saved letters
   useEffect(() => {
@@ -726,6 +730,7 @@ function NavalLetterGeneratorInner() {
       onCopyAMHS={handleCopyAMHS}
       onExportAMHS={handleExportAMHS}
       onAddSignature={handleAddSignature}
+      onBatchGenerate={() => setShowBatchModal(true)}
       customRightPanel={
         formData.documentType === 'amhs' ? (
           <AMHSPreview
@@ -752,6 +757,17 @@ function NavalLetterGeneratorInner() {
         )}
         pdfBlob={signaturePdfBlob}
         totalPages={signaturePdfPageCount}
+      />
+      <BatchGenerateModal
+        open={showBatchModal}
+        onOpenChange={setShowBatchModal}
+        formData={formData}
+        paragraphs={paragraphs}
+        vias={vias}
+        references={references}
+        enclosures={enclosures}
+        copyTos={copyTos}
+        distList={distList}
       />
     </ModernAppShell>
   );
