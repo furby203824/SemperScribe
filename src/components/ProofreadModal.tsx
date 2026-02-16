@@ -181,7 +181,7 @@ export function ProofreadModal({
           </div>
         </div>
 
-        <ScrollArea className="flex-1 pr-2">
+        <ScrollArea className="flex-1 pr-2 max-h-[55vh] overflow-y-auto">
           <div className="space-y-4">
             {(Object.keys(CATEGORY_LABELS) as CheckCategory[]).map(cat => {
               const catInfo = CATEGORY_LABELS[cat];
