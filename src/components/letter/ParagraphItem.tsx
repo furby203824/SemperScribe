@@ -4,12 +4,14 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Mic, 
-  MicOff, 
-  Plus, 
-  ChevronUp, 
-  ChevronDown, 
+import { SpellCheckBar } from '@/components/ui/SpellCheckBar';
+import { useSpellCheck } from '@/hooks/useSpellCheck';
+import {
+  Mic,
+  MicOff,
+  Plus,
+  ChevronUp,
+  ChevronDown,
   Eraser,
   Indent,
   ArrowRight,
@@ -85,6 +87,7 @@ export function ParagraphItem({
   const [localContent, setLocalContent] = useState(paragraph.content || '');
   const lastEmitted = useRef(paragraph.content || '');
   const [isEditing, setIsEditing] = useState(false);
+  const { issues: spellIssues } = useSpellCheck(localContent);
 
   // Sync from props if paragraph.content changes externally
   useEffect(() => {
@@ -265,6 +268,10 @@ export function ParagraphItem({
             {(localContent || '').length} chars
           </div>
         </div>
+
+        {spellIssues.length > 0 && (
+          <SpellCheckBar issues={spellIssues} />
+        )}
 
         {paragraph.acronymError && (
             <div className="flex items-center text-xs text-destructive bg-destructive/10 p-2 rounded border border-destructive/20">
