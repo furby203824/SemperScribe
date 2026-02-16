@@ -40,6 +40,29 @@ interface ParagraphItemProps {
   documentType?: string;
 }
 
+/**
+ * Parses markdown-like formatting markers into styled React elements for UI preview.
+ * Supported: **bold**, *italic*, <u>underline</u>
+ */
+function renderFormattedPreview(text: string): React.ReactNode[] {
+  if (!text) return [];
+
+  const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|<u>.*?<\/u>)/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith('*') && part.endsWith('*') && part.length >= 2) {
+      return <em key={index}>{part.slice(1, -1)}</em>;
+    }
+    if (part.startsWith('<u>') && part.endsWith('</u>') && part.length >= 7) {
+      return <span key={index} className="underline">{part.slice(3, -4)}</span>;
+    }
+    return part;
+  });
+}
+
 export function ParagraphItem({
   paragraph,
   index,
@@ -61,6 +84,7 @@ export function ParagraphItem({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [localContent, setLocalContent] = useState(paragraph.content || '');
   const lastEmitted = useRef(paragraph.content || '');
+  const [isEditing, setIsEditing] = useState(false);
 
   // Sync from props if paragraph.content changes externally
   useEffect(() => {
@@ -175,47 +199,68 @@ export function ParagraphItem({
 
       <CardContent className="p-3 space-y-3">
         <div className="relative group">
-          {/* Formatting Toolbar - Floats top right of textarea or sits above */}
-          <div className="flex items-center gap-1 mb-1.5 opacity-100 transition-opacity bg-accent/5 w-fit p-1 rounded-md border border-border/50">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 hover:bg-primary/10 text-muted-foreground hover:text-primary"
-              onClick={() => applyFormat('bold')}
-              title="Bold (**text**)"
-            >
-              <Bold className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 hover:bg-primary/10 text-muted-foreground hover:text-primary"
-              onClick={() => applyFormat('italic')}
-              title="Italic (*text*)"
-            >
-              <Italic className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 hover:bg-primary/10 text-muted-foreground hover:text-primary"
-              onClick={() => applyFormat('underline')}
-              title="Underline (<u>text</u>)"
-            >
-              <Underline className="h-3.5 w-3.5" />
-            </Button>
-          </div>
+          {/* Formatting Toolbar - shown only in edit mode */}
+          {isEditing && (
+            <div className="flex items-center gap-1 mb-1.5 opacity-100 transition-opacity bg-accent/5 w-fit p-1 rounded-md border border-border/50">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                onClick={() => applyFormat('bold')}
+                title="Bold (**text**)"
+              >
+                <Bold className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                onClick={() => applyFormat('italic')}
+                title="Italic (*text*)"
+              >
+                <Italic className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                onClick={() => applyFormat('underline')}
+                title="Underline (<u>text</u>)"
+              >
+                <Underline className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
 
-          <Textarea
-            ref={textareaRef}
-            value={localContent}
-            onChange={(e) => setLocalContent(e.target.value)}
-            onFocus={() => onFocus(paragraph.id)}
-            onBlur={() => onFocus(-1)} 
-            placeholder="Enter paragraph content..."
-            className="min-h-[100px] resize-y focus:ring-2 focus:ring-primary/50 pr-16 text-base font-serif bg-background text-foreground border-border"
-          />
-          
+          {isEditing ? (
+            <Textarea
+              ref={textareaRef}
+              value={localContent}
+              onChange={(e) => setLocalContent(e.target.value)}
+              onFocus={() => onFocus(paragraph.id)}
+              onBlur={() => {
+                onFocus(-1);
+                setIsEditing(false);
+              }}
+              placeholder="Enter paragraph content..."
+              className="min-h-[100px] resize-y focus:ring-2 focus:ring-primary/50 pr-16 text-base font-serif bg-background text-foreground border-border"
+              autoFocus
+            />
+          ) : (
+            <div
+              onClick={() => {
+                setIsEditing(true);
+                setTimeout(() => textareaRef.current?.focus(), 0);
+              }}
+              className="min-h-[100px] p-3 text-base font-serif bg-background text-foreground border border-border rounded-md cursor-text whitespace-pre-wrap"
+            >
+              {localContent
+                ? renderFormattedPreview(localContent)
+                : <span className="text-muted-foreground">Enter paragraph content...</span>
+              }
+            </div>
+          )}
+
           <div className="absolute bottom-2 right-2 text-xs text-muted-foreground pointer-events-none group-hover:text-foreground transition-colors">
             {(localContent || '').length} chars
           </div>
