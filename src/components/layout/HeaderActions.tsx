@@ -46,6 +46,42 @@ import { Badge } from '@/components/ui/badge';
 import { SavedLetter } from '@/types';
 import { useTemplates, Template } from '@/hooks/useTemplates';
 
+function TemplateList({ templates, onSelect }: { templates: Template[]; onSelect: (url: string) => void }) {
+  if (templates.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground text-sm">
+        No templates found matching your criteria.
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-1">
+      {templates.map(template => (
+        <button
+          key={template.id}
+          onClick={() => onSelect(template.url)}
+          className="flex flex-col items-start p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left group"
+        >
+          <div className="font-medium text-foreground group-hover:text-primary">
+            {template.title}
+          </div>
+          {template.description && (
+            <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+              {template.description}
+            </div>
+          )}
+          {template.unitName && (
+            <Badge variant="secondary" className="mt-2 text-[10px] font-normal bg-secondary/10 text-secondary border border-secondary/20">
+              {template.unitName}
+            </Badge>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 interface HeaderActionsProps {
   onSave: () => void;
   onLoadDraft: (id: string) => void;
@@ -150,43 +186,9 @@ export function HeaderActions({
     return date.toLocaleDateString();
   };
 
-  const TemplateList = ({ templates }: { templates: Template[] }) => {
-    if (templates.length === 0) {
-      return (
-        <div className="text-center py-8 text-muted-foreground text-sm">
-          No templates found matching your criteria.
-        </div>
-      );
-    }
-
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-1">
-        {templates.map(template => (
-          <button
-            key={template.id}
-            onClick={() => {
-              onLoadTemplateUrl(template.url);
-              setIsTemplateOpen(false);
-            }}
-            className="flex flex-col items-start p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left group"
-          >
-            <div className="font-medium text-foreground group-hover:text-primary">
-              {template.title}
-            </div>
-            {template.description && (
-              <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                {template.description}
-              </div>
-            )}
-            {template.unitName && (
-              <Badge variant="secondary" className="mt-2 text-[10px] font-normal bg-secondary/10 text-secondary border border-secondary/20">
-                {template.unitName}
-              </Badge>
-            )}
-          </button>
-        ))}
-      </div>
-    );
+  const handleTemplateSelect = (url: string) => {
+    onLoadTemplateUrl(url);
+    setIsTemplateOpen(false);
   };
 
   return (
@@ -227,10 +229,10 @@ export function HeaderActions({
             
             <ScrollArea className="flex-1 mt-4 h-[300px] pr-4">
               <TabsContent value="global" className="mt-0">
-                <TemplateList templates={globalTemplates} />
+                <TemplateList templates={globalTemplates} onSelect={handleTemplateSelect} />
               </TabsContent>
               <TabsContent value="unit" className="mt-0">
-                <TemplateList templates={unitTemplates} />
+                <TemplateList templates={unitTemplates} onSelect={handleTemplateSelect} />
               </TabsContent>
             </ScrollArea>
           </Tabs>
