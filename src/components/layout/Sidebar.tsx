@@ -150,6 +150,16 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
                     onClick={() => onDocumentTypeChange('position-paper')}
                     label="Position Paper"
                   />
+                  <DocumentTypeButton
+                    active={documentType === 'decision-paper'}
+                    onClick={() => onDocumentTypeChange('decision-paper')}
+                    label="Decision Paper"
+                  />
+                  <DocumentTypeButton
+                    active={documentType === 'coordination-page'}
+                    onClick={() => onDocumentTypeChange('coordination-page')}
+                    label="Coordination Page"
+                  />
                 </div>
               </AccordionContent>
             </AccordionItem>
