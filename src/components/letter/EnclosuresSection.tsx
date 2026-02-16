@@ -44,7 +44,7 @@ export function EnclosuresSection({ enclosures, setEnclosures, formData, setForm
         // Tabs use Letters (A, B, C...)
         return String.fromCharCode(65 + index); // 65 is 'A'
     }
-    return `(${parseInt(startingNumber, 10) + index})`;
+    return `(${parseInt(startingNumber || '1', 10) + index})`;
   };
 
   const handleRadioChange = (value: string) => {
