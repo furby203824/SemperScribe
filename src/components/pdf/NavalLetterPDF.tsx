@@ -415,7 +415,7 @@ function ParagraphItem({
   
   const titleText = shouldUppercaseTitle && paragraph.title ? paragraph.title.toUpperCase() : paragraph.title;
 
-  if (documentType === 'business-letter') {
+  if (documentType === 'business-letter' || documentType === 'executive-correspondence') {
      if (level === 1) {
         // Main Paragraph: First line indent 0.25" (18pt) to match Word/policy "8 spaces"
         // Short Letter rule: If isShortLetter is true, indent is 1 inch (72pt)
@@ -533,10 +533,13 @@ export function NavalLetterPDF({
   );
 
   const isBusinessLetter = formData.documentType === 'business-letter';
-  
+  const isExecCorr = formData.documentType === 'executive-correspondence';
+  const isExecLetter = isExecCorr && (formData.execFormat === 'letter' || !formData.execFormat);
+  const isCivilianStyle = isBusinessLetter || isExecLetter;
+
   const sealDataUrl = getPDFSealDataUrl(formData.headerType as 'USMC' | 'DON');
-  const formattedDate = isBusinessLetter 
-    ? formatBusinessDate(formData.date || '') 
+  const formattedDate = isCivilianStyle
+    ? formatBusinessDate(formData.date || '')
     : parseAndFormatDate(formData.date || '');
 
   const viasWithContent = vias.filter((v) => v.trim());
@@ -621,14 +624,14 @@ export function NavalLetterPDF({
           render={({ pageNumber }) => (
             pageNumber > 1 ? (
               <View>
-                {isBusinessLetter && (
+                {isCivilianStyle && (
                    <View style={{ marginBottom: 12 }}>
                       <Text style={styles.addressLine}>{formData.ssic}</Text>
                       <Text style={styles.addressLine}>{formData.originatorCode}</Text>
-                      <Text style={styles.addressLine}>{formattedDate}</Text>
+                      {!formData.omitDate && <Text style={styles.addressLine}>{formattedDate}</Text>}
                    </View>
                 )}
-                {!isBusinessLetter && (
+                {!isCivilianStyle && (
                   <>
                     <View style={styles.continuationSubjLine}>
                       <Text style={styles.continuationSubjLabel}>Subj:</Text>
@@ -649,7 +652,7 @@ export function NavalLetterPDF({
           fixed
           render={({ pageNumber }) => (
             pageNumber > 1 ? (
-              <View style={{ height: CONTINUATION_HEADER_HEIGHT + (isBusinessLetter ? 48 : 0) }} />
+              <View style={{ height: CONTINUATION_HEADER_HEIGHT + (isCivilianStyle ? 48 : 0) }} />
             ) : null
           )}
         />
@@ -727,6 +730,39 @@ export function NavalLetterPDF({
                     <View style={{ flexDirection: 'row', marginTop: 12 }}>
                         <Text style={[styles.addressLine, { width: 62 }]}>SUBJECT:</Text>
                         <Text style={[styles.addressLine, { flex: 1, textTransform: 'uppercase' }]}>
+                            {formData.subj}
+                        </Text>
+                    </View>
+                 )}
+             </View>
+        )}
+
+        {/* Executive Letter Inside Address & Salutation */}
+        {isExecLetter && (
+             <View style={{
+                marginBottom: PDF_SPACING.sectionGap,
+                marginLeft: 0
+             }}>
+                 {!formData.omitDate && formattedDate && (
+                   <Text style={[styles.addressLine, { textAlign: 'right', marginBottom: 24 }]}>
+                     {formattedDate}
+                   </Text>
+                 )}
+                 {formData.recipientName && <Text style={styles.addressLine}>{formData.recipientName}</Text>}
+                 {formData.recipientTitle && <Text style={styles.addressLine}>{formData.recipientTitle}</Text>}
+                 {formData.organizationName && <Text style={styles.addressLine}>{formData.organizationName}</Text>}
+                 {(formData.recipientAddress || '').split('\n').map((line: string, i: number) => (
+                     <Text key={i} style={styles.addressLine}>{line}</Text>
+                 ))}
+
+                 <Text style={[styles.addressLine, { marginTop: 24 }]}>
+                     {formData.salutation || 'Dear Sir or Madam:'}
+                 </Text>
+
+                 {formData.subj && (
+                    <View style={{ flexDirection: 'row', marginTop: 12 }}>
+                        <Text style={[styles.addressLine, { width: 62 }]}>SUBJECT:</Text>
+                        <Text style={[styles.addressLine, { flex: 1 }]}>
                             {formData.subj}
                         </Text>
                     </View>
@@ -895,8 +931,8 @@ export function NavalLetterPDF({
           </View>
         )}
 
-        {/* From/To/Via - Hide for MFR, MOA/MOU, Staffing Papers, and Business Letter */}
-        {formData.documentType !== 'mfr' && !isMoaOrMou && !isStaffingPaper && !isBusinessLetter && (
+        {/* From/To/Via - Hide for MFR, MOA/MOU, Staffing Papers, Business Letter, Exec Letter */}
+        {formData.documentType !== 'mfr' && !isMoaOrMou && !isStaffingPaper && !isCivilianStyle && (
         <View style={styles.fromToSection}>
           {/* From Line - Common */}
           {formData.bodyFont === 'courier' ? (
@@ -982,8 +1018,8 @@ export function NavalLetterPDF({
         )}
 
         {/* Subject */}
-        {/* Subject Line - Hide for MOA/MOU (handled in header), Staffing Papers (handled in custom header), and Business Letter (custom placement) */}
-        {!isMoaOrMou && !isStaffingPaper && !isBusinessLetter && (
+        {/* Subject Line - Hide for MOA/MOU (handled in header), Staffing Papers (handled in custom header), Business/Exec Letter (custom placement) */}
+        {!isMoaOrMou && !isStaffingPaper && !isCivilianStyle && (
         <View style={styles.subjectSection}>
           {formData.bodyFont === 'courier' ? (
             <>
@@ -1008,8 +1044,8 @@ export function NavalLetterPDF({
         </View>
         )}
 
-        {/* References - Hide for Business Letter */}
-        {!isBusinessLetter && refsWithContent.length > 0 && (
+        {/* References - Hide for Business/Exec Letter */}
+        {!isCivilianStyle && refsWithContent.length > 0 && (
           <View style={styles.refEnclSection}>
             {refsWithContent.map((ref, i) => {
               const refLetter = String.fromCharCode(startRefChar + i);
@@ -1029,8 +1065,8 @@ export function NavalLetterPDF({
           </View>
         )}
 
-        {/* Enclosures / Tabs - Hide for Business Letter (rendered at bottom) */}
-        {!isBusinessLetter && enclsWithContent.length > 0 && (
+        {/* Enclosures / Tabs - Hide for Business/Exec Letter (rendered at bottom) */}
+        {!isCivilianStyle && enclsWithContent.length > 0 && (
           <View style={styles.refEnclSection}>
             {enclsWithContent.map((encl, i) => {
               const isPositionPaper = formData.documentType === 'position-paper';
@@ -1277,8 +1313,8 @@ export function NavalLetterPDF({
           </View>
         )}
 
-        {/* Signature block - Standard (Hide for MOA/MOU, Staffing Papers, Business Letter) */}
-        {!isMoaOrMou && !isStaffingPaper && !isBusinessLetter && formData.sig && (
+        {/* Signature block - Standard (Hide for MOA/MOU, Staffing Papers, Business/Exec Letter) */}
+        {!isMoaOrMou && !isStaffingPaper && !isCivilianStyle && formData.sig && (
           <View style={styles.signatureBlock}>
             <View style={styles.emptyLine} />
             <View style={styles.emptyLine} />
@@ -1289,8 +1325,8 @@ export function NavalLetterPDF({
           </View>
         )}
 
-        {/* Business Letter Closing Block */}
-        {isBusinessLetter && (
+        {/* Business/Executive Letter Closing Block */}
+        {isCivilianStyle && (
             <View>
                 {/* Complimentary Close (Centered) */}
                 <View style={{ marginBottom: PDF_SPACING.sectionGap * 2, marginLeft: PDF_INDENTS.signature }}>
@@ -1300,15 +1336,17 @@ export function NavalLetterPDF({
                     </Text>
                 </View>
 
-                {/* Signature Block (Centered) */}
-                <View style={{ marginBottom: PDF_SPACING.sectionGap, marginLeft: PDF_INDENTS.signature }}>
-                     <View style={styles.emptyLine} />
-                     <View style={styles.emptyLine} />
-                     <Text style={styles.addressLine}>{formData.sig}</Text>
-                     {formData.signerRank && <Text style={styles.addressLine}>{formData.signerRank}</Text>}
-                     {formData.signerTitle && <Text style={styles.addressLine}>{formData.signerTitle}</Text>}
-                     {formData.delegationText && <Text style={styles.addressLine}>{formData.delegationText}</Text>}
-                </View>
+                {/* Signature Block (Centered) - may be omitted for exec correspondence */}
+                {!formData.omitSignatureBlock && (
+                  <View style={{ marginBottom: PDF_SPACING.sectionGap, marginLeft: PDF_INDENTS.signature }}>
+                       <View style={styles.emptyLine} />
+                       <View style={styles.emptyLine} />
+                       {formData.sig && <Text style={styles.addressLine}>{formData.sig}</Text>}
+                       {isBusinessLetter && formData.signerRank && <Text style={styles.addressLine}>{formData.signerRank}</Text>}
+                       {formData.signerTitle && <Text style={styles.addressLine}>{formData.signerTitle}</Text>}
+                       {formData.delegationText && <Text style={styles.addressLine}>{formData.delegationText}</Text>}
+                  </View>
+                )}
 
                 {/* Enclosures (Flush Left) */}
                 {enclsWithContent.length > 0 && (
@@ -1322,13 +1360,21 @@ export function NavalLetterPDF({
                     </View>
                 )}
 
-                {/* Copy To (Flush Left) */}
+                {/* Copy To / Courtesy Copy (Flush Left) */}
                 {copiesWithContent.length > 0 && (
                     <View style={{ marginBottom: PDF_SPACING.sectionGap, marginLeft: 0 }}>
                         <Text style={styles.addressLine}>Copy to:</Text>
                         {copiesWithContent.map((copy, i) => (
                             <Text key={i} style={styles.addressLine}>{copy}</Text>
                         ))}
+                    </View>
+                )}
+
+                {/* Congressional Courtesy Copy */}
+                {isExecLetter && formData.courtesyCopyTo && (
+                    <View style={{ marginBottom: PDF_SPACING.sectionGap, marginLeft: 0 }}>
+                        <Text style={styles.addressLine}>{formData.courtesyCopyTo}</Text>
+                        <Text style={styles.addressLine}>Ranking Minority Member</Text>
                     </View>
                 )}
             </View>
@@ -1436,8 +1482,8 @@ export function NavalLetterPDF({
           </View>
         )}
 
-        {/* Copy to (Standard Letter) - Hide for Business Letter AND Staffing Papers */}
-        {!isDirective && !isBusinessLetter && !isStaffingPaper && copiesWithContent.length > 0 && (
+        {/* Copy to (Standard Letter) - Hide for Business/Exec Letter AND Staffing Papers */}
+        {!isDirective && !isCivilianStyle && !isStaffingPaper && copiesWithContent.length > 0 && (
           <View style={styles.copyToSection}>
             {/* Add full space if any distribution list was rendered above */}
             {(isMultipleAddressMany || (distListWithContent.length > 0)) && (

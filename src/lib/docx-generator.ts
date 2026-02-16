@@ -80,7 +80,10 @@ export async function generateDocxBlob(
   const isMfr = formData.documentType === 'mfr';
   const isMoaOrMou = formData.documentType === 'moa' || formData.documentType === 'mou';
   const isBusinessLetter = formData.documentType === 'business-letter';
-  
+  const isExecCorr = formData.documentType === 'executive-correspondence';
+  const isExecLetter = isExecCorr && (formData.execFormat === 'letter' || !formData.execFormat);
+  const isCivilianStyle = isBusinessLetter || isExecLetter;
+
   const moaData = formData.moaData || {
     activityA: '',
     activityB: '',
@@ -139,8 +142,8 @@ export async function generateDocxBlob(
   // --- SSIC Block ---
   const ssicParagraphs: (Paragraph | Table)[] = [];
   
-  const formattedDate = isBusinessLetter 
-    ? formatBusinessDate(formData.date || '') 
+  const formattedDate = isCivilianStyle
+    ? formatBusinessDate(formData.date || '')
     : parseAndFormatDate(formData.date || '');
 
   if (isFromToMemo || isMfr) {
@@ -505,6 +508,62 @@ export async function generateDocxBlob(
       businessHeaderParagraphs.push(createEmptyLine(font));
   }
 
+  // --- Executive Letter Header (Inside Address, Salutation) ---
+  if (isExecLetter) {
+      businessHeaderParagraphs.push(createEmptyLine(font));
+
+      if (formData.recipientName) {
+          businessHeaderParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: formData.recipientName, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.LEFT,
+              spacing: { after: 0 }
+          }));
+      }
+      if (formData.recipientTitle) {
+          businessHeaderParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: formData.recipientTitle, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.LEFT,
+              spacing: { after: 0 }
+          }));
+      }
+      if (formData.organizationName) {
+          businessHeaderParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: formData.organizationName, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.LEFT,
+              spacing: { after: 0 }
+          }));
+      }
+      if (formData.recipientAddress) {
+          formData.recipientAddress.split('\n').forEach((line: string) => {
+              businessHeaderParagraphs.push(new Paragraph({
+                  children: [new TextRun({ text: line, font, size: FONT_SIZE_BODY })],
+                  alignment: AlignmentType.LEFT,
+                  spacing: { after: 0 }
+              }));
+          });
+      }
+      businessHeaderParagraphs.push(createEmptyLine(font));
+      if (formData.salutation) {
+          businessHeaderParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: formData.salutation, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.LEFT,
+              spacing: { after: 0 }
+          }));
+      }
+      if (formData.subj) {
+          businessHeaderParagraphs.push(createEmptyLine(font));
+          businessHeaderParagraphs.push(new Paragraph({
+              children: [
+                  new TextRun({ text: "SUBJECT:\t", font, size: FONT_SIZE_BODY }),
+                  new TextRun({ text: formData.subj, font, size: FONT_SIZE_BODY })
+              ],
+              alignment: AlignmentType.LEFT,
+              spacing: { after: 0 }
+          }));
+      }
+      businessHeaderParagraphs.push(createEmptyLine(font));
+  }
+
   // --- Endorsement Identification Line (between date and From) ---
   const endorsementParagraphs: Paragraph[] = [];
   if (formData.documentType === 'endorsement' && formData.endorsementLevel && formData.basicLetterReference) {
@@ -548,7 +607,7 @@ export async function generateDocxBlob(
       alignment: AlignmentType.LEFT,
       spacing: { after: 240 } // Double space after title
     }));
-  } else if (!isMoaOrMou && !isStaffingPaper && !isBusinessLetter) {
+  } else if (!isMoaOrMou && !isStaffingPaper && !isCivilianStyle) {
     // Standard Letter / Directive: From/To/Via
 
     // Letterhead Memorandum Title
@@ -692,7 +751,7 @@ export async function generateDocxBlob(
   }
 
   // --- Subject ---
-  if (!isMoaOrMou && !isStaffingPaper && !isBusinessLetter) {
+  if (!isMoaOrMou && !isStaffingPaper && !isCivilianStyle) {
     addressParagraphs.push(createEmptyLine(font));
     
     const subjLabel = getSubjSpacing(formData.bodyFont);
@@ -762,8 +821,8 @@ export async function generateDocxBlob(
   const enclParagraphs: Paragraph[] = [];
   const encls = enclosures.filter(e => e.trim());
   if (encls.length > 0 && !isStaffingPaper) {
-    if (isBusinessLetter) {
-        // Business Letter Enclosures (Flush Left)
+    if (isCivilianStyle) {
+        // Business/Executive Letter Enclosures (Flush Left)
         const label = encls.length > 1 ? "Enclosures" : "Enclosure";
         enclParagraphs.push(new Paragraph({
             children: [new TextRun({ text: label, font, size: FONT_SIZE_BODY })],
@@ -901,7 +960,7 @@ export async function generateDocxBlob(
     // 3. Bold/Italic parsing
     const shouldBoldTitle = !['moa', 'mou'].includes(formData.documentType);
     const shouldUppercaseTitle = !['moa', 'mou'].includes(formData.documentType);
-    bodyParagraphs.push(createFormattedParagraph(p, index, paragraphsWithContent, font, "000000", isDirective, shouldBoldTitle, shouldUppercaseTitle, isBusinessLetter, formData.isShortLetter));
+    bodyParagraphs.push(createFormattedParagraph(p, index, paragraphsWithContent, font, "000000", isDirective, shouldBoldTitle, shouldUppercaseTitle, isCivilianStyle, formData.isShortLetter));
     
     // Add spacing after paragraph
     bodyParagraphs.push(new Paragraph({
@@ -1222,15 +1281,15 @@ export async function generateDocxBlob(
           ]
       });
       signatureParagraphs.push(table);
-  } else if (isBusinessLetter) {
-      // Complimentary Close
+  } else if (isCivilianStyle) {
+      // Business/Executive Letter Closing Block
       let close = formData.complimentaryClose;
       if (!close) {
           close = formData.isVipMode ? "Very respectfully" : "Sincerely";
       }
 
       signatureParagraphs.push(new Paragraph({
-          children: [new TextRun({ text: close + ",", font, size: FONT_SIZE_BODY })],
+          children: [new TextRun({ text: close.endsWith(',') ? close : close + ",", font, size: FONT_SIZE_BODY })],
           alignment: AlignmentType.CENTER,
           spacing: { after: 0 }
       }));
@@ -1239,29 +1298,46 @@ export async function generateDocxBlob(
       signatureParagraphs.push(createEmptyLine(font));
       signatureParagraphs.push(createEmptyLine(font));
 
-      // Signer Name
-      if (formData.sig) {
-          signatureParagraphs.push(new Paragraph({
-              children: [new TextRun({ text: formData.sig.toUpperCase(), font, size: FONT_SIZE_BODY })],
-              alignment: AlignmentType.CENTER,
-              spacing: { after: 0 }
-          }));
-      }
-      
-      // Signer Rank
-      if (formData.signerRank) {
-          signatureParagraphs.push(new Paragraph({
-              children: [new TextRun({ text: formData.signerRank, font, size: FONT_SIZE_BODY })],
-              alignment: AlignmentType.CENTER,
-              spacing: { after: 0 }
-          }));
+      if (!formData.omitSignatureBlock) {
+          // Signer Name
+          if (formData.sig) {
+              signatureParagraphs.push(new Paragraph({
+                  children: [new TextRun({ text: formData.sig.toUpperCase(), font, size: FONT_SIZE_BODY })],
+                  alignment: AlignmentType.CENTER,
+                  spacing: { after: 0 }
+              }));
+          }
+
+          // Signer Rank (business letter only)
+          if (isBusinessLetter && formData.signerRank) {
+              signatureParagraphs.push(new Paragraph({
+                  children: [new TextRun({ text: formData.signerRank, font, size: FONT_SIZE_BODY })],
+                  alignment: AlignmentType.CENTER,
+                  spacing: { after: 0 }
+              }));
+          }
+
+          // Signer Title
+          if (formData.signerTitle) {
+              signatureParagraphs.push(new Paragraph({
+                  children: [new TextRun({ text: formData.signerTitle, font, size: FONT_SIZE_BODY })],
+                  alignment: AlignmentType.CENTER,
+                  spacing: { after: 0 }
+              }));
+          }
       }
 
-      // Signer Title
-      if (formData.signerTitle) {
+      // Congressional courtesy copy
+      if (isExecLetter && formData.courtesyCopyTo) {
+          signatureParagraphs.push(createEmptyLine(font));
           signatureParagraphs.push(new Paragraph({
-              children: [new TextRun({ text: formData.signerTitle, font, size: FONT_SIZE_BODY })],
-              alignment: AlignmentType.CENTER,
+              children: [new TextRun({ text: formData.courtesyCopyTo, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.LEFT,
+              spacing: { after: 0 }
+          }));
+          signatureParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: 'Ranking Minority Member', font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.LEFT,
               spacing: { after: 0 }
           }));
       }
@@ -1549,25 +1625,22 @@ export async function generateDocxBlob(
   // --- Header for Subsequent Pages (Subject Line) ---
   const subsequentHeaderParagraphs: Paragraph[] = [];
   
-  if (isBusinessLetter) {
-      // Business Letter Continuation Header: SSIC, Originator, Date
-      // Aligned Left (Standard) or Flush Right?
-      // M-5216.5 Figure 11-3 shows it at top left.
+  if (isCivilianStyle) {
+      // Business/Executive Letter Continuation Header: SSIC, Originator, Date
       if (formData.ssic) {
-          subsequentHeaderParagraphs.push(new Paragraph({ 
+          subsequentHeaderParagraphs.push(new Paragraph({
               children: [new TextRun({ text: formData.ssic, font, size: FONT_SIZE_BODY })],
               spacing: { after: 0 }
           }));
       }
       if (formData.originatorCode) {
-          subsequentHeaderParagraphs.push(new Paragraph({ 
+          subsequentHeaderParagraphs.push(new Paragraph({
               children: [new TextRun({ text: formData.originatorCode, font, size: FONT_SIZE_BODY })],
               spacing: { after: 0 }
           }));
       }
-      // Date should be the formatted date, using existing variable or formatting logic
-      const dateText = isBusinessLetter 
-        ? formatBusinessDate(formData.date || '') 
+      const dateText = isCivilianStyle
+        ? formatBusinessDate(formData.date || '')
         : parseAndFormatDate(formData.date || 'Date Placeholder');
 
       subsequentHeaderParagraphs.push(new Paragraph({ 

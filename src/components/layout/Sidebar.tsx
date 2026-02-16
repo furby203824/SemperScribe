@@ -15,7 +15,8 @@ import {
   ScrollText,
   ClipboardList,
   Notebook,
-  Briefcase
+  Briefcase,
+  Landmark
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -167,6 +168,11 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
                     active={documentType === 'business-letter'}
                     onClick={() => onDocumentTypeChange('business-letter')}
                     label="Business Letter"
+                  />
+                  <DocumentTypeButton
+                    active={documentType === 'executive-correspondence'}
+                    onClick={() => onDocumentTypeChange('executive-correspondence')}
+                    label="Executive Correspondence"
                   />
                 </div>
               </AccordionContent>

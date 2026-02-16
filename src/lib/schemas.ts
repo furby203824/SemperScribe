@@ -1187,6 +1187,244 @@ export const BusinessLetterDefinition: DocumentTypeDefinition = {
   ]
 };
 
+// 17. Executive Correspondence
+export const ExecutiveCorrespondenceSchema = z.object({
+  documentType: z.literal('executive-correspondence'),
+  ssic: z.string().optional(),
+  originatorCode: z.string().optional(),
+  date: z.string().optional(), // May be left blank per Ch 12-3 para 3
+  recipientName: z.string().min(1, "Recipient Name is required"),
+  recipientTitle: z.string().optional(),
+  organizationName: z.string().optional(),
+  recipientAddress: z.string().optional(),
+  salutation: z.string().min(1, "Salutation is required").transform(val => {
+    const trimmed = val.trim();
+    if (trimmed && !trimmed.endsWith(':') && !trimmed.endsWith(',')) {
+      return `${trimmed}:`;
+    }
+    return trimmed;
+  }),
+  subj: z.string().optional(),
+  complimentaryClose: z.string().default("Sincerely,"),
+  sig: z.string().optional(), // May be omitted for SecDef/DepSecDef/SECNAV/UNSECNAV
+  signerTitle: z.string().optional(),
+  execFormat: z.enum(['letter', 'standard-memo', 'action-memo', 'info-memo']).default('letter'),
+  memoFor: z.string().optional(), // "MEMORANDUM FOR" addressee(s)
+  memoFrom: z.string().optional(), // "FROM:" line for info memos
+  isCongressional: z.boolean().optional(),
+  courtesyCopyTo: z.string().optional(), // Ranking minority member
+  omitSignatureBlock: z.boolean().optional(), // For SecDef/DepSecDef signature
+  omitDate: z.boolean().optional(), // Date added after signing
+  preparedBy: z.string().optional(), // "Prepared by:" line
+  preparedByPhone: z.string().optional(),
+});
+
+export const ExecutiveCorrespondenceDefinition: DocumentTypeDefinition = {
+  id: 'executive-correspondence',
+  name: 'Executive Correspondence',
+  description: 'Letters and memorandums for HqDON, Congress, OSD, and senior officials.',
+  icon: '🏛️',
+  schema: ExecutiveCorrespondenceSchema,
+  sections: [
+    {
+      id: 'format',
+      title: 'Format & Options',
+      fields: [
+        {
+          name: 'execFormat',
+          label: 'Format',
+          type: 'select',
+          options: [
+            { value: 'letter', label: 'Executive Letter' },
+            { value: 'standard-memo', label: 'Standard Memorandum' },
+            { value: 'action-memo', label: 'Action Memorandum' },
+            { value: 'info-memo', label: 'Information Memorandum' },
+          ],
+          required: true,
+          className: 'md:col-span-1',
+          description: 'Per SECNAV M-5216.5, Ch 12'
+        },
+        {
+          name: 'isCongressional',
+          label: 'Congressional Response',
+          type: 'checkbox',
+          description: 'Adds courtesy copy to ranking minority member',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'omitDate',
+          label: 'Omit Date (Added After Signing)',
+          type: 'checkbox',
+          description: 'Per Ch 12-3 para 3: date added by Admin after signature',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'omitSignatureBlock',
+          label: 'Omit Signature Block',
+          type: 'checkbox',
+          description: 'For SecDef/DepSecDef/SECNAV/UNSECNAV signature',
+          className: 'md:col-span-1'
+        },
+      ]
+    },
+    {
+      id: 'header',
+      title: 'Identification',
+      fields: [
+        {
+          name: 'ssic',
+          label: 'SSIC',
+          type: 'combobox',
+          placeholder: 'Search SSIC...',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'originatorCode',
+          label: 'Originator Code',
+          type: 'text',
+          placeholder: 'e.g., DNS',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'date',
+          label: 'Date',
+          type: 'date',
+          placeholder: 'DD Mmm YY',
+          className: 'md:col-span-1',
+          description: 'Leave blank if date added after signing'
+        }
+      ]
+    },
+    {
+      id: 'recipient',
+      title: 'Addressee',
+      fields: [
+        {
+          name: 'recipientName',
+          label: 'Recipient Name / Title',
+          type: 'text',
+          placeholder: 'The Honorable John Smith',
+          required: true,
+          className: 'col-span-full'
+        },
+        {
+          name: 'recipientTitle',
+          label: 'Position / Committee',
+          type: 'text',
+          placeholder: 'Chairman, Committee on Armed Services',
+          className: 'col-span-full'
+        },
+        {
+          name: 'organizationName',
+          label: 'Organization',
+          type: 'text',
+          placeholder: 'U.S. House of Representatives',
+          className: 'col-span-full'
+        },
+        {
+          name: 'recipientAddress',
+          label: 'Address',
+          type: 'textarea',
+          placeholder: 'Washington, DC 20515',
+          className: 'col-span-full',
+          rows: 2
+        },
+        {
+          name: 'memoFor',
+          label: 'MEMORANDUM FOR (Memo formats)',
+          type: 'text',
+          placeholder: 'SECRETARY OF DEFENSE',
+          className: 'col-span-full',
+          description: 'Used for memo formats only'
+        },
+        {
+          name: 'memoFrom',
+          label: 'FROM (Info/Action Memo)',
+          type: 'text',
+          placeholder: 'Thomas Harker, ASN (FM&C)',
+          className: 'col-span-full',
+          description: 'Used for info/action memo formats'
+        }
+      ]
+    },
+    {
+      id: 'details',
+      title: 'Letter Details',
+      fields: [
+        {
+          name: 'salutation',
+          label: 'Salutation',
+          type: 'text',
+          placeholder: 'Dear Mr. Chairman:',
+          required: true,
+          className: 'col-span-full',
+          description: 'Must be formal per Ch 12-3'
+        },
+        {
+          name: 'subj',
+          label: 'Subject (Optional)',
+          type: 'text',
+          placeholder: 'Subject line',
+          className: 'col-span-full'
+        },
+        {
+          name: 'complimentaryClose',
+          label: 'Complimentary Close',
+          type: 'text',
+          defaultValue: 'Sincerely,',
+          required: true,
+          className: 'md:col-span-1',
+          description: 'Sincerely, / Respectfully, / Very respectfully, / Warm regards'
+        },
+        {
+          name: 'courtesyCopyTo',
+          label: 'Courtesy Copy (Congressional)',
+          type: 'text',
+          placeholder: 'The Honorable Jane Doe, Ranking Minority Member',
+          className: 'col-span-full',
+          description: 'Required for Committee/Subcommittee Chairperson letters'
+        }
+      ]
+    },
+    {
+      id: 'signature',
+      title: 'Signature Block',
+      fields: [
+        {
+          name: 'sig',
+          label: 'Signer Name',
+          type: 'text',
+          placeholder: 'CARLOS DEL TORO',
+          className: 'md:col-span-1',
+          description: 'Leave blank if omitting signature block'
+        },
+        {
+          name: 'signerTitle',
+          label: 'Official Title',
+          type: 'text',
+          placeholder: 'Secretary of the Navy',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'preparedBy',
+          label: 'Prepared By',
+          type: 'text',
+          placeholder: 'Name, Organization',
+          className: 'md:col-span-1',
+          description: 'For action/info memos'
+        },
+        {
+          name: 'preparedByPhone',
+          label: 'Phone',
+          type: 'text',
+          placeholder: '(703) 555-1234',
+          className: 'md:col-span-1'
+        }
+      ]
+    }
+  ]
+};
+
 // Create a union of all schemas for type inference
 export const DocumentSchema = z.union([
   BasicLetterSchema,
@@ -1205,6 +1443,7 @@ export const DocumentSchema = z.union([
   MOUSchema,
   StaffingPaperSchema,
   BusinessLetterSchema,
+  ExecutiveCorrespondenceSchema,
 ]);
 
 // Infer the FormData type from the union schema
@@ -1233,4 +1472,5 @@ export const DOCUMENT_TYPES: Record<string, DocumentTypeDefinition> = {
   'decision-paper': DecisionPaperDefinition,
   'coordination-page': CoordinationPageDefinition,
   'business-letter': BusinessLetterDefinition,
+  'executive-correspondence': ExecutiveCorrespondenceDefinition,
 };

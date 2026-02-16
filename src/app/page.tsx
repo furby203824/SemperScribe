@@ -35,6 +35,8 @@ import { createDecisionPaperPdf } from '@/services/pdf/decisionPaperGenerator';
 import { CoordinationPageForm } from '@/components/letter/CoordinationPageForm';
 import { createCoordinationPagePdf } from '@/services/pdf/coordinationPageGenerator';
 import { createBusinessLetterPdf } from '@/services/pdf/businessLetterGenerator';
+import { createExecutiveMemoPdf } from '@/services/pdf/executiveMemoGenerator';
+import { ExecutiveCorrespondenceForm } from '@/components/letter/ExecutiveCorrespondenceForm';
 import { Navmc11811Data } from '@/types/navmc';
 import { SignaturePlacementModal } from '@/components/SignaturePlacementModal';
 import { configureConsole, debugUserAction, debugFormChange } from '@/lib/console-utils';
@@ -344,7 +346,11 @@ function NavalLetterGeneratorInner() {
       } else if (formData.documentType === 'business-letter') {
         const pdfBytes = await createBusinessLetterPdf(formData as any);
         blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
-      } else if (['basic', 'multiple-address', 'endorsement', 'mco', 'bulletin', 'mfr', 'from-to-memo', 'letterhead-memo', 'moa', 'mou', 'position-paper', 'information-paper'].includes(formData.documentType)) {
+      } else if (formData.documentType === 'executive-correspondence' && formData.execFormat && formData.execFormat !== 'letter') {
+        // Executive memo formats (action-memo, info-memo, standard-memo) use dedicated generator
+        const pdfBytes = await createExecutiveMemoPdf({ ...formData, paragraphs } as any);
+        blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
+      } else if (['basic', 'multiple-address', 'endorsement', 'mco', 'bulletin', 'mfr', 'from-to-memo', 'letterhead-memo', 'moa', 'mou', 'position-paper', 'information-paper', 'executive-correspondence'].includes(formData.documentType)) {
         // Standard Naval Letter logic for applicable types
         if (!formData.subj && !('originatorCode' in formData && formData.originatorCode)) {
             setIsGeneratingPreview(false);
@@ -467,6 +473,8 @@ function NavalLetterGeneratorInner() {
       newParagraphs = getPositionPaperParagraphs();
     } else if (newType === 'business-letter') {
       newParagraphs = getBusinessLetterParagraphs();
+    } else if (newType === 'executive-correspondence') {
+      newParagraphs = []; // Exec correspondence starts with empty paragraphs
     } else if (newType === 'decision-paper') {
       newParagraphs = []; // No paragraphs for decision paper
     } else if (newType === 'coordination-page') {
@@ -542,6 +550,7 @@ function NavalLetterGeneratorInner() {
               defaultValues={formData}
             >
               {formData.documentType === 'business-letter' && <BusinessLetterForm />}
+              {formData.documentType === 'executive-correspondence' && <ExecutiveCorrespondenceForm />}
               {formData.documentType === 'decision-paper' && <DecisionPaperForm />}
               {formData.documentType === 'coordination-page' && <CoordinationPageForm />}
             </DynamicForm>
@@ -561,10 +570,10 @@ function NavalLetterGeneratorInner() {
         )}
 
         {/* Sections with shared logic but conditional display */}
-        {!['moa', 'mou', 'business-letter', 'position-paper', 'information-paper'].includes(formData.documentType) && (
+        {!['moa', 'mou', 'business-letter', 'executive-correspondence', 'position-paper', 'information-paper'].includes(formData.documentType) && (
             <ViaSection vias={vias} setVias={setVias} />
         )}
-        {!['moa', 'mou', 'business-letter', 'position-paper', 'information-paper', 'aa-form'].includes(formData.documentType) && (
+        {!['moa', 'mou', 'business-letter', 'executive-correspondence', 'position-paper', 'information-paper', 'aa-form'].includes(formData.documentType) && (
             <ReferencesSection references={references} setReferences={setReferences} formData={formData} setFormData={setFormData} />
         )}
         {!['moa', 'mou', 'position-paper', 'information-paper', 'aa-form'].includes(formData.documentType) && (
@@ -590,10 +599,10 @@ function NavalLetterGeneratorInner() {
         )}
 
         {/* Closing / Signature sections */}
-        {!['page11', 'moa', 'mou', 'business-letter', 'position-paper', 'information-paper', 'aa-form'].includes(formData.documentType) && (
+        {!['page11', 'moa', 'mou', 'business-letter', 'executive-correspondence', 'position-paper', 'information-paper', 'aa-form'].includes(formData.documentType) && (
             <ClosingBlockSection formData={formData} setFormData={setFormData} copyTos={copyTos} setCopyTos={setCopyTos} distList={distList} setDistList={setDistList} />
         )}
-        {formData.documentType === 'business-letter' && <CopyToSection copyTos={copyTos} setCopyTos={setCopyTos} />}
+        {(formData.documentType === 'business-letter' || formData.documentType === 'executive-correspondence') && <CopyToSection copyTos={copyTos} setCopyTos={setCopyTos} />}
       </>
     );
   };
@@ -696,6 +705,7 @@ function NavalLetterGeneratorInner() {
       case 'position-paper':
       case 'information-paper':
       case 'business-letter':
+      case 'executive-correspondence':
       case 'decision-paper':
       case 'coordination-page':
       case 'page11':

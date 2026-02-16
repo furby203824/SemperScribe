@@ -6,6 +6,7 @@ import { MFRTemplate } from './mfr';
 import { AAFormTemplate } from './aa-form';
 import { PositionPaperTemplate, InformationPaperTemplate } from './staffing-paper';
 import { CoordinationPageTemplate } from './coordination-page';
+import { ExecutiveCorrespondenceTemplate } from './executive-correspondence';
 import { FromToMemoTemplate, LetterheadMemoTemplate, MOATemplate, MOUTemplate } from './memo';
 import { MCOTemplate, BulletinTemplate } from './orders';
 
@@ -13,6 +14,7 @@ import { MCOTemplate, BulletinTemplate } from './orders';
 export * from './types';
 export * from './basic-letter';
 export * from './business-letter';
+export * from './executive-correspondence';
 export * from './endorsement';
 export * from './mfr';
 export * from './aa-form';
@@ -38,6 +40,7 @@ export const DOCUMENT_TEMPLATES: Record<string, DocumentTemplate> = {
   'bulletin': BulletinTemplate,
   
   'coordination-page': CoordinationPageTemplate,
+  'executive-correspondence': ExecutiveCorrespondenceTemplate,
 
   // Aliases or Additional Placeholders (Mapped to Basic if not implemented)
   'multiple-address': { ...BasicLetterTemplate, id: 'multiple-address-default', typeId: 'multiple-address', name: 'Multiple-Address Letter' },

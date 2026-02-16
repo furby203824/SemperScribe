@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { FileText, FileSignature, ClipboardList, ScrollText, AlertCircle, Building2, Type, FileCheck, MessageSquare, Users, Notebook, Handshake, Lightbulb, Mic, BookOpen, Flag, Plane, Briefcase } from 'lucide-react';
+import { FileText, FileSignature, ClipboardList, ScrollText, AlertCircle, Building2, Type, FileCheck, MessageSquare, Users, Notebook, Handshake, Lightbulb, Mic, BookOpen, Flag, Plane, Briefcase, Landmark } from 'lucide-react';
 
 interface DocumentTypeSectionProps {
   formData: FormData;
@@ -403,6 +403,16 @@ export function DocumentTypeSection({
               note="→ For civilian/external use"
               isActive={formData.documentType === 'business-letter'}
               onClick={() => setFormData(prev => ({ ...prev, documentType: 'business-letter' }))}
+            />
+
+            <DocumentTypeCard
+              type="executive-correspondence"
+              icon={<Landmark className="w-10 h-10" />}
+              title="Executive Correspondence"
+              description="Letters and memorandums for Congress, OSD, SECNAV, CNO, and senior officials."
+              note="→ SECNAV M-5216.5, Ch 12"
+              isActive={formData.documentType === 'executive-correspondence'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'executive-correspondence', execFormat: prev.execFormat || 'letter' }))}
             />
           </div>
         </div>
