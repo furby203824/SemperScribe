@@ -64,7 +64,7 @@ const initialState: FormData = {
   line2: '',
   line3: '',
   sig: '',
-  delegationText: ''
+  delegationText: '' 
 };
 
 function NavalLetterGeneratorInner() {

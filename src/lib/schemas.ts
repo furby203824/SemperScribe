@@ -326,7 +326,10 @@ export const MCOSchema = BasicLetterSchema.extend({
   // Reserve designation per MCO 5215.1K para 22
   isReserveOnly: z.boolean().optional(),
   // Revision tracking per MCO 5215.1K para 21e
-  revisionLetter: z.string().optional(),
+  revisionLetter: z.string().optional().refine(
+    val => !val || (/^[A-Z]$/.test(val) && !['I', 'O', 'Q'].includes(val)),
+    { message: "Revision must be a single capital letter (A-Z, excluding I, O, Q)" }
+  ),
   // FOUO designation per MCO 5215.1K para 10
   fouoDesignation: z.enum(['', 'full', 'partial']).optional(),
   // 4-digit paragraph numbering per MCO 5215.1K para 34

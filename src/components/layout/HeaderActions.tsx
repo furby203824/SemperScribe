@@ -323,6 +323,7 @@ export function HeaderActions({
 
       {/* Export/Generate Buttons */}
       <div className="flex items-center space-x-1 sm:space-x-2">
+
         {documentType === 'amhs' ? (
           <>
             <Button
@@ -389,7 +390,6 @@ export function HeaderActions({
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
