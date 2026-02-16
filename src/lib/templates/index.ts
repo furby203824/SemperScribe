@@ -5,6 +5,7 @@ import { EndorsementTemplate } from './endorsement';
 import { MFRTemplate } from './mfr';
 import { AAFormTemplate } from './aa-form';
 import { PositionPaperTemplate, InformationPaperTemplate } from './staffing-paper';
+import { DecisionPaperTemplate } from './decision-paper';
 import { CoordinationPageTemplate } from './coordination-page';
 import { ExecutiveCorrespondenceTemplate } from './executive-correspondence';
 import { FromToMemoTemplate, LetterheadMemoTemplate, MOATemplate, MOUTemplate } from './memo';
@@ -19,6 +20,7 @@ export * from './endorsement';
 export * from './mfr';
 export * from './aa-form';
 export * from './staffing-paper';
+export * from './decision-paper';
 export * from './coordination-page';
 export * from './memo';
 export * from './orders';
@@ -32,6 +34,7 @@ export const DOCUMENT_TEMPLATES: Record<string, DocumentTemplate> = {
   'aa-form': AAFormTemplate,
   'position-paper': PositionPaperTemplate,
   'information-paper': InformationPaperTemplate,
+  'decision-paper': DecisionPaperTemplate,
   'from-to-memo': FromToMemoTemplate,
   'letterhead-memo': LetterheadMemoTemplate,
   'moa': MOATemplate,
