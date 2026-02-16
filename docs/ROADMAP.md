@@ -156,12 +156,8 @@ Three master templates to cover the majority of formatting logic:
 
 ### Feature Enhancements
 - [x] Spell check with military terminology awareness
-- [ ] Auto-suggest for common phrases and references
 - [x] Batch document generation (mail merge via CSV)
 - [x] Print-optimized CSS for direct browser printing (covered by PDF preview)
-- [ ] Collaborative editing (real-time sync)
-- [ ] Version history for drafts
-- [ ] PDF form field detection and auto-fill
 
 ---
 
