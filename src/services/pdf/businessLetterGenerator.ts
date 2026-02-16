@@ -1,9 +1,19 @@
 
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import { BusinessLetterSchema } from '@/lib/schemas';
-import { z } from 'zod';
 
-type BusinessLetterData = z.infer<typeof BusinessLetterSchema>;
+interface BusinessLetterData {
+  documentType: string;
+  date: string;
+  recipientAddress: string;
+  salutation: string;
+  complimentaryClose: string;
+  sig: string;
+  senderAddress?: string;
+  body?: string;
+  closing?: string;
+  signatureName?: string;
+  [key: string]: unknown;
+}
 
 export async function createBusinessLetterPdf(data: BusinessLetterData): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create();
@@ -47,10 +57,12 @@ export async function createBusinessLetterPdf(data: BusinessLetterData): Promise
 
 
   // 1. Sender's Address (top right)
-  const senderAddressWidth = font.widthOfTextAtSize(data.senderAddress, fontSize);
-  drawMultilineText(data.senderAddress, width - margin - senderAddressWidth, y, 250);
-  
-  y -= lineHeight * (data.senderAddress.split('\n').length + 1);
+  const senderAddr = data.senderAddress || '';
+  if (senderAddr) {
+    const senderAddressWidth = font.widthOfTextAtSize(senderAddr, fontSize);
+    drawMultilineText(senderAddr, width - margin - senderAddressWidth, y, 250);
+    y -= lineHeight * (senderAddr.split('\n').length + 1);
+  }
 
   // 2. Date
   y = drawText(data.date, margin, y);
@@ -71,11 +83,13 @@ export async function createBusinessLetterPdf(data: BusinessLetterData): Promise
   }
 
   // 6. Closing
-  y = drawText(data.closing, margin, y);
+  const closingText = data.closing || data.complimentaryClose || '';
+  y = drawText(closingText, margin, y);
   y -= lineHeight * 3; // Space for signature
 
   // 7. Signature Name
-  drawText(data.signatureName, margin, y);
+  const sigName = data.signatureName || data.sig || '';
+  drawText(sigName, margin, y);
 
   return pdfDoc.save();
 }

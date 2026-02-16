@@ -448,7 +448,7 @@ export async function generateDocxBlob(
       
       if (formData.recipientAddress) {
           const addressLines = formData.recipientAddress.split('\n');
-          addressLines.forEach(line => {
+          addressLines.forEach((line: string) => {
               businessHeaderParagraphs.push(new Paragraph({
                   children: [new TextRun({ text: line, font, size: FONT_SIZE_BODY })],
                   alignment: AlignmentType.LEFT,
@@ -597,13 +597,13 @@ export async function generateDocxBlob(
     if (formData.documentType === 'multiple-address') {
        // Multiple Address: To line lists all recipients, NO Via section
        const recipients = formData.distribution?.recipients || (formData.to ? [formData.to] : ["Addressee"]);
-       const recipientsWithContent = recipients.filter(r => r && r.trim());
-       
+       const recipientsWithContent = recipients.filter((r: string) => r && r.trim());
+
        if (recipientsWithContent.length === 0) recipientsWithContent.push("Addressee");
 
        if (recipientsWithContent.length > 1) {
           // If > 1 recipient, use "See Distribution"
-          const toLabel = getFromToSpacing('To', formData.bodyFont);
+          const toLabel = getFromToSpacing('To', formData.bodyFont as 'times' | 'courier');
           addressParagraphs.push(new Paragraph({
              children: [
                 new TextRun({ text: toLabel, font, size: FONT_SIZE_BODY }),
@@ -615,11 +615,11 @@ export async function generateDocxBlob(
           }));
        } else {
           // If 1 recipient, list it in the To block
-          recipientsWithContent.forEach((recipient, index) => {
+          recipientsWithContent.forEach((recipient: string, index: number) => {
               let children: TextRun[] = [];
-              
+
               if (index === 0) {
-                 const toLabel = getFromToSpacing('To', formData.bodyFont);
+                 const toLabel = getFromToSpacing('To', formData.bodyFont as 'times' | 'courier');
                  children = [
                     new TextRun({ text: toLabel, font, size: FONT_SIZE_BODY }),
                     new TextRun({ text: recipient, font, size: FONT_SIZE_BODY }),
@@ -831,7 +831,7 @@ export async function generateDocxBlob(
         }));
 
         // 2. Iterate Recommendation Items
-        formData.decisionGrid?.recommendationItems?.forEach((item, itemIdx) => {
+        formData.decisionGrid?.recommendationItems?.forEach((item: { id: string; text: string }, itemIdx: number) => {
              // a. Text
              const itemLetter = String.fromCharCode(97 + itemIdx);
              bodyParagraphs.push(new Paragraph({
@@ -848,7 +848,7 @@ export async function generateDocxBlob(
              const tableRows: TableRow[] = [];
              
              // Recommenders
-             formData.decisionGrid?.recommenders.forEach(rec => {
+             formData.decisionGrid?.recommenders.forEach((rec: { id: string; role: string; options: string[] }) => {
                  tableRows.push(new TableRow({
                      children: [
                          new TableCell({
@@ -916,8 +916,8 @@ export async function generateDocxBlob(
       
       if (formData.decisionMode === 'MULTIPLE_CHOICE') {
           // Mode B: Stacked COAs (Vertical)
-          formData.decisionGrid.recommenders.forEach(rec => {
-              const coaRows = rec.options.map(opt => 
+          formData.decisionGrid.recommenders.forEach((rec: { id: string; role: string; options: string[] }) => {
+              const coaRows = rec.options.map((opt: string) =>
                   new Paragraph({
                       children: [
                           new TextRun({ text: opt, font, size: FONT_SIZE_BODY }),
@@ -962,7 +962,7 @@ export async function generateDocxBlob(
                  ? formData.decisionGrid.recommenders[0].options
                  : final.options;
 
-              const coaRows = finalOptions.map(opt => 
+              const coaRows = finalOptions.map((opt: string) =>
                   new Paragraph({
                       children: [
                           new TextRun({ text: opt, font, size: FONT_SIZE_BODY }),
@@ -1001,8 +1001,8 @@ export async function generateDocxBlob(
       } else {
           // Mode A: Single Recommendation (Standard Horizontal)
           // Recommenders
-          formData.decisionGrid.recommenders.forEach(rec => {
-              const optionsText = rec.options.map(opt => `[ ] ${opt}`).join("    ");
+          formData.decisionGrid.recommenders.forEach((rec: { id: string; role: string; options: string[] }) => {
+              const optionsText = rec.options.map((opt: string) => `[ ] ${opt}`).join("    ");
               
               bodyParagraphs.push(new Paragraph({
                   children: [
@@ -1017,7 +1017,7 @@ export async function generateDocxBlob(
 
           // Final Decision
           if (formData.decisionGrid.finalDecision) {
-              const finalOptsText = formData.decisionGrid.finalDecision.options.map(opt => `[ ] ${opt}`).join("    ");
+              const finalOptsText = formData.decisionGrid.finalDecision.options.map((opt: string) => `[ ] ${opt}`).join("    ");
               bodyParagraphs.push(new Paragraph({
                   children: [
                       new TextRun({ text: formData.decisionGrid.finalDecision.role + " decision:\t", font, size: FONT_SIZE_BODY }),
@@ -1045,7 +1045,7 @@ export async function generateDocxBlob(
         spacing: { after: 120 }
     }));
     
-    formData.reports.forEach(report => {
+    formData.reports.forEach((report: { title: string; controlSymbol?: string; exempt?: boolean }) => {
         let reportText = report.title;
         if (report.controlSymbol) reportText += ` (${report.controlSymbol})`;
         if (report.exempt) reportText += " (Exempt)";
@@ -1065,7 +1065,7 @@ export async function generateDocxBlob(
       decisionGridParagraphs.push(createEmptyLine(font));
 
       // Recommenders
-      formData.decisionGrid.recommenders.forEach(rec => {
+      formData.decisionGrid.recommenders.forEach((rec: { id: string; role: string; options: string[] }) => {
           // Role line
           decisionGridParagraphs.push(new Paragraph({
               children: [new TextRun({ text: `${rec.role} recommends:`, font, size: FONT_SIZE_BODY })],
@@ -1074,7 +1074,7 @@ export async function generateDocxBlob(
 
           // Options line
           const optionRuns: TextRun[] = [];
-          rec.options.forEach((opt, index) => {
+          rec.options.forEach((opt: string, index: number) => {
               if (index > 0) {
                   optionRuns.push(new TextRun({ text: "\t", font, size: FONT_SIZE_BODY }));
               }
@@ -1107,7 +1107,7 @@ export async function generateDocxBlob(
       }));
 
       const finalOptionRuns: TextRun[] = [];
-      final.options.forEach((opt, index) => {
+      final.options.forEach((opt: string, index: number) => {
           if (index > 0) {
               finalOptionRuns.push(new TextRun({ text: "\t", font, size: FONT_SIZE_BODY }));
           }
@@ -1328,7 +1328,7 @@ export async function generateDocxBlob(
           distributionParagraphs.push(new Paragraph({
               children: [
                   new TextRun({ text: "Copy to: ", font, size: FONT_SIZE_BODY }),
-                  new TextRun({ text: dist.copyTo.map(c => c.code).join(', '), font, size: FONT_SIZE_BODY })
+                  new TextRun({ text: dist.copyTo.map((c: { code: string; qty: number }) => c.code).join(', '), font, size: FONT_SIZE_BODY })
               ],
               spacing: { after: 120 }
           }));
@@ -1337,8 +1337,8 @@ export async function generateDocxBlob(
       // 1. Multiple-Address Distribution List (> 1 recipient)
       if (formData.documentType === 'multiple-address') {
           const recipients = formData.distribution?.recipients || [];
-          const recipientsWithContent = recipients.filter(r => r && r.trim());
-          
+          const recipientsWithContent = recipients.filter((r: string) => r && r.trim());
+
           if (recipientsWithContent.length > 1) {
               distributionParagraphs.push(createEmptyLine(font));
               
@@ -1348,7 +1348,7 @@ export async function generateDocxBlob(
                   spacing: { after: 0 }
               }));
 
-              recipientsWithContent.forEach(recipient => {
+              recipientsWithContent.forEach((recipient: string) => {
                   if (formData.bodyFont === 'courier') {
                       distributionParagraphs.push(new Paragraph({
                           children: [
@@ -1373,7 +1373,7 @@ export async function generateDocxBlob(
       // Manual Distribution List
       const manualDistWithContent = distList ? distList.filter(d => d.trim()) : [];
       const isMultipleAddressMany = formData.documentType === 'multiple-address' && 
-                                   (formData.distribution?.recipients?.filter(r => r && r.trim()).length || 0) > 1;
+                                   (formData.distribution?.recipients?.filter((r: string) => r && r.trim()).length || 0) > 1;
 
       if (manualDistWithContent.length > 0 && !isMultipleAddressMany) {
           distributionParagraphs.push(createEmptyLine(font));

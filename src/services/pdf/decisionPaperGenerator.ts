@@ -1,9 +1,15 @@
 
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import { DecisionPaperSchema } from '@/lib/schemas';
-import { z } from 'zod';
 
-type DecisionPaperData = z.infer<typeof DecisionPaperSchema>;
+interface DecisionPaperData {
+  documentType: string;
+  subj: string;
+  date: string;
+  problem: string;
+  discussionPoints?: Array<{ point: string }>;
+  recommendation: string;
+  [key: string]: unknown;
+}
 
 const drawSection = async (context: {
   page: any;
@@ -78,7 +84,7 @@ export async function createDecisionPaperPdf(data: DecisionPaperData): Promise<U
   // Discussion Section
   let discussionContent = '';
   if (data.discussionPoints) {
-    discussionContent = data.discussionPoints.map((p, i) => `${i + 1}. ${p.point}`).join('\n');
+    discussionContent = data.discussionPoints.map((p: { point: string }, i: number) => `${i + 1}. ${p.point}`).join('\n');
   }
   y = await drawSection({
     page,
