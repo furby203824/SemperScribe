@@ -158,28 +158,47 @@ export function formatCancellationDate(dateString: string): string {
 }
 
 /**
- * Standard MCO Paragraphs
+ * Standard MCO 5-Paragraph Order (SMEAC) scaffold per MCO 5216.20B Ch2.
+ * Includes mandatory sub-paragraphs for Execution and Command and Signal.
+ * Cancellation (para 2) is included as optional — delete if not needed.
  */
 export function getMCOParagraphs(): ParagraphData[] {
   return [
-    { id: 1, level: 1, content: '', title: 'Situation' },
-    { id: 2, level: 1, content: '', title: 'Mission' },
-    { id: 3, level: 1, content: '', title: 'Execution' },
-    { id: 4, level: 1, content: '', title: 'Administration and Logistics' },
-    { id: 5, level: 1, content: '', title: 'Command and Signal' },
+    { id: 1,  level: 1, content: '', title: 'Situation', isMandatory: true },
+    { id: 2,  level: 1, content: '', title: 'Cancellation' },
+    { id: 3,  level: 1, content: '', title: 'Mission', isMandatory: true },
+    { id: 4,  level: 1, content: '', title: 'Execution', isMandatory: true },
+    { id: 5,  level: 2, content: '', title: 'Commander\'s Intent and Concept of Operations' },
+    { id: 6,  level: 3, content: '', title: 'Commander\'s Intent' },
+    { id: 7,  level: 3, content: '', title: 'Concept of Operations' },
+    { id: 8,  level: 2, content: '', title: 'Subordinate Element Missions' },
+    { id: 9,  level: 2, content: '', title: 'Coordinating Instructions' },
+    { id: 10, level: 1, content: '', title: 'Administration and Logistics', isMandatory: true },
+    { id: 11, level: 1, content: '', title: 'Command and Signal', isMandatory: true },
+    { id: 12, level: 2, content: '', title: 'Command' },
+    { id: 13, level: 2, content: '', title: 'Signal' },
   ];
 }
 
 /**
- * Standard MCBul Paragraphs
+ * Standard MCBul 5-Paragraph Order scaffold per MCO 5216.20B Ch2.
+ * Bulletins follow the same SMEAC format as MCOs.
  */
 export function getMCBulParagraphs(): ParagraphData[] {
   return [
-    { id: 1, level: 1, content: '', title: 'Purpose' },
-    { id: 2, level: 1, content: '', title: 'Background' },
-    { id: 3, level: 1, content: '', title: 'Action' },
-    { id: 4, level: 1, content: '', title: 'Reserve Applicability' },
-    { id: 5, level: 1, content: '', title: 'Cancellation' },
+    { id: 1,  level: 1, content: '', title: 'Situation', isMandatory: true },
+    { id: 2,  level: 1, content: '', title: 'Cancellation' },
+    { id: 3,  level: 1, content: '', title: 'Mission', isMandatory: true },
+    { id: 4,  level: 1, content: '', title: 'Execution', isMandatory: true },
+    { id: 5,  level: 2, content: '', title: 'Commander\'s Intent and Concept of Operations' },
+    { id: 6,  level: 3, content: '', title: 'Commander\'s Intent' },
+    { id: 7,  level: 3, content: '', title: 'Concept of Operations' },
+    { id: 8,  level: 2, content: '', title: 'Subordinate Element Missions' },
+    { id: 9,  level: 2, content: '', title: 'Coordinating Instructions' },
+    { id: 10, level: 1, content: '', title: 'Administration and Logistics', isMandatory: true },
+    { id: 11, level: 1, content: '', title: 'Command and Signal', isMandatory: true },
+    { id: 12, level: 2, content: '', title: 'Command' },
+    { id: 13, level: 2, content: '', title: 'Signal' },
   ];
 }
 

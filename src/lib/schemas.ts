@@ -377,6 +377,23 @@ export const MCODefinition: DocumentTypeDefinition = {
            type: 'text',
            placeholder: 'e.g. 10200000000',
            className: 'md:col-span-1'
+         },
+         {
+           name: 'distribution.statementCode',
+           label: 'Distribution Statement',
+           type: 'select',
+           options: [
+             { label: 'A — Public release; unlimited', value: 'A' },
+             { label: 'B — U.S. Gov agencies only', value: 'B' },
+             { label: 'C — Gov agencies & contractors', value: 'C' },
+             { label: 'D — DoD & DoD contractors only', value: 'D' },
+             { label: 'E — DoD components only', value: 'E' },
+             { label: 'F — Further dissemination as directed', value: 'F' },
+             { label: 'X — Export-controlled', value: 'X' }
+           ],
+           defaultValue: 'A',
+           className: 'md:col-span-1',
+           description: 'Per DoD 5230.24. Shown at bottom of letterhead page.'
          }
       ]
     }
@@ -436,6 +453,30 @@ export const BulletinDefinition: DocumentTypeDefinition = {
           ],
           defaultValue: 'fixed',
           className: 'md:col-span-1'
+        },
+        {
+          name: 'distribution.pcn',
+          label: 'PCN (Publication Control Number)',
+          type: 'text',
+          placeholder: 'e.g. 10200000000',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'distribution.statementCode',
+          label: 'Distribution Statement',
+          type: 'select',
+          options: [
+            { label: 'A — Public release; unlimited', value: 'A' },
+            { label: 'B — U.S. Gov agencies only', value: 'B' },
+            { label: 'C — Gov agencies & contractors', value: 'C' },
+            { label: 'D — DoD & DoD contractors only', value: 'D' },
+            { label: 'E — DoD components only', value: 'E' },
+            { label: 'F — Further dissemination as directed', value: 'F' },
+            { label: 'X — Export-controlled', value: 'X' }
+          ],
+          defaultValue: 'A',
+          className: 'md:col-span-1',
+          description: 'Per DoD 5230.24. Shown at bottom of letterhead page.'
         }
       ]
     }
