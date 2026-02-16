@@ -1,7 +1,7 @@
 
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
-interface BusinessLetterData {
+export interface BusinessLetterData {
   documentType: string;
   date: string;
   recipientAddress: string;

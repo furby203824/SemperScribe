@@ -31,11 +31,11 @@ import { generateBasePDFBlob, getPDFPageCount } from '@/lib/pdf-generator';
 import { generateNavmc10274 } from '@/services/pdf/navmc10274Generator';
 import { generateNavmc11811 } from '@/services/pdf/navmc11811Generator';
 import { DecisionPaperForm } from '@/components/letter/DecisionPaperForm';
-import { createDecisionPaperPdf } from '@/services/pdf/decisionPaperGenerator';
+import { createDecisionPaperPdf, type DecisionPaperData } from '@/services/pdf/decisionPaperGenerator';
 import { CoordinationPageForm } from '@/components/letter/CoordinationPageForm';
-import { createCoordinationPagePdf } from '@/services/pdf/coordinationPageGenerator';
-import { createBusinessLetterPdf } from '@/services/pdf/businessLetterGenerator';
-import { createExecutiveMemoPdf } from '@/services/pdf/executiveMemoGenerator';
+import { createCoordinationPagePdf, type CoordinationPageData } from '@/services/pdf/coordinationPageGenerator';
+import { createBusinessLetterPdf, type BusinessLetterData } from '@/services/pdf/businessLetterGenerator';
+import { createExecutiveMemoPdf, type ExecMemoData } from '@/services/pdf/executiveMemoGenerator';
 import { ExecutiveCorrespondenceForm } from '@/components/letter/ExecutiveCorrespondenceForm';
 import { Navmc11811Data } from '@/types/navmc';
 import { SignaturePlacementModal } from '@/components/SignaturePlacementModal';
@@ -342,17 +342,17 @@ function NavalLetterGeneratorInner() {
          });
          blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
       } else if (formData.documentType === 'decision-paper') {
-        const pdfBytes = await createDecisionPaperPdf(formData as any);
+        const pdfBytes = await createDecisionPaperPdf(formData as unknown as DecisionPaperData);
         blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
       } else if (formData.documentType === 'coordination-page') {
-        const pdfBytes = await createCoordinationPagePdf(formData as any);
+        const pdfBytes = await createCoordinationPagePdf(formData as unknown as CoordinationPageData);
         blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
       } else if (formData.documentType === 'business-letter') {
-        const pdfBytes = await createBusinessLetterPdf(formData as any);
+        const pdfBytes = await createBusinessLetterPdf(formData as unknown as BusinessLetterData);
         blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
       } else if (formData.documentType === 'executive-correspondence' && formData.execFormat && formData.execFormat !== 'letter') {
         // Executive memo formats (action-memo, info-memo, standard-memo) use dedicated generator
-        const pdfBytes = await createExecutiveMemoPdf({ ...formData, paragraphs } as any);
+        const pdfBytes = await createExecutiveMemoPdf({ ...formData, paragraphs } as unknown as ExecMemoData);
         blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
       } else if (['basic', 'multiple-address', 'endorsement', 'mco', 'bulletin', 'mfr', 'from-to-memo', 'letterhead-memo', 'moa', 'mou', 'position-paper', 'information-paper', 'executive-correspondence'].includes(formData.documentType)) {
         // Standard Naval Letter logic for applicable types

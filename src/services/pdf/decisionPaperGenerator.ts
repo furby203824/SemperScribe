@@ -1,7 +1,7 @@
 
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
-interface DecisionPaperData {
+export interface DecisionPaperData {
   documentType: string;
   subj: string;
   date: string;
