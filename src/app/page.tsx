@@ -431,6 +431,11 @@ function NavalLetterGeneratorInner() {
       }
     } catch (e) {
       console.error("Preview generation failed", e);
+      toast({
+        title: "Preview generation failed",
+        description: e instanceof Error ? e.message : "An unexpected error occurred while generating the preview.",
+        variant: "destructive",
+      });
     } finally {
       setIsGeneratingPreview(false);
     }
