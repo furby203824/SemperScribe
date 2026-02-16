@@ -156,20 +156,29 @@ describe('formatCancellationDate', () => {
 
 describe('Standard paragraph templates', () => {
   describe('getMCOParagraphs', () => {
-    it('returns 5-paragraph SMEAC structure', () => {
+    it('returns full SMEAC structure with sub-paragraphs', () => {
       const paras = getMCOParagraphs();
-      expect(paras).toHaveLength(5);
+      expect(paras).toHaveLength(13);
       expect(paras[0].title).toBe('Situation');
-      expect(paras[1].title).toBe('Mission');
-      expect(paras[2].title).toBe('Execution');
-      expect(paras[3].title).toBe('Administration and Logistics');
-      expect(paras[4].title).toBe('Command and Signal');
+      expect(paras[1].title).toBe('Cancellation');
+      expect(paras[2].title).toBe('Mission');
+      expect(paras[3].title).toBe('Execution');
+      expect(paras[9].title).toBe('Administration and Logistics');
+      expect(paras[10].title).toBe('Command and Signal');
     });
 
-    it('sets all paragraphs to level 1', () => {
-      getMCOParagraphs().forEach(p => {
-        expect(p.level).toBe(1);
-      });
+    it('uses correct levels for top-level and sub-paragraphs', () => {
+      const paras = getMCOParagraphs();
+      // Top-level SMEAC paragraphs are level 1
+      expect(paras[0].level).toBe(1); // Situation
+      expect(paras[2].level).toBe(1); // Mission
+      expect(paras[3].level).toBe(1); // Execution
+      expect(paras[9].level).toBe(1); // Admin & Logistics
+      expect(paras[10].level).toBe(1); // Command and Signal
+      // Sub-paragraphs under Execution are level 2-3
+      expect(paras[4].level).toBe(2); // Commander's Intent and Concept of Ops
+      expect(paras[5].level).toBe(3); // Commander's Intent
+      expect(paras[6].level).toBe(3); // Concept of Operations
     });
   });
 
@@ -178,7 +187,8 @@ describe('Standard paragraph templates', () => {
       const paras = getMCBulParagraphs();
       expect(paras).toHaveLength(5);
       expect(paras[0].title).toBe('Purpose');
-      expect(paras[4].title).toBe('Cancellation');
+      expect(paras[1].title).toBe('Cancellation');
+      expect(paras[4].title).toBe('Reserve Applicability');
     });
   });
 
