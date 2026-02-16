@@ -17,7 +17,7 @@ import { FileSignature } from 'lucide-react';
 import { useEDMSContext, isEditMode } from '@/hooks/useEDMSContext';
 import { UNITS } from '@/lib/units';
 import { getTodaysDate } from '@/lib/date-utils';
-import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getInformationPaperParagraphs, getPositionPaperParagraphs, getBusinessLetterParagraphs, mergeAdminSubsections, validateAcronymFirstUse } from '@/lib/naval-format-utils';
+import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getInformationPaperParagraphs, getPositionPaperParagraphs, getBusinessLetterParagraphs, mergeAdminSubsections, validateAcronymFirstUse, validateGenderNeutralLanguage, validateSpacing } from '@/lib/naval-format-utils';
 import { validateSSIC, validateSubject, validateFromTo } from '@/lib/validation-utils';
 import { loadSavedLetters, saveLetterToStorage } from '@/lib/storage-utils';
 import { generateBasePDFBlob, getPDFPageCount } from '@/lib/pdf-generator';
@@ -174,18 +174,26 @@ function NavalLetterGeneratorInner() {
     }
   }, [formData, paragraphs, vias, references, enclosures, copyTos, distList]);
 
-  // Acronym first-use validation per MCO 5215.1K para 16
+  // Combined paragraph validation per MCO 5215.1K (para 15, 16, 36)
   // Debounced: runs 800ms after user stops typing to avoid excessive recalculation
   useEffect(() => {
     const timer = setTimeout(() => {
-      const errors = validateAcronymFirstUse(paragraphs);
+      const isDir = ['mco', 'bulletin', 'change-transmittal'].includes(formData.documentType);
+      const acronymErrors = validateAcronymFirstUse(paragraphs);
+      const genderWarnings = validateGenderNeutralLanguage(paragraphs, isDir);
+      const spacingWarnings = validateSpacing(paragraphs);
+
       setParagraphs(prev => {
         let changed = false;
         const updated = prev.map(p => {
-          const error = errors.get(p.id) || '';
-          if (p.acronymError !== error) {
+          const parts: string[] = [];
+          if (acronymErrors.has(p.id)) parts.push(acronymErrors.get(p.id)!);
+          if (genderWarnings.has(p.id)) parts.push(genderWarnings.get(p.id)!);
+          if (spacingWarnings.has(p.id)) parts.push(spacingWarnings.get(p.id)!);
+          const combined = parts.join('; ');
+          if (p.acronymError !== combined) {
             changed = true;
-            return { ...p, acronymError: error };
+            return { ...p, acronymError: combined };
           }
           return p;
         });
@@ -194,7 +202,7 @@ function NavalLetterGeneratorInner() {
     }, 800);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paragraphs.map(p => p.content).join('|')]);
+  }, [paragraphs.map(p => p.content).join('|'), formData.documentType]);
 
   // Auto-select unit from EDMS
   useEffect(() => {

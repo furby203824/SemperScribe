@@ -554,6 +554,108 @@ export function validateAcronymFirstUse(paragraphs: ParagraphData[]): Map<number
   return result;
 }
 
+/**
+ * Validates gender-neutral language per MCO 5215.1K para 15.
+ * Rules:
+ * - Avoid gendered pronouns used alone ("he" should be "he or she")
+ * - Avoid first-person pronouns in directives ("I", "me", "my")
+ *
+ * @param paragraphs  All paragraphs to validate
+ * @param isDirective Whether the document is a directive (enables first-person check)
+ * @returns Map of paragraph ID to warning message
+ */
+export function validateGenderNeutralLanguage(
+  paragraphs: ParagraphData[],
+  isDirective: boolean = false
+): Map<number, string> {
+  const result: Map<number, string> = new Map();
+
+  for (const paragraph of paragraphs) {
+    const text = paragraph.content || '';
+    if (!text.trim()) continue;
+    const warnings: string[] = [];
+
+    // Check for gendered pronouns without paired form
+    // Match standalone "he" not part of "he or she" / "he and she" / "the" / "them" etc.
+    if (/\bhe\b/i.test(text) && !/\bhe\s+(?:or|and)\s+she\b/i.test(text) && !/\bshe\s+(?:or|and)\s+he\b/i.test(text)) {
+      // Exclude "the", "them", "then", "there", "these", "they", "their" — only match standalone "he"
+      const matches = text.match(/(?<!\w)(?:^|\s)he(?:\s|[.,;:!?]|$)/gi);
+      if (matches && matches.length > 0) {
+        warnings.push('Gendered pronoun "he" — use "he or she" or rewrite (para 15)');
+      }
+    }
+
+    if (/\bhim\b/i.test(text) && !/\bhim\s+(?:or|and)\s+her\b/i.test(text)) {
+      warnings.push('Gendered pronoun "him" — use "him or her" or rewrite (para 15)');
+    }
+
+    if (/\bhimself\b/i.test(text) && !/\bhimself\s+(?:or|and)\s+herself\b/i.test(text)) {
+      warnings.push('Gendered pronoun "himself" — use "himself or herself" or rewrite (para 15)');
+    }
+
+    // First-person check for directives only
+    if (isDirective) {
+      // Match capital "I" as a word (not in Roman numerals context or mid-word)
+      if (/(?:^|[\s(,"'])I(?:[\s.,;:!?)"']|$)/.test(text)) {
+        warnings.push('First-person "I" — avoid in directives (para 15)');
+      }
+      if (/\bmy\b/i.test(text)) {
+        warnings.push('First-person "my" — avoid in directives (para 15)');
+      }
+    }
+
+    if (warnings.length > 0) {
+      result.set(paragraph.id, warnings.join('; '));
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Validates spacing conventions per MCO 5215.1K para 36.
+ * Rules:
+ * - One space after closing parenthesis
+ * - Two spaces after end-of-sentence period
+ *
+ * @returns Map of paragraph ID to warning message
+ */
+export function validateSpacing(paragraphs: ParagraphData[]): Map<number, string> {
+  const result: Map<number, string> = new Map();
+
+  for (const paragraph of paragraphs) {
+    const text = paragraph.content || '';
+    if (!text.trim()) continue;
+    const warnings: string[] = [];
+
+    // Check: two+ spaces after closing parenthesis (should be one)
+    if (/\)\s{2,}/.test(text)) {
+      warnings.push('Use one space after closing parenthesis (para 36)');
+    }
+
+    // Check: single space after end-of-sentence period (should be two)
+    // Match period followed by exactly one space then an uppercase letter (new sentence)
+    // Exclude abbreviations like "U.S." / "e.g." / "i.e." and reference labels like "(a)."
+    const sentenceEndPattern = /(?<![A-Z])\.(?!\w)\s(?=[A-Z])/g;
+    const singleSpaceMatches = text.match(sentenceEndPattern);
+    if (singleSpaceMatches && singleSpaceMatches.length > 0) {
+      // Verify they're not already double-spaced
+      const doubleSpacePattern = /(?<![A-Z])\.\s{2}(?=[A-Z])/g;
+      const doubleSpaceMatches = text.match(doubleSpacePattern);
+      const singleCount = singleSpaceMatches.length - (doubleSpaceMatches?.length || 0);
+      if (singleCount > 0) {
+        warnings.push('Use two spaces after end-of-sentence periods (para 36)');
+      }
+    }
+
+    if (warnings.length > 0) {
+      result.set(paragraph.id, warnings.join('; '));
+    }
+  }
+
+  return result;
+}
+
 export function getPositionPaperParagraphs(): ParagraphData[] {
   return [
     { 
