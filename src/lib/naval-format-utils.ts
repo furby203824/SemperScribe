@@ -181,24 +181,18 @@ export function getMCOParagraphs(): ParagraphData[] {
 }
 
 /**
- * Standard MCBul 5-Paragraph Order scaffold per MCO 5216.20B Ch2.
- * Bulletins follow the same SMEAC format as MCOs.
+ * Standard MCBul paragraph scaffold per MCO 5216.20B Ch3 Section 11.
+ * Bulletins use their own paragraph structure (NOT SMEAC):
+ *   Purpose, Cancellation, Background, Action, Reserve Applicability,
+ *   and Cancellation Contingency (if contingent cancellation type).
  */
 export function getMCBulParagraphs(): ParagraphData[] {
   return [
-    { id: 1,  level: 1, content: '', title: 'Situation', isMandatory: true },
-    { id: 2,  level: 1, content: '', title: 'Cancellation' },
-    { id: 3,  level: 1, content: '', title: 'Mission', isMandatory: true },
-    { id: 4,  level: 1, content: '', title: 'Execution', isMandatory: true },
-    { id: 5,  level: 2, content: '', title: 'Commander\'s Intent and Concept of Operations' },
-    { id: 6,  level: 3, content: '', title: 'Commander\'s Intent' },
-    { id: 7,  level: 3, content: '', title: 'Concept of Operations' },
-    { id: 8,  level: 2, content: '', title: 'Subordinate Element Missions' },
-    { id: 9,  level: 2, content: '', title: 'Coordinating Instructions' },
-    { id: 10, level: 1, content: '', title: 'Administration and Logistics', isMandatory: true },
-    { id: 11, level: 1, content: '', title: 'Command and Signal', isMandatory: true },
-    { id: 12, level: 2, content: '', title: 'Command' },
-    { id: 13, level: 2, content: '', title: 'Signal' },
+    { id: 1, level: 1, content: '', title: 'Purpose', isMandatory: true },
+    { id: 2, level: 1, content: '', title: 'Cancellation' },
+    { id: 3, level: 1, content: '', title: 'Background' },
+    { id: 4, level: 1, content: '', title: 'Action' },
+    { id: 5, level: 1, content: '', title: 'Reserve Applicability' },
   ];
 }
 
