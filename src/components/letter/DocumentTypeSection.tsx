@@ -322,15 +322,6 @@ export function DocumentTypeSection({
               }}
             />
 
-            <DocumentTypeCard
-              type="coordination-page"
-              icon={<Users className="w-10 h-10" />}
-              title="Coordination Page"
-              description="A form for coordinating actions and decisions among multiple parties."
-              note="→ For multi-party decisions"
-              isActive={formData.documentType === 'coordination-page'}
-              onClick={() => setFormData(prev => ({ ...prev, documentType: 'coordination-page' }))}
-            />
           </div>
         </div>
 
@@ -383,6 +374,16 @@ export function DocumentTypeSection({
                       // setParagraphs(getDecisionPaperParagraphs());
                   }
               }}
+            />
+
+            <DocumentTypeCard
+              type="coordination-page"
+              icon={<ClipboardList className="w-10 h-10" />}
+              title="Coordination Page"
+              description="Mandatory staffing table for routing packages. Tracks concurrence/non-concurrence."
+              note="→ MCO 5216.20B, Fig 13-8"
+              isActive={formData.documentType === 'coordination-page'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'coordination-page' }))}
             />
           </div>
         </div>

@@ -37,7 +37,7 @@ Updated per MCO 5216.20B. Briefing documents used for staffing actions and decis
 |------|--------|-----------|-------|
 | Information Paper | DONE | MCO 5216.20B, Sec 10 | New Standard. Replaces Point/Talking papers. Uses "tick and bullet" format. 1-2 pages max. |
 | Position/Decision Paper | DONE | MCO 5216.20B, Sec 10 | Unified format. Includes BLUF, Discussion, and mandatory Decision Grid (Approve/Disapprove). |
-| Coordination Page | TODO | MCO 5216.20B, Fig 13-8 | Mandatory staffing table for routing packages. Tracks concurrence/non-concurrence. |
+| Coordination Page | DONE | MCO 5216.20B, Fig 13-8 | Mandatory staffing table for routing packages. Tracks concurrence/non-concurrence. |
 | CMC Green Letter | TODO | MCO 5216.20B, Sec 10 | Personal comms between CMC and General Officers. (Lower priority). |
 | CMC White Letter | TODO | MCO 5216.20B, Sec 10 | Personal comms between CMC and Commanders. (Lower priority). |
 
@@ -141,7 +141,7 @@ Three master templates to cover the majority of formatting logic:
 - [x] "From-To" Memorandum format
 - [x] Letterhead Memorandum format
 - [x] Information Paper
-- [ ] Coordination Page
+- [x] Coordination Page
 
 ### Medium Priority
 - [x] Position/Decision Paper
