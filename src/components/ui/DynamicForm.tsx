@@ -173,7 +173,7 @@ export function DynamicForm({ documentType, onSubmit, defaultValues, children }:
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {field.options?.map(opt => (
+                    {field.options?.filter(opt => opt.value !== '').map(opt => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>
