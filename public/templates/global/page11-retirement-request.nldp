@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "packageId": "page11_retirement_request",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-02-16T00:00:00.000Z",
+    "author": {
+      "name": "System Template"
+    },
+    "package": {
+      "title": "Voluntary Retirement Request (Officer)",
+      "description": "Officer retirement request per MCO 1900.16 CH 2",
+      "documentType": "page11"
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "page11",
+      "name": "",
+      "edipi": "",
+      "date": "",
+      "remarksLeft": "Entry:",
+      "remarksRight": "(Date). I request transfer to the retired list effective (Date). I have signed the Commanding Officer's pre-application checklist and fully understand the ramifications of this request.\n\n\n_____________________\nSignature of Officer"
+    },
+    "vias": [],
+    "references": [],
+    "enclosures": [],
+    "copyTos": [],
+    "paragraphs": []
+  }
+}

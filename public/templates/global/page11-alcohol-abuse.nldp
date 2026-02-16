@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "packageId": "page11_alcohol_abuse",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-02-16T00:00:00.000Z",
+    "author": {
+      "name": "System Template"
+    },
+    "package": {
+      "title": "Alcohol Abuse",
+      "description": "Entry for alcohol-related incident per MCO 5300.17A",
+      "documentType": "page11"
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "page11",
+      "name": "",
+      "edipi": "",
+      "date": "",
+      "remarksLeft": "Entry:",
+      "remarksRight": "(Date). Counseled this date concerning my conviction of (list charge/incident), and in the commander's judgment, a contributing factor was the ingestion of alcohol. I am advised that failure to take corrective action may result in administrative separation or limitation on further service. I was advised that within 5 working days after acknowledgment of this entry a written rebuttal could be submitted and that such a rebuttal will be filed on the document side of the service record. I choose (to) (not to) make such a statement.\n\n\n_____________________          _____________________\nSignature of Marine            Signature of CO"
+    },
+    "vias": [],
+    "references": [],
+    "enclosures": [],
+    "copyTos": [],
+    "paragraphs": []
+  }
+}

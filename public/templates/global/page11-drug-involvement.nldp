@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "packageId": "page11_drug_involvement",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-02-16T00:00:00.000Z",
+    "author": {
+      "name": "System Template"
+    },
+    "package": {
+      "title": "Illegal Drug Involvement",
+      "description": "Mandatory entry for illegal drug use (MCO 5300.17A / MCO 1900.16 CH 2)",
+      "documentType": "page11"
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "page11",
+      "name": "",
+      "edipi": "",
+      "date": "",
+      "remarksLeft": "Entry:",
+      "remarksRight": "(Date). Counseled this date concerning my illegal drug involvement; specifically, (indicate involvement; e.g., wrongful use of marijuana identified by sample #123456). Specific recommendations for corrective action: Placed on Urinalysis Surveillance Program this date and referred to SACC. I am advised that processing for administrative separation for cause is mandatory per MCO 1900.16 CH 2. I was advised that within 5 working days after acknowledgment of this entry, a written rebuttal can be submitted and this rebuttal will be filed on the document side of the OQR/SRB. I choose (to) (not to) make a statement.\n\n\n_____________________          _____________________\nSignature of Marine            Signature of CO"
+    },
+    "vias": [],
+    "references": [],
+    "enclosures": [],
+    "copyTos": [],
+    "paragraphs": []
+  }
+}

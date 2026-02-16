@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "packageId": "page11_hostile_fire_waiver",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-02-16T00:00:00.000Z",
+    "author": {
+      "name": "System Template"
+    },
+    "package": {
+      "title": "Hostile Fire Area Waiver (OCD)",
+      "description": "Overseas Control Date waiver for hostile fire assignment per MCO 1300.8 W/CH 1",
+      "documentType": "page11"
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "page11",
+      "name": "",
+      "edipi": "",
+      "date": "",
+      "remarksLeft": "Entry:",
+      "remarksRight": "(Date). I hereby waive my Overseas Control Date (OCD) and request assignment to (designated hostile fire area). I understand that this waiver does not guarantee a particular location and my ultimate assignment overseas will be predicated on the needs of the Marine Corps.\n\n\n_____________________\nSignature of Marine"
+    },
+    "vias": [],
+    "references": [],
+    "enclosures": [],
+    "copyTos": [],
+    "paragraphs": []
+  }
+}
