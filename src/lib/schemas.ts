@@ -332,6 +332,17 @@ export const MCOSchema = BasicLetterSchema.extend({
   ),
   // FOUO designation per MCO 5215.1K para 10
   fouoDesignation: z.enum(['', 'full', 'partial']).optional(),
+  // 4-digit paragraph numbering per MCO 5215.1K para 34
+  fourDigitNumbering: z.boolean().optional(),
+  chapterNumber: z.number().min(1).max(9).optional(),
+  // Structural pages per MCO 5215.1K para 48
+  showStructuralPages: z.boolean().optional(),
+  recordOfChanges: z.array(z.object({
+    changeNo: z.number(),
+    date: z.string(),
+    pagesAffected: z.string(),
+    enteredBy: z.string(),
+  })).optional(),
   reports: z.array(z.object({
     id: z.string(),
     title: z.string(),
@@ -453,6 +464,29 @@ export const MCODefinition: DocumentTypeDefinition = {
           defaultValue: '',
           className: 'md:col-span-1',
           description: 'Per MCO 5215.1K para 10 — marks "FOR OFFICIAL USE ONLY" on pages'
+        },
+        {
+          name: 'fourDigitNumbering',
+          label: '4-Digit Numbering',
+          type: 'checkbox',
+          className: 'md:col-span-1',
+          description: 'Per MCO 5215.1K para 34 — for orders exceeding 200 pages (e.g., 1001., 1002.)'
+        },
+        {
+          name: 'chapterNumber',
+          label: 'Chapter Number',
+          type: 'number',
+          placeholder: '1',
+          className: 'md:col-span-1',
+          description: 'Chapter prefix for 4-digit numbering (1=1001, 2=2001, etc.)',
+          condition: (formData: any) => !!formData.fourDigitNumbering
+        },
+        {
+          name: 'showStructuralPages',
+          label: 'Structural Pages',
+          type: 'checkbox',
+          className: 'md:col-span-1',
+          description: 'Per MCO 5215.1K para 48 — adds Locator Sheet, Record of Changes, and Table of Contents'
         }
       ]
     }

@@ -30,13 +30,15 @@ interface ParagraphSectionProps {
   onUpdateAdminSubsection?: (key: keyof AdminSubsections, field: 'show' | 'content' | 'order', value: any) => void;
   activeVoiceInput: number | null;
   validateParagraphNumbering: (paragraphs: ParagraphData[]) => string[];
-  getUiCitation: (paragraph: ParagraphData, index: number, allParagraphs: ParagraphData[]) => string;
+  getUiCitation: (paragraph: ParagraphData, index: number, allParagraphs: ParagraphData[], options?: { fourDigitNumbering?: boolean; chapterNumber?: number }) => string;
   moveParagraphUp: (id: number) => void;
   moveParagraphDown: (id: number) => void;
   updateParagraphContent: (id: number, content: string) => void;
   toggleVoiceInput: (id: number) => void;
   addParagraph: (type: 'main' | 'sub' | 'same' | 'up', afterId: number) => void;
   removeParagraph: (id: number) => void;
+  fourDigitNumbering?: boolean;
+  chapterNumber?: number;
 }
 
 export function ParagraphSection({
@@ -52,10 +54,15 @@ export function ParagraphSection({
   updateParagraphContent,
   toggleVoiceInput,
   addParagraph,
-  removeParagraph
+  removeParagraph,
+  fourDigitNumbering,
+  chapterNumber
 }: ParagraphSectionProps) {
   const numberingErrors = validateParagraphNumbering(paragraphs);
   const [focusedId, setFocusedId] = useState<number | null>(null);
+
+  // Options for 4-digit numbering (passed through to citation generation)
+  const citationOpts = fourDigitNumbering ? { fourDigitNumbering, chapterNumber } : undefined;
 
   // Compute next citation hints for add-paragraph buttons
   const getNextCitations = (paragraph: ParagraphData, index: number) => {
@@ -65,27 +72,27 @@ export function ParagraphSection({
     // "Main" = new level-1 paragraph after current
     hypothetical.level = 1;
     const withMain = [...paragraphs.slice(0, index + 1), hypothetical, ...paragraphs.slice(index + 1)];
-    hints.main = getUiCitation(hypothetical, index + 1, withMain);
+    hints.main = getUiCitation(hypothetical, index + 1, withMain, citationOpts);
 
     // "Sub" = new paragraph at level+1 after current
     if (paragraph.level < 8) {
       hypothetical.level = paragraph.level + 1;
       const withSub = [...paragraphs.slice(0, index + 1), { ...hypothetical }, ...paragraphs.slice(index + 1)];
-      hints.sub = getUiCitation({ ...hypothetical }, index + 1, withSub);
+      hints.sub = getUiCitation({ ...hypothetical }, index + 1, withSub, citationOpts);
     }
 
     // "Same" = new paragraph at same level after current
     if (paragraph.level > 1) {
       hypothetical.level = paragraph.level;
       const withSame = [...paragraphs.slice(0, index + 1), { ...hypothetical }, ...paragraphs.slice(index + 1)];
-      hints.same = getUiCitation({ ...hypothetical }, index + 1, withSame);
+      hints.same = getUiCitation({ ...hypothetical }, index + 1, withSame, citationOpts);
     }
 
     // "Up" = new paragraph at level-1 after current
     if (paragraph.level > 2) {
       hypothetical.level = paragraph.level - 1;
       const withUp = [...paragraphs.slice(0, index + 1), { ...hypothetical }, ...paragraphs.slice(index + 1)];
-      hints.up = getUiCitation({ ...hypothetical }, index + 1, withUp);
+      hints.up = getUiCitation({ ...hypothetical }, index + 1, withUp, citationOpts);
     }
 
     return hints;
@@ -130,7 +137,7 @@ export function ParagraphSection({
                   ))}
                 </div>
                 <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 font-medium">
-                  Rule: Sequence must be preserved (1, 2... a, b... (1), (2)...).
+                  Per MCO 5215.1K para 32h: A paragraph may not be subdivided unless it produces at least two subdivisions.
                 </p>
               </div>
             </div>
@@ -220,7 +227,7 @@ export function ParagraphSection({
 
         <div className="space-y-4">
           {paragraphs.map((paragraph, index) => {
-            let citation = getUiCitation(paragraph, index, paragraphs);
+            let citation = getUiCitation(paragraph, index, paragraphs, citationOpts);
             
             if (documentType === 'information-paper' && paragraph.level > 1) {
               citation = (paragraph.level === 2 ? '•' : paragraph.level === 3 ? '◦' : '▪');

@@ -17,7 +17,7 @@ import { FileSignature } from 'lucide-react';
 import { useEDMSContext, isEditMode } from '@/hooks/useEDMSContext';
 import { UNITS } from '@/lib/units';
 import { getTodaysDate } from '@/lib/date-utils';
-import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getInformationPaperParagraphs, getPositionPaperParagraphs, getBusinessLetterParagraphs, mergeAdminSubsections } from '@/lib/naval-format-utils';
+import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getInformationPaperParagraphs, getPositionPaperParagraphs, getBusinessLetterParagraphs, mergeAdminSubsections, validateAcronymFirstUse } from '@/lib/naval-format-utils';
 import { validateSSIC, validateSubject, validateFromTo } from '@/lib/validation-utils';
 import { loadSavedLetters, saveLetterToStorage } from '@/lib/storage-utils';
 import { generateBasePDFBlob, getPDFPageCount } from '@/lib/pdf-generator';
@@ -173,6 +173,28 @@ function NavalLetterGeneratorInner() {
       setIsDirty(true);
     }
   }, [formData, paragraphs, vias, references, enclosures, copyTos, distList]);
+
+  // Acronym first-use validation per MCO 5215.1K para 16
+  // Debounced: runs 800ms after user stops typing to avoid excessive recalculation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const errors = validateAcronymFirstUse(paragraphs);
+      setParagraphs(prev => {
+        let changed = false;
+        const updated = prev.map(p => {
+          const error = errors.get(p.id) || '';
+          if (p.acronymError !== error) {
+            changed = true;
+            return { ...p, acronymError: error };
+          }
+          return p;
+        });
+        return changed ? updated : prev;
+      });
+    }, 800);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paragraphs.map(p => p.content).join('|')]);
 
   // Auto-select unit from EDMS
   useEffect(() => {
@@ -656,6 +678,8 @@ function NavalLetterGeneratorInner() {
                 moveParagraphDown={moveParagraphDown}
                 getUiCitation={getUiCitation}
                 validateParagraphNumbering={validateParagraphNumbering}
+                fourDigitNumbering={formData.fourDigitNumbering}
+                chapterNumber={formData.chapterNumber}
             />
         )}
 

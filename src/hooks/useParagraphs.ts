@@ -112,8 +112,15 @@ export function useParagraphs(initialParagraphs?: ParagraphData[]) {
     });
   }, []);
 
-  const getUiCitation = useCallback((paragraph: ParagraphData, index: number, allParagraphs: ParagraphData[]): string => {
+  const getUiCitation = useCallback((
+    paragraph: ParagraphData,
+    index: number,
+    allParagraphs: ParagraphData[],
+    options?: { fourDigitNumbering?: boolean; chapterNumber?: number }
+  ): string => {
     const { level } = paragraph;
+    const isFourDigit = options?.fourDigitNumbering;
+    const chapterNum = options?.chapterNumber || 1;
 
     const getCitationPart = (targetLevel: number, parentIndex: number) => {
       let listStartIndex = 0;
@@ -130,6 +137,21 @@ export function useParagraphs(initialParagraphs?: ParagraphData[]) {
       for (let i = listStartIndex; i <= parentIndex; i++) {
         if (allParagraphs[i].level === targetLevel) {
           count++;
+        }
+      }
+
+      // 4-digit numbering shifts level mapping per MCO 5215.1K para 34
+      if (isFourDigit) {
+        switch (targetLevel) {
+          case 1: return `${chapterNum}${String(count).padStart(3, '0')}.`;
+          case 2: return `${count}`;
+          case 3: return `${String.fromCharCode(96 + count)}`;
+          case 4: return `(${count})`;
+          case 5: return `(${String.fromCharCode(96 + count)})`;
+          case 6: return `${count}.`;
+          case 7: return `${String.fromCharCode(96 + count)}.`;
+          case 8: return `(${count})`;
+          default: return '';
         }
       }
 
@@ -155,7 +177,8 @@ export function useParagraphs(initialParagraphs?: ParagraphData[]) {
           break;
         }
       }
-      return `${parentCitation}${getCitationPart(2, index)}`;
+      const sep = isFourDigit ? '.' : '';
+      return `${parentCitation}${sep}${getCitationPart(2, index)}`;
     }
 
     const citationPath: string[] = [];
