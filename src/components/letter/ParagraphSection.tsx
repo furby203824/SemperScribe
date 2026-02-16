@@ -57,6 +57,40 @@ export function ParagraphSection({
   const numberingErrors = validateParagraphNumbering(paragraphs);
   const [focusedId, setFocusedId] = useState<number | null>(null);
 
+  // Compute next citation hints for add-paragraph buttons
+  const getNextCitations = (paragraph: ParagraphData, index: number) => {
+    const hints: { main?: string; sub?: string; same?: string; up?: string } = {};
+    const hypothetical: ParagraphData = { id: -1, level: 1, content: '' };
+
+    // "Main" = new level-1 paragraph after current
+    hypothetical.level = 1;
+    const withMain = [...paragraphs.slice(0, index + 1), hypothetical, ...paragraphs.slice(index + 1)];
+    hints.main = getUiCitation(hypothetical, index + 1, withMain);
+
+    // "Sub" = new paragraph at level+1 after current
+    if (paragraph.level < 8) {
+      hypothetical.level = paragraph.level + 1;
+      const withSub = [...paragraphs.slice(0, index + 1), { ...hypothetical }, ...paragraphs.slice(index + 1)];
+      hints.sub = getUiCitation({ ...hypothetical }, index + 1, withSub);
+    }
+
+    // "Same" = new paragraph at same level after current
+    if (paragraph.level > 1) {
+      hypothetical.level = paragraph.level;
+      const withSame = [...paragraphs.slice(0, index + 1), { ...hypothetical }, ...paragraphs.slice(index + 1)];
+      hints.same = getUiCitation({ ...hypothetical }, index + 1, withSame);
+    }
+
+    // "Up" = new paragraph at level-1 after current
+    if (paragraph.level > 2) {
+      hypothetical.level = paragraph.level - 1;
+      const withUp = [...paragraphs.slice(0, index + 1), { ...hypothetical }, ...paragraphs.slice(index + 1)];
+      hints.up = getUiCitation({ ...hypothetical }, index + 1, withUp);
+    }
+
+    return hints;
+  };
+
   const isDirective = documentType === 'order' || documentType === 'bulletin' || documentType === 'directive';
   const showAdminSubsections = isDirective && adminSubsections && onUpdateAdminSubsection;
 
@@ -257,6 +291,7 @@ export function ParagraphSection({
             onFocus={setFocusedId}
             isFocused={focusedId === paragraph.id}
             documentType={documentType}
+            nextCitations={getNextCitations(paragraph, index)}
           />
             );
           })}
