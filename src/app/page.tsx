@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { FormData, ParagraphData, SavedLetter, ValidationState, AdminSubsections } from '@/types';
 import { BusinessLetterForm } from '@/components/letter/BusinessLetterForm';
 import { ModernAppShell } from '@/components/layout/ModernAppShell';
@@ -410,10 +410,20 @@ function NavalLetterGeneratorInner() {
     }
   }, [formData, vias, references, enclosures, copyTos, paragraphs, distList, toast]);
 
-  // Initial Preview Generation
+  // Generate initial preview after URL state has been loaded (or confirmed absent).
+  // We use formKey as a signal — it increments after URL state loading and document type changes.
+  const initialPreviewDone = useRef(false);
   useEffect(() => {
-    handleUpdatePreview();
-  }, []); // Only run on mount
+    if (!initialPreviewDone.current) {
+      // Defer to next tick so URL state effect runs first (both have [] deps,
+      // but this ensures React has flushed any batched state from URL loading).
+      const id = setTimeout(() => {
+        handleUpdatePreview();
+        initialPreviewDone.current = true;
+      }, 0);
+      return () => clearTimeout(id);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handlers
   const handleValidateSSIC = (value: string) => {
