@@ -29,11 +29,66 @@ export const MERGEABLE_FORM_FIELDS: { key: string; label: string; description: s
   { key: 'from', label: 'FROM', description: 'Originator (From line)' },
   { key: 'subj', label: 'SUBJECT', description: 'Subject line' },
   { key: 'date', label: 'DATE', description: 'Letter date (DD Mmm YY)' },
+  { key: 'ssic', label: 'SSIC', description: 'Standard Subject ID Code' },
+  { key: 'originatorCode', label: 'ORIGINATOR_CODE', description: 'Office code (e.g., G-1)' },
   { key: 'sig', label: 'SIGNATURE', description: 'Signature block name' },
   { key: 'sigTitle', label: 'SIG_TITLE', description: 'Signer title / rank' },
   { key: 'name', label: 'NAME', description: 'Service member name (Page 11)' },
   { key: 'edipi', label: 'EDIPI', description: 'DoD ID Number (Page 11)' },
+  { key: 'title', label: 'TITLE', description: 'Document title (MCO, Bulletin, Papers)' },
+  { key: 'purpose', label: 'PURPOSE', description: 'Purpose (Papers)' },
+  { key: 'background', label: 'BACKGROUND', description: 'Background (Papers)' },
+  { key: 'discussion', label: 'DISCUSSION', description: 'Discussion (Papers)' },
+  { key: 'recommendation', label: 'RECOMMENDATION', description: 'Recommendation (Papers)' },
 ];
+
+/**
+ * Maps document types to their relevant merge fields.
+ * This determines which fields are shown in the batch generate UI.
+ */
+export const DOCUMENT_TYPE_FIELDS: Record<string, string[]> = {
+  // Standard Letters (to, from, subj, date, ssic, originatorCode, sig, sigTitle)
+  'basic': ['to', 'from', 'subj', 'date', 'ssic', 'originatorCode', 'sig', 'sigTitle'],
+  'multiple-address': ['from', 'subj', 'date', 'ssic', 'originatorCode', 'sig', 'sigTitle'],
+  'endorsement': ['to', 'from', 'subj', 'date', 'ssic', 'originatorCode', 'sig', 'sigTitle'],
+  'business-letter': ['to', 'from', 'subj', 'date', 'ssic', 'originatorCode', 'sig', 'sigTitle'],
+
+  // Forms
+  'aa-form': ['to', 'from', 'subj', 'date', 'sig'],
+  'page11': ['name', 'edipi', 'date'],
+
+  // Orders & Directives (title, date, sig)
+  'mco': ['title', 'date', 'from', 'subj'],
+  'bulletin': ['title', 'date', 'from', 'subj'],
+
+  // Memos (to, from, date, subj)
+  'mfr': ['from', 'subj', 'date'],
+  'from-to-memo': ['to', 'from', 'subj', 'date'],
+  'letterhead-memo': ['to', 'from', 'subj', 'date', 'sig', 'sigTitle'],
+  'executive-correspondence': ['to', 'from', 'subj', 'date', 'sig', 'sigTitle'],
+
+  // Special documents
+  'coordination-page': ['title', 'from', 'date'],
+  'moa': ['title', 'date', 'sig', 'sigTitle'],
+  'mou': ['title', 'date', 'sig', 'sigTitle'],
+
+  // Papers (title, purpose, background, discussion, recommendation)
+  'position-paper': ['title', 'purpose', 'background', 'discussion', 'recommendation', 'date'],
+  'information-paper': ['title', 'purpose', 'background', 'discussion', 'date'],
+  'decision-paper': ['title', 'purpose', 'background', 'discussion', 'recommendation', 'date'],
+
+  // AMHS
+  'amhs': ['to', 'from', 'subj', 'date'],
+};
+
+/**
+ * Get the mergeable fields relevant to a specific document type.
+ * Falls back to standard letter fields if document type not found.
+ */
+export function getMergeableFieldsForDocType(documentType: string): typeof MERGEABLE_FORM_FIELDS {
+  const relevantKeys = DOCUMENT_TYPE_FIELDS[documentType] || ['to', 'from', 'subj', 'date', 'sig', 'sigTitle'];
+  return MERGEABLE_FORM_FIELDS.filter(f => relevantKeys.includes(f.key));
+}
 
 export interface MergeField {
   name: string;       // e.g. "RANK_NAME"
