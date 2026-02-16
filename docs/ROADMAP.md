@@ -27,7 +27,7 @@ Internal or semi-formal correspondence. Formatting varies significantly.
 | Memorandum for the Record (MFR) | DONE | SECNAV M-5216.5, Ch 5 | No "To:" line. Documents events internally. Uses plain paper (no letterhead) |
 | "From-To" Memorandum | DONE | SECNAV M-5216.5, Ch 5 | Informal, internal routine business. Uses plain paper or authorized command memo forms |
 | Letterhead Memorandum | DONE | SECNAV M-5216.5, Ch 5 | Formal memo to senior officials. Uses Command Letterhead but keeps "From/To" structure |
-| Memorandum of Agreement/Understanding (MOA/MOU) | TODO | SECNAV M-5216.5, Ch 5 | Requires side-by-side or stacked signature blocks for all parties |
+| Memorandum of Agreement/Understanding (MOA/MOU) | DONE | SECNAV M-5216.5, Ch 5 | Side-by-side dual-party headers and signature blocks |
 
 ### Group 3: Staffing Papers (USMC Specific)
 
@@ -149,7 +149,7 @@ Three master templates to cover the majority of formatting logic:
 
 ### Lower Priority
 - [ ] Executive Correspondence format
-- [ ] MOA/MOU format (multi-party signature blocks)
+- [x] MOA/MOU format (multi-party signature blocks)
 - [ ] Template B engine (bullet indentation logic for papers)
 - [ ] Template C engine (civilian letter formatting)
 - [ ] CMC Green/White Letters
