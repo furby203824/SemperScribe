@@ -69,14 +69,26 @@ export const BasicLetterTemplate: DocumentTemplate = {
 
     // Footer
     sig: 'I. M. MARINE',
-    delegationText: '', // "By direction" is optional
-    
+    delegationText: 'By direction',
+
     // Arrays
-    vias: [],
-    references: [],
-    enclosures: [],
-    copyTos: [],
-    
+    vias: [
+      'Commanding Officer, Intermediate Unit, Camp Pendleton, CA 92055'
+    ],
+    references: [
+      '(a) MCO 5216.20B',
+      '(b) SECNAVINST 5216.5E',
+      '(c) CMC ltr 1000 CODE of 10 Jan 26'
+    ],
+    enclosures: [
+      '(1) Supporting Document A',
+      '(2) Supporting Document B'
+    ],
+    copyTos: [
+      'Commanding General, I MEF',
+      'Inspector General of the Marine Corps'
+    ],
+
     // Defaults for other required fields (even if unused in this type)
     line1: '',
     line2: '',

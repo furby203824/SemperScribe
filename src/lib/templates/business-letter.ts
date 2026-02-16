@@ -18,21 +18,22 @@ export const BusinessLetterTemplate: DocumentTemplate = {
     recipientName: 'Mr. John Doe',
     recipientTitle: 'Director of Operations',
     businessName: 'Acme Corporation',
-    recipientAddress: '123 Business Blvd\nCity, State 12345',
+    recipientAddress: '123 Business Blvd\nSuite 400\nSan Diego, CA 92101',
+    attentionLine: 'Attention: Contracts Division',
     salutation: 'Dear Mr. Doe:',
     complimentaryClose: 'Sincerely,',
-    
-    subj: 'BUSINESS LETTER TEMPLATE', // Optional in Business Letter, but good practice
-    
+
+    subj: 'BUSINESS LETTER TEMPLATE',
+
     // Footer
     sig: 'I. M. MARINE',
     signerRank: 'Colonel',
     signerTitle: 'Commanding Officer',
-    
+
     // Toggles
-    isWindowEnvelope: false,
+    isWindowEnvelope: true,
     isShortLetter: false,
-    isVipMode: false,
+    isVipMode: true,
     
     // Body
     paragraphs: [
@@ -85,12 +86,21 @@ export const BusinessLetterTemplate: DocumentTemplate = {
     ],
 
     // Unused/Defaults
-    from: '', // Not used in Business Letter header block
-    to: '', // Not used
+    from: '',
+    to: '',
     vias: [],
-    references: [],
-    enclosures: [],
-    copyTos: [],
+    references: [
+      '(a) Contract N00024-26-C-1234',
+      '(b) Previous correspondence dtd 5 Jan 26'
+    ],
+    enclosures: [
+      '(1) Statement of Work',
+      '(2) Cost Estimate'
+    ],
+    copyTos: [
+      'Contracting Officer, NAVSEA',
+      'Staff Judge Advocate'
+    ],
     line1: '',
     line2: '',
     line3: '',
