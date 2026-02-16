@@ -42,6 +42,7 @@ import { SignaturePlacementModal } from '@/components/SignaturePlacementModal';
 import { configureConsole, debugUserAction, debugFormChange } from '@/lib/console-utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DynamicForm } from '@/components/ui/DynamicForm';
+import { ValidationSummary } from '@/components/ui/validation-summary';
 import { DOCUMENT_TYPES, LetterFormData } from '@/lib/schemas';
 import { AMHSEditor } from '@/components/amhs/AMHSEditor';
 import { AMHSPreview } from '@/components/amhs/AMHSPreview';
@@ -88,6 +89,21 @@ function NavalLetterGeneratorInner() {
         ...prev,
         ...data,
     }));
+
+    // Run inline validation on key fields as user edits
+    if (data.ssic !== undefined) {
+      setValidation(prev => ({ ...prev, ssic: validateSSIC(data.ssic) }));
+    }
+    if (data.subj !== undefined) {
+      setValidation(prev => ({ ...prev, subj: validateSubject(data.subj) }));
+    }
+    if (data.from !== undefined) {
+      setValidation(prev => ({ ...prev, from: validateFromTo(data.from) }));
+    }
+    if (data.to !== undefined) {
+      setValidation(prev => ({ ...prev, to: validateFromTo(data.to) }));
+    }
+
     debugFormChange('Dynamic Form Update', data);
   }, []);
 
@@ -579,6 +595,9 @@ function NavalLetterGeneratorInner() {
               {formData.documentType === 'coordination-page' && <CoordinationPageForm />}
             </DynamicForm>
         </div>
+
+        {/* Inline validation summary — shows errors while editing */}
+        <ValidationSummary validation={validation} />
 
         {/* Decision Grid for Position/Decision Papers */}
         {(formData.documentType === 'decision-paper' || formData.documentType === 'position-paper') && (

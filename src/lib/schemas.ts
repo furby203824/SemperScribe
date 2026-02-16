@@ -58,16 +58,59 @@ export interface DocumentTypeDefinition {
 const ssicRegex = /^[0-9]{4,5}$/;
 const dateRegex = /^(?:[0-9]{1,2} [A-Z][a-z]{2} [0-9]{2}|today)$/; // Simple validation for "DD Mmm YY" or "today"
 
+// Reusable inline validators for rich error messages while editing
+const ssicFieldRequired = () => z.string().superRefine((val, ctx) => {
+  if (!val) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "SSIC is required" });
+    return;
+  }
+  if (!/^\d+$/.test(val)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "SSIC must contain only numbers" });
+    return;
+  }
+  if (val.length < 4) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `SSIC must be 4-5 digits (currently ${val.length})` });
+    return;
+  }
+  if (val.length > 5) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "SSIC too long (max 5 digits)" });
+    return;
+  }
+});
+
+const ssicFieldOptional = () => z.string().optional().superRefine((val, ctx) => {
+  if (!val || val.length === 0) return;
+  if (!/^\d+$/.test(val)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "SSIC must contain only numbers" });
+    return;
+  }
+  if (val.length < 4) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `SSIC must be 4-5 digits (currently ${val.length})` });
+    return;
+  }
+  if (val.length > 5) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "SSIC too long (max 5 digits)" });
+    return;
+  }
+});
+
+const subjFieldRequired = () => z.string()
+  .min(1, "Subject is required")
+  .refine(val => val === val.toUpperCase(), { message: "Subject must be in ALL CAPS" });
+
+const subjFieldOptional = () => z.string().optional()
+  .refine(val => !val || val === val.toUpperCase(), { message: "Subject must be in ALL CAPS" });
+
 // --- Document Type Schemas ---
 
 // 1. Basic Letter
 export const BasicLetterSchema = z.object({
-  ssic: z.string().min(4, "SSIC must be at least 4 digits").max(5),
+  ssic: ssicFieldRequired(),
   originatorCode: z.string().min(1, "Originator Code is required"),
   date: z.string().min(1, "Date is required"),
   from: z.string().min(1, "From line is required"),
   to: z.string().min(1, "To line is required"),
-  subj: z.string().min(1, "Subject is required").transform(val => val.toUpperCase()),
+  subj: subjFieldRequired(),
   documentType: z.literal('basic'),
   line1: z.string(),
   line2: z.string(),
@@ -197,12 +240,12 @@ export const EndorsementDefinition: DocumentTypeDefinition = {
 // 4. AA Form (NAVMC 10274)
 export const AAFormSchema = z.object({
   documentType: z.literal('aa-form'),
-  ssic: z.string().optional(),
+  ssic: ssicFieldOptional(),
   actionNo: z.string().optional(),
   orgStation: z.string().optional(),
   from: z.string().min(1, "From is required"),
   to: z.string().min(1, "To is required"),
-  subj: z.string().min(1, "Subject is required"),
+  subj: subjFieldRequired(),
   date: z.string().min(1, "Date is required"),
 });
 
@@ -440,7 +483,7 @@ export const AMHSSchema = z.object({
   amhsDtg: z.string().optional(), // Auto-generated, handled separately
   amhsOfficeCode: z.string().optional(),
   originatorCode: z.string().min(1, "Originator (FROM) is required"), // Reusing originatorCode for "FROM" field
-  subj: z.string().min(1, "Subject is required"),
+  subj: subjFieldRequired(),
   amhsPocs: z.array(z.string()).optional(),
   amhsReferences: z.array(z.object({
     id: z.string(),
@@ -540,7 +583,7 @@ export const MFRSchema = BasicLetterSchema.omit({ from: true, to: true, ssic: tr
   documentType: z.literal('mfr'),
   from: z.string().optional(),
   to: z.string().optional(),
-  ssic: z.string().optional(),
+  ssic: ssicFieldOptional(),
   originatorCode: z.string().optional(),
 });
 
@@ -567,7 +610,7 @@ export const MFRDefinition: DocumentTypeDefinition = {
 // 10. From-To Memorandum
 export const FromToMemoSchema = BasicLetterSchema.extend({
   documentType: z.literal('from-to-memo'),
-  ssic: z.string().optional(),
+  ssic: ssicFieldOptional(),
   originatorCode: z.string().optional(),
 });
 
@@ -638,7 +681,7 @@ export const LetterheadMemoDefinition: DocumentTypeDefinition = {
 // 12. Coordination Page (MCO 5216.20B, Fig 13-8)
 export const CoordinationPageSchema = z.object({
   documentType: z.literal('coordination-page'),
-  subj: z.string().min(1, "Subject is required.").transform(val => val.toUpperCase()),
+  subj: subjFieldRequired(),
   date: z.string().optional(),
   actionOfficerName: z.string().min(1, "Action Officer name is required."),
   actionOfficerRank: z.string().optional(),
@@ -742,7 +785,7 @@ export const CoordinationPageDefinition: DocumentTypeDefinition = {
 export const MOASchema = z.object({
   documentType: z.literal('moa'),
   date: z.string().optional(),
-  subj: z.string().min(1, "Subject (REGARDING) is required").transform(val => val.toUpperCase()),
+  subj: subjFieldRequired(),
   moaData: z.object({
     activityA: z.string().min(1, "Senior Activity is required"),
     activityB: z.string().min(1, "Junior Activity is required"),
@@ -815,7 +858,7 @@ export const MOUDefinition: DocumentTypeDefinition = {
 // 15. Staffing Papers (Position, Information, Decision Paper)
 export const StaffingPaperSchema = z.object({
   documentType: z.enum(['position-paper', 'information-paper', 'decision-paper']),
-  subj: z.string().min(1, "Subject is required").transform(val => val.toUpperCase()),
+  subj: subjFieldRequired(),
   date: z.string().min(1, "Date is required"),
   drafterName: z.string().min(1, "Drafter Name is required"),
   drafterRank: z.string().min(1, "Drafter Rank is required"),
@@ -993,7 +1036,7 @@ export const DecisionPaperDefinition: DocumentTypeDefinition = {
 // 16. Business Letter
 export const BusinessLetterSchema = z.object({
   documentType: z.literal('business-letter'),
-  ssic: z.string().min(4, "SSIC must be at least 4 digits").max(5),
+  ssic: ssicFieldRequired(),
   originatorCode: z.string().min(1, "Originator Code is required"),
   date: z.string().min(1, "Date is required"),
   recipientName: z.string().min(1, "Recipient Name is required"),
@@ -1009,7 +1052,7 @@ export const BusinessLetterSchema = z.object({
     }
     return trimmed;
   }),
-  subj: z.string().optional(), // Optional, unlike basic letter
+  subj: subjFieldOptional(), // Optional, unlike basic letter
   complimentaryClose: z.string().default("Sincerely,"),
   sig: z.string().min(1, "Signer Name is required"),
   signerRank: z.string().optional(),
@@ -1192,7 +1235,7 @@ export const BusinessLetterDefinition: DocumentTypeDefinition = {
 // 17. Executive Correspondence
 export const ExecutiveCorrespondenceSchema = z.object({
   documentType: z.literal('executive-correspondence'),
-  ssic: z.string().optional(),
+  ssic: ssicFieldOptional(),
   originatorCode: z.string().optional(),
   date: z.string().optional(), // May be left blank per Ch 12-3 para 3
   recipientName: z.string().min(1, "Recipient Name is required"),
@@ -1206,7 +1249,7 @@ export const ExecutiveCorrespondenceSchema = z.object({
     }
     return trimmed;
   }),
-  subj: z.string().optional(),
+  subj: subjFieldOptional(),
   complimentaryClose: z.string().default("Sincerely,"),
   sig: z.string().optional(), // May be omitted for SecDef/DepSecDef/SECNAV/UNSECNAV
   signerTitle: z.string().optional(),
