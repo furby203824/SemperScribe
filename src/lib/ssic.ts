@@ -288,9 +288,6 @@ export const SSICS: Ssic[] = [
   {"code": "8225", "nomenclature": "Battery Alignment (Gun Fire Control)"},
   {"code": "13280", "nomenclature": "Battery Systems"},
   {"code": "10420", "nomenclature": "Bearing"},
-<<<<<<< HEAD
-  {"code": "6321", "nomenclature": "Beds (Hospitalization)"}
-=======
   {"code": "6321", "nomenclature": "Beds (Hospitalization)"},
   {"code": "1770", "nomenclature": "Benefits, Casualties and Survivors"},
   {"code": "1780", "nomenclature": "Benefits, Educational"},
@@ -2716,5 +2713,4 @@ export const SSICS: Ssic[] = [
   {"code": "6760", "nomenclature": "X-Ray (Equipment and Supplies)"},
   {"code": "12308", "nomenclature": "Youth and Student Employment Program"},
   {"code": "9632", "nomenclature": "Zinc Coating"}
->>>>>>> 1c155f2998dec023b104f2b7bf0ba03266a6d57e
 ]
