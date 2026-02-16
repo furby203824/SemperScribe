@@ -321,6 +321,17 @@ export const MCOSchema = BasicLetterSchema.extend({
   line3: z.string().optional(),
   sig: z.string().optional(),
   directiveTitle: z.string().optional(),
+  // Classified directive prefix per MCO 5215.1K para 9
+  classificationPrefix: z.enum(['', 'C', 'S']).optional(),
+  // Reserve designation per MCO 5215.1K para 22
+  isReserveOnly: z.boolean().optional(),
+  // Revision tracking per MCO 5215.1K para 21e
+  revisionLetter: z.string().optional().refine(
+    val => !val || (/^[A-Z]$/.test(val) && !['I', 'O', 'Q'].includes(val)),
+    { message: "Revision must be a single capital letter (A-Z, excluding I, O, Q)" }
+  ),
+  // FOUO designation per MCO 5215.1K para 10
+  fouoDesignation: z.enum(['', 'full', 'partial']).optional(),
   reports: z.array(z.object({
     id: z.string(),
     title: z.string(),
@@ -396,6 +407,54 @@ export const MCODefinition: DocumentTypeDefinition = {
            description: 'Per DoD 5230.24. Shown at bottom of letterhead page.'
          }
       ]
+    },
+    {
+      id: 'directive-options',
+      title: 'Directive Options',
+      description: 'Classification, revision, and reserve designation per MCO 5215.1K',
+      fields: [
+        {
+          name: 'classificationPrefix',
+          label: 'Classification Prefix',
+          type: 'select',
+          options: [
+            { label: 'None (Unclassified)', value: '' },
+            { label: 'C (Confidential)', value: 'C' },
+            { label: 'S (Secret)', value: 'S' }
+          ],
+          defaultValue: '',
+          className: 'md:col-span-1',
+          description: 'Prefixes SSIC per MCO 5215.1K para 9 (e.g., MCO C5215.1)'
+        },
+        {
+          name: 'revisionLetter',
+          label: 'Revision Letter',
+          type: 'text',
+          placeholder: 'e.g. A, B, K',
+          className: 'md:col-span-1',
+          description: 'Capital letter suffix (A-Z, skip I/O/Q) per MCO 5215.1K para 21e'
+        },
+        {
+          name: 'isReserveOnly',
+          label: 'Reserve Only',
+          type: 'checkbox',
+          className: 'md:col-span-1',
+          description: 'Adds "R" after SSIC per MCO 5215.1K para 22 (e.g., MCO 5215R.15)'
+        },
+        {
+          name: 'fouoDesignation',
+          label: 'FOUO Designation',
+          type: 'select',
+          options: [
+            { label: 'None', value: '' },
+            { label: 'Full FOUO (all information)', value: 'full' },
+            { label: 'Partial FOUO (specific portions)', value: 'partial' }
+          ],
+          defaultValue: '',
+          className: 'md:col-span-1',
+          description: 'Per MCO 5215.1K para 10 — marks "FOR OFFICIAL USE ONLY" on pages'
+        }
+      ]
     }
   ]
 };
@@ -431,6 +490,12 @@ export const BulletinSchema = BasicLetterSchema.extend({
     statementDate: z.string().optional(),
     statementAuthority: z.string().optional(),
   }).optional(),
+  // Classified directive prefix per MCO 5215.1K para 9
+  classificationPrefix: z.enum(['', 'C', 'S']).optional(),
+  // Reserve designation per MCO 5215.1K para 22
+  isReserveOnly: z.boolean().optional(),
+  // FOUO designation per MCO 5215.1K para 10
+  fouoDesignation: z.enum(['', 'full', 'partial']).optional(),
 });
 
 export const BulletinDefinition: DocumentTypeDefinition = {
@@ -497,6 +562,46 @@ export const BulletinDefinition: DocumentTypeDefinition = {
           defaultValue: 'A',
           className: 'md:col-span-1',
           description: 'Per DoD 5230.24. Shown at bottom of letterhead page.'
+        }
+      ]
+    },
+    {
+      id: 'directive-options',
+      title: 'Directive Options',
+      description: 'Classification and reserve designation per MCO 5215.1K',
+      fields: [
+        {
+          name: 'classificationPrefix',
+          label: 'Classification Prefix',
+          type: 'select',
+          options: [
+            { label: 'None (Unclassified)', value: '' },
+            { label: 'C (Confidential)', value: 'C' },
+            { label: 'S (Secret)', value: 'S' }
+          ],
+          defaultValue: '',
+          className: 'md:col-span-1',
+          description: 'Prefixes SSIC per MCO 5215.1K para 9 (e.g., MCBul C5215)'
+        },
+        {
+          name: 'isReserveOnly',
+          label: 'Reserve Only',
+          type: 'checkbox',
+          className: 'md:col-span-1',
+          description: 'Adds "R" after SSIC per MCO 5215.1K para 22 (e.g., MCBul 5215R)'
+        },
+        {
+          name: 'fouoDesignation',
+          label: 'FOUO Designation',
+          type: 'select',
+          options: [
+            { label: 'None', value: '' },
+            { label: 'Full FOUO (all information)', value: 'full' },
+            { label: 'Partial FOUO (specific portions)', value: 'partial' }
+          ],
+          defaultValue: '',
+          className: 'md:col-span-1',
+          description: 'Per MCO 5215.1K para 10 — marks "FOR OFFICIAL USE ONLY" on pages'
         }
       ]
     }
@@ -1563,6 +1668,103 @@ export const ExecutiveCorrespondenceDefinition: DocumentTypeDefinition = {
   ]
 };
 
+// 18. Change Transmittal (MCO 5215.1K para 40-44)
+export const ChangeTransmittalSchema = BasicLetterSchema.extend({
+  documentType: z.literal('change-transmittal'),
+  // The parent directive being changed
+  parentDirectiveTitle: z.string().min(1, "Parent directive title is required (e.g., MCO 5215.1K)"),
+  // Change number (Ch 1, Ch 2, etc.)
+  changeNumber: z.number().min(1, "Change number is required"),
+  // Classification prefix (inherited from parent directive)
+  classificationPrefix: z.enum(['', 'C', 'S']).optional(),
+  // Reserve designation
+  isReserveOnly: z.boolean().optional(),
+  // FOUO designation
+  fouoDesignation: z.enum(['', 'full', 'partial']).optional(),
+  // Distribution statement
+  distribution: z.object({
+    type: z.string().optional(),
+    pcn: z.string().optional(),
+    copyTo: z.array(z.object({
+        code: z.string(),
+        qty: z.number()
+    })).optional(),
+    statementCode: z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'X', '']).optional(),
+    statementReason: z.string().optional(),
+    statementDate: z.string().optional(),
+    statementAuthority: z.string().optional(),
+  }).optional(),
+});
+
+export const ChangeTransmittalDefinition: DocumentTypeDefinition = {
+  id: 'change-transmittal',
+  name: 'Change Transmittal',
+  description: 'Transmits amendments (page replacements) to an existing order per MCO 5215.1K para 40-44.',
+  icon: '📝',
+  schema: ChangeTransmittalSchema,
+  sections: [
+    {
+      id: 'header',
+      title: 'Change Transmittal Information',
+      fields: [
+        ...BasicLetterDefinition.sections[0].fields.map(f =>
+          f.name === 'to' ? { ...f, defaultValue: 'Distribution List', placeholder: 'Distribution List' } : f
+        ),
+      ]
+    },
+    {
+      id: 'change-details',
+      title: 'Change Details',
+      description: 'Identifies the parent directive and change number',
+      fields: [
+        {
+          name: 'parentDirectiveTitle',
+          label: 'Parent Directive',
+          type: 'text',
+          placeholder: 'e.g., MCO 5215.1K',
+          required: true,
+          className: 'md:col-span-1',
+          description: 'The directive being amended (e.g., MCO 5215.1K)'
+        },
+        {
+          name: 'changeNumber',
+          label: 'Change Number',
+          type: 'number',
+          placeholder: '1',
+          required: true,
+          className: 'md:col-span-1',
+          description: 'Sequential change number (Ch 1, Ch 2, etc.)'
+        },
+        {
+          name: 'classificationPrefix',
+          label: 'Classification Prefix',
+          type: 'select',
+          options: [
+            { label: 'None (Unclassified)', value: '' },
+            { label: 'C (Confidential)', value: 'C' },
+            { label: 'S (Secret)', value: 'S' }
+          ],
+          defaultValue: '',
+          className: 'md:col-span-1',
+          description: 'Inherited from parent directive'
+        },
+        {
+          name: 'fouoDesignation',
+          label: 'FOUO Designation',
+          type: 'select',
+          options: [
+            { label: 'None', value: '' },
+            { label: 'Full FOUO', value: 'full' },
+            { label: 'Partial FOUO', value: 'partial' }
+          ],
+          defaultValue: '',
+          className: 'md:col-span-1'
+        }
+      ]
+    }
+  ]
+};
+
 // Create a union of all schemas for type inference
 export const DocumentSchema = z.union([
   BasicLetterSchema,
@@ -1571,6 +1773,7 @@ export const DocumentSchema = z.union([
   AAFormSchema,
   MCOSchema,
   BulletinSchema,
+  ChangeTransmittalSchema,
   Page11Schema,
   AMHSSchema,
   MFRSchema,
@@ -1598,6 +1801,7 @@ export const DOCUMENT_TYPES: Record<string, DocumentTypeDefinition> = {
   'aa-form': AAFormDefinition,
   mco: MCODefinition,
   bulletin: BulletinDefinition,
+  'change-transmittal': ChangeTransmittalDefinition,
   page11: Page11Definition,
   mfr: MFRDefinition,
   'from-to-memo': FromToMemoDefinition,

@@ -1,5 +1,59 @@
 import { DocumentTemplate } from './types';
-import { MCODefinition, BulletinDefinition } from '@/lib/schemas';
+import { MCODefinition, BulletinDefinition, ChangeTransmittalDefinition } from '@/lib/schemas';
+
+/**
+ * Assumption of Command Order Template
+ * Per MCO 5215.1K, Chapter 1, Figure 1-1
+ * Uses SSIC 1301 and follows the standard MCO format
+ */
+export const AssumptionOfCommandTemplate: DocumentTemplate = {
+  id: 'assumption-of-command',
+  typeId: 'mco',
+  name: 'Assumption of Command',
+  description: 'Order publishing an assumption of command per MCO 5215.1K, Figure 1-1.',
+  definition: MCODefinition,
+  defaultData: {
+    documentType: 'mco',
+    ssic: '1301',
+    originatorCode: '',
+    date: '',
+    from: 'Commanding General',
+    to: 'Distribution List',
+    subj: 'ASSUMPTION OF COMMAND',
+
+    // MCO Specifics
+    orderPrefix: 'DivO',
+    directiveTitle: '',
+
+    distribution: {
+      type: 'standard',
+      statementCode: 'A',
+    },
+
+    paragraphs: [
+      { id: 1, level: 0, content: '1. Situation. To publish an assumption of command as required by reference (a).' },
+      { id: 2, level: 0, content: '2. Cancellation. [Predecessor\'s assumption of command order, e.g., DivO 1301.2].' },
+      { id: 3, level: 0, content: '3. Execution. I have assumed duties as Commanding General, [Unit Designation], this date as directed by reference (b). All effective orders and directives issued by my predecessors remain in effect.' },
+    ],
+    sig: '',
+
+    // Arrays
+    vias: [],
+    references: [
+      '(a) U.S. Navy Regulations, 1990, Article 0703',
+      '(b) [Appropriate reference directing assumption of command]'
+    ],
+    enclosures: [],
+    copyTos: [
+      'Seniors in chain-of-command',
+      'Subordinate units'
+    ],
+    line1: '', line2: '', line3: '', endorsementLevel: '', basicLetterReference: '',
+    referenceWho: '', referenceType: '', referenceDate: '', startingReferenceLevel: '',
+    startingEnclosureNumber: '', startingPageNumber: 1, previousPackagePageCount: 0,
+    headerType: 'USMC', bodyFont: 'times', accentColor: 'black'
+  }
+};
 
 export const MCOTemplate: DocumentTemplate = {
   id: 'mco-default',
@@ -203,3 +257,63 @@ export const BulletinTemplate: DocumentTemplate = {
       headerType: 'USMC', bodyFont: 'times', accentColor: 'black'
     }
   };
+
+export const ChangeTransmittalTemplate: DocumentTemplate = {
+  id: 'change-transmittal-default',
+  typeId: 'change-transmittal',
+  name: 'Change Transmittal',
+  description: 'Transmits amendments to an existing order per MCO 5215.1K para 40-44.',
+  definition: ChangeTransmittalDefinition,
+  defaultData: {
+    documentType: 'change-transmittal',
+    ssic: '1000',
+    originatorCode: 'ARDB',
+    date: '10 Feb 26',
+    from: 'Commandant of the Marine Corps',
+    to: 'Distribution List',
+    subj: 'FORMAT OF A CHANGE TRANSMITTAL',
+
+    // Change Transmittal Specifics
+    parentDirectiveTitle: 'MCO 1000.1',
+    changeNumber: 1,
+    orderPrefix: 'MCO',
+    directiveTitle: 'MCO 1000.1 Ch 1',
+
+    distribution: {
+      type: 'pcn-with-copy',
+      pcn: '10207570000',
+      statementCode: 'A',
+      statementReason: 'administrative/operational use',
+      statementDate: '10 Feb 26',
+      statementAuthority: 'CMC (ARDB)',
+      copyTo: [
+        { code: '8145001', qty: 2 },
+        { code: '7000260', qty: 1 }
+      ]
+    },
+
+    paragraphs: [
+      { id: 1, level: 0, content: '1. Situation. To transmit new page inserts to the basic order.' },
+      { id: 2, level: 0, content: '2. Mission. This change transmits updated policy and procedural guidance.' },
+      { id: 3, level: 0, content: '3. Execution.' },
+      { id: 4, level: 1, content: 'a. Remove the letterhead page and page 2, and replace with corresponding pages in the enclosure.' },
+      { id: 5, level: 1, content: 'b. Remove Table of Contents and replace with corresponding Table of Contents contained in the enclosure.' },
+      { id: 6, level: 1, content: 'c. Insert new pages 2, 4a, 4b, and 4c in the basic order.' },
+      { id: 7, level: 0, content: '4. Summary of Change. This change updates references and incorporates revised procedural guidance.' },
+      { id: 8, level: 0, content: '5. Filing Instructions. File the change transmittal page in front of the basic order.' }
+    ],
+    sig: 'I. M. COMMANDANT',
+
+    // Arrays
+    vias: [],
+    references: [],
+    enclosures: [
+      '(1) New page inserts to MCO 1000.1'
+    ],
+    copyTos: [],
+    line1: '', line2: '', line3: '', endorsementLevel: '', basicLetterReference: '',
+    referenceWho: '', referenceType: '', referenceDate: '', startingReferenceLevel: '',
+    startingEnclosureNumber: '', startingPageNumber: 1, previousPackagePageCount: 0,
+    headerType: 'USMC', bodyFont: 'times', accentColor: 'black'
+  }
+};

@@ -158,6 +158,104 @@ export function formatCancellationDate(dateString: string): string {
 }
 
 /**
+ * Formats a directive SSIC with classification prefix, reserve designation, and revision letter.
+ * Per MCO 5215.1K:
+ *   - Para 9: Classified prefix (C/S) before SSIC (e.g., MCO C5215.1)
+ *   - Para 22: Reserve designation "R" after SSIC (e.g., MCO 5215R.15)
+ *   - Para 21e: Revision letter suffix (e.g., MCO 5215.1K)
+ *
+ * @param ssic - The raw SSIC code (e.g., "5215")
+ * @param options - Classification prefix, reserve flag, revision letter, point number
+ * @returns Formatted SSIC string
+ */
+export function formatDirectiveSSIC(
+  ssic: string,
+  options?: {
+    classificationPrefix?: string;
+    isReserveOnly?: boolean;
+    revisionLetter?: string;
+    pointNumber?: string;
+  }
+): string {
+  if (!ssic) return '';
+  const { classificationPrefix, isReserveOnly, revisionLetter, pointNumber } = options || {};
+
+  let result = '';
+
+  // Classification prefix before SSIC (e.g., "C5215" or "S5215")
+  if (classificationPrefix) {
+    result += classificationPrefix;
+  }
+
+  result += ssic;
+
+  // Reserve designation after SSIC (e.g., "5215R")
+  if (isReserveOnly) {
+    result += 'R';
+  }
+
+  // Point number if present (e.g., "5215.1")
+  if (pointNumber) {
+    result += '.' + pointNumber;
+  }
+
+  // Revision letter suffix (e.g., "5215.1K")
+  if (revisionLetter) {
+    result += revisionLetter;
+  }
+
+  return result;
+}
+
+/**
+ * Builds the full directive title line (e.g., "MCO C5215R.1K")
+ * Combines order prefix with formatted SSIC.
+ */
+export function buildDirectiveTitle(formData: FormData): string {
+  const prefix = formData.orderPrefix || (formData.documentType === 'bulletin' ? 'MCBul' : 'MCO');
+  const ssic = formData.ssic || '';
+
+  // Extract point number from existing directiveTitle if present
+  // e.g., "MCO 5210.11G" -> pointNumber="11", revisionLetter="G"
+  let pointNumber = '';
+  if (formData.directiveTitle) {
+    // Try to parse point number from the existing title
+    const match = formData.directiveTitle.match(/\d{4,5}\.(\d+)([A-Z]?)$/);
+    if (match) {
+      pointNumber = match[1];
+    }
+  }
+
+  const formattedSSIC = formatDirectiveSSIC(ssic, {
+    classificationPrefix: formData.classificationPrefix || '',
+    isReserveOnly: formData.isReserveOnly || false,
+    revisionLetter: formData.revisionLetter || '',
+    pointNumber,
+  });
+
+  return formattedSSIC ? `${prefix} ${formattedSSIC}` : '';
+}
+
+/**
+ * Formats the SSIC display in the identification block for directives.
+ * The SSIC block shows the raw SSIC with classification prefix and reserve designation,
+ * without the order prefix or point number.
+ */
+export function formatDirectiveSSICBlock(formData: FormData): string {
+  if (!formData.ssic) return '';
+
+  let result = '';
+  if (formData.classificationPrefix) {
+    result += formData.classificationPrefix;
+  }
+  result += formData.ssic;
+  if (formData.isReserveOnly) {
+    result += 'R';
+  }
+  return result;
+}
+
+/**
  * Standard MCO 5-Paragraph Order (SMEAC) scaffold per MCO 5216.20B Ch2.
  * Includes mandatory sub-paragraphs for Execution and Command and Signal.
  * Cancellation (para 2) is included as optional — delete if not needed.
@@ -177,6 +275,18 @@ export function getMCOParagraphs(): ParagraphData[] {
     { id: 11, level: 1, content: '', title: 'Command and Signal', isMandatory: true },
     { id: 12, level: 2, content: '', title: 'Command' },
     { id: 13, level: 2, content: '', title: 'Signal' },
+  ];
+}
+
+/**
+ * Assumption of Command Paragraphs
+ * Per MCO 5215.1K, Chapter 1, Figure 1-1
+ */
+export function getAssumptionOfCommandParagraphs(): ParagraphData[] {
+  return [
+    { id: 1, level: 0, content: '1. Situation. To publish an assumption of command as required by reference (a).' },
+    { id: 2, level: 0, content: '2. Cancellation. [Predecessor\'s assumption of command order].' },
+    { id: 3, level: 0, content: '3. Execution. I have assumed duties as Commanding General, [Unit Designation], this date as directed by reference (b). All effective orders and directives issued by my predecessors remain in effect.' },
   ];
 }
 
@@ -237,6 +347,13 @@ export function getExportFilename(formData: FormData, extension: 'pdf' | 'docx' 
   // Bulletin
   if (formData.documentType === 'bulletin') {
     return `MCBul ${ssic} - ${subject}.${extension}`;
+  }
+
+  // Change Transmittal
+  if (formData.documentType === 'change-transmittal') {
+    const parent = sanitize(formData.parentDirectiveTitle ?? '') || 'Directive';
+    const chNum = formData.changeNumber || 1;
+    return `${parent} Ch ${chNum} - ${subject}.${extension}`;
   }
 
   // Endorsement

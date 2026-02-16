@@ -7,7 +7,7 @@ import React from 'react';
 import { FormData, EndorsementLevel, ParagraphData } from '@/types';
 import { StructuredReferenceInput } from './StructuredReferenceInput';
 import { debugFormChange } from '@/lib/console-utils';
-import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getPositionPaperParagraphs, getInformationPaperParagraphs } from '@/lib/naval-format-utils';
+import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getPositionPaperParagraphs, getInformationPaperParagraphs, getAssumptionOfCommandParagraphs } from '@/lib/naval-format-utils';
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -176,6 +176,23 @@ export function DocumentTypeSection({
             />
 
             <DocumentTypeCard
+              type="change-transmittal"
+              icon={<FileSignature className="w-10 h-10" />}
+              title="Change Transmittal"
+              description="Transmits amendments (page replacements) to an existing order."
+              note="→ MCO 5215.1K para 40-44"
+              isActive={formData.documentType === 'change-transmittal'}
+              onClick={() => {
+                setFormData(prev => ({
+                  ...prev,
+                  documentType: 'change-transmittal',
+                  to: prev.to || 'Distribution List',
+                  orderPrefix: prev.orderPrefix || 'MCO'
+                }));
+              }}
+            />
+
+            <DocumentTypeCard
               type="coordination-page"
               icon={<ClipboardList className="w-10 h-10" />}
               title="Coordination Page"
@@ -203,6 +220,35 @@ export function DocumentTypeSection({
                   />
                   <p className="text-xs text-muted-foreground">
                     Determines the export filename (e.g., <strong>{formData.orderPrefix || 'MCO'} {formData.ssic || 'XXXX.X'}</strong>)
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    Quick Start Templates
+                  </Label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm('Load the Assumption of Command template? This will replace current paragraphs, SSIC, and subject.')) {
+                        setFormData(prev => ({
+                          ...prev,
+                          ssic: '1301',
+                          subj: 'ASSUMPTION OF COMMAND',
+                          orderPrefix: 'DivO',
+                          directiveTitle: '',
+                        }));
+                        if (setParagraphs) {
+                          setParagraphs(getAssumptionOfCommandParagraphs());
+                        }
+                      }
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-sm bg-background border border-border rounded-lg hover:bg-accent/50 transition-colors"
+                  >
+                    <ScrollText className="w-4 h-4 text-primary" />
+                    Assumption of Command (SSIC 1301)
+                  </button>
+                  <p className="text-xs text-muted-foreground">
+                    Per MCO 5215.1K, Chapter 1, Figure 1-1
                   </p>
                 </div>
               </div>
