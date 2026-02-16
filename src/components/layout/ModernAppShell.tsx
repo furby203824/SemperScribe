@@ -37,6 +37,8 @@ interface ModernAppShellProps {
   onAddSignature?: () => void;
   onBatchGenerate?: () => void;
   onProofread?: () => void;
+  isDirty?: boolean;
+  lastSavedAt?: Date | null;
 }
 
 export function ModernAppShell({
@@ -66,6 +68,8 @@ export function ModernAppShell({
   onAddSignature,
   onBatchGenerate,
   onProofread,
+  isDirty,
+  lastSavedAt,
 }: ModernAppShellProps) {
   const [showPreview, setShowPreview] = React.useState(true);
   const [showPreviewModal, setShowPreviewModal] = React.useState(false);
@@ -107,7 +111,19 @@ export function ModernAppShell({
             {documentType && (
               <>
                 <span className="text-primary-foreground/50">/</span>
-                <span className="text-primary-foreground/70 font-medium text-xs">Draft</span>
+                {isDirty ? (
+                  <span className="text-amber-300 font-medium text-xs flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                    Unsaved
+                  </span>
+                ) : lastSavedAt ? (
+                  <span className="text-emerald-300 font-medium text-xs flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    Saved
+                  </span>
+                ) : (
+                  <span className="text-primary-foreground/70 font-medium text-xs">Draft</span>
+                )}
               </>
             )}
           </div>
