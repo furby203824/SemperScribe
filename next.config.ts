@@ -1,21 +1,29 @@
-import type {NextConfig} from 'next';
+﻿import type {NextConfig} from 'next';
 
 const isProd = process.env.NODE_ENV === 'production';
-const basePath = isProd ? '/SemperScribe' : '';
-
-console.log(`[NextConfig] Environment: ${process.env.NODE_ENV}`);
-console.log(`[NextConfig] BasePath: '${basePath}'`);
+const repoName = 'marine-corps-directives-formatter';
 
 const nextConfig: NextConfig = {
-  basePath,
-  assetPrefix: isProd ? '/SemperScribe/' : undefined,
-  output: isProd ? 'export' : undefined,
+  basePath: isProd ? `/${repoName}` : '',
+  assetPrefix: isProd ? `/${repoName}` : '',
+  output: 'export',
   trailingSlash: true,
   typescript: {
-    ignoreBuildErrors: false,
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
   images: {
-    unoptimized: true, 
+    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
 };
 

@@ -15,9 +15,6 @@ interface StatsDisplayProps {
   onDocumentGenerated?: () => void;
 }
 
-// Estimate that 70% of views are from actual Marines
-const MARINES_HELPED_ESTIMATE_FACTOR = 0.7;
-
 export function StatsDisplay({ onDocumentGenerated }: StatsDisplayProps) {
   const [stats, setStats] = useState<Stats>({
     totalViews: 0,
@@ -29,29 +26,17 @@ export function StatsDisplay({ onDocumentGenerated }: StatsDisplayProps) {
 
   const fetchStats = async () => {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
-
       // Increment page view
-      const viewResponse = await fetch('https://api.countapi.xyz/hit/naval-letter-formatter/views', {
-        signal: controller.signal,
-        mode: 'cors'
-      });
-
-      // Get document generation count
-      const docResponse = await fetch('https://api.countapi.xyz/get/naval-letter-formatter/documents', {
-        signal: controller.signal,
-        mode: 'cors'
-      });
-
-      clearTimeout(timeoutId);
-
+      const viewResponse = await fetch('https://api.countapi.xyz/hit/marine-corps-directives-formatter/views');
       const viewData = await viewResponse.json();
+      
+      // Get document generation count
+      const docResponse = await fetch('https://api.countapi.xyz/get/marine-corps-directives-formatter/documents');
       const docData = await docResponse.json();
-
+      
       const totalViews = viewData.value || 0;
       const documentsGenerated = docData.value || 0;
-      const marinesHelped = Math.floor(totalViews * MARINES_HELPED_ESTIMATE_FACTOR);
+      const marinesHelped = Math.floor(totalViews * 0.7); // Estimate 70% are actual Marines
       
       setStats({
         totalViews,
@@ -68,7 +53,7 @@ export function StatsDisplay({ onDocumentGenerated }: StatsDisplayProps) {
 
   const incrementDocumentCount = async () => {
     try {
-      const response = await fetch('https://api.countapi.xyz/hit/naval-letter-formatter/documents');
+      const response = await fetch('https://api.countapi.xyz/hit/marine-corps-directives-formatter/documents');
       const data = await response.json();
       setStats(prev => ({
         ...prev,
@@ -82,6 +67,14 @@ export function StatsDisplay({ onDocumentGenerated }: StatsDisplayProps) {
   useEffect(() => {
     fetchStats();
   }, []);
+
+  // Expose increment function to parent
+  useEffect(() => {
+    if (onDocumentGenerated) {
+      // Store the increment function globally so it can be called from document generation
+      (window as any).incrementDocumentCount = incrementDocumentCount;
+    }
+  }, [onDocumentGenerated]);
 
   if (stats.isLoading) {
     return (

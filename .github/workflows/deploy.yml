@@ -1,8 +1,9 @@
 name: Deploy to GitHub Pages
-
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
   workflow_dispatch:
 
 permissions:
@@ -20,29 +21,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '20'
           cache: 'npm'
-          
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-        
+      
       - name: Install dependencies
-        run: npm ci
-        
-      - name: Build
+        run: npm install
+      
+      # REMOVED Setup Pages step - using manual config instead
+      
+      - name: Build with Next.js
         run: npm run build
-        env:
-          NODE_ENV: production
-          
+      
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out
-
+          path: out
+          
   deploy:
     environment:
       name: github-pages

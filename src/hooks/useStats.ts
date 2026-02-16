@@ -23,25 +23,11 @@ export function useStats(): UseStatsReturn {
   useEffect(() => {
     const loadInitialStats = async () => {
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout for initial load
-        
         const [docResponse, saveResponse, loadResponse] = await Promise.all([
-          fetch('https://api.countapi.xyz/get/naval-letter-formatter/documents', {
-            signal: controller.signal,
-            mode: 'cors'
-          }),
-          fetch('https://api.countapi.xyz/get/naval-letter-formatter/saves', {
-            signal: controller.signal,
-            mode: 'cors'
-          }),
-          fetch('https://api.countapi.xyz/get/naval-letter-formatter/loads', {
-            signal: controller.signal,
-            mode: 'cors'
-          })
+          fetch('https://api.countapi.xyz/get/marine-corps-directives-formatter/documents'),
+          fetch('https://api.countapi.xyz/get/marine-corps-directives-formatter/saves'),
+          fetch('https://api.countapi.xyz/get/marine-corps-directives-formatter/loads')
         ]);
-        
-        clearTimeout(timeoutId);
 
         const [docData, saveData, loadData] = await Promise.all([
           docResponse.json(),
@@ -56,12 +42,6 @@ export function useStats(): UseStatsReturn {
         });
       } catch (error) {
         console.error('Failed to load initial stats:', error);
-        // Use default values on error
-        setStats({
-          documentsGenerated: 0,
-          lettersSaved: 0,
-          lettersLoaded: 0
-        });
       }
     };
 
@@ -70,27 +50,19 @@ export function useStats(): UseStatsReturn {
 
   const incrementDocumentCount = async () => {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      const response = await fetch('https://api.countapi.xyz/hit/marine-corps-directives-formatter/documents');
+      const data = await response.json();
       
-      const response = await fetch('https://api.countapi.xyz/hit/naval-letter-formatter/documents', {
-        signal: controller.signal,
-        mode: 'cors'
-      });
+      setStats(prev => ({ 
+        ...prev, 
+        documentsGenerated: data.value || prev.documentsGenerated + 1 
+      }));
       
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      // Also call global function if it exists (for StatsDisplay component)
+      if (typeof window !== 'undefined' && (window as any).updateStatsDisplay) {
+        (window as any).updateStatsDisplay();
       }
       
-      const data = await response.json();
-
-      setStats(prev => ({
-        ...prev,
-        documentsGenerated: data.value || prev.documentsGenerated + 1
-      }));
-
       console.log('Document generated! New count:', data.value);
     } catch (error) {
       console.error('Failed to increment document count:', error);
@@ -104,20 +76,7 @@ export function useStats(): UseStatsReturn {
 
   const incrementSaveCount = async () => {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      const response = await fetch('https://api.countapi.xyz/hit/naval-letter-formatter/saves', {
-        signal: controller.signal,
-        mode: 'cors'
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      
+      const response = await fetch('https://api.countapi.xyz/hit/marine-corps-directives-formatter/saves');
       const data = await response.json();
       
       setStats(prev => ({ 
@@ -125,7 +84,7 @@ export function useStats(): UseStatsReturn {
         lettersSaved: data.value || prev.lettersSaved + 1 
       }));
       
-      // Document count updated successfully
+      console.log('Letter saved! New count:', data.value);
     } catch (error) {
       console.error('Failed to increment save count:', error);
       // Fallback: increment locally
@@ -138,20 +97,7 @@ export function useStats(): UseStatsReturn {
 
   const incrementLoadCount = async () => {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      const response = await fetch('https://api.countapi.xyz/hit/naval-letter-formatter/loads', {
-        signal: controller.signal,
-        mode: 'cors'
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      
+      const response = await fetch('https://api.countapi.xyz/hit/marine-corps-directives-formatter/loads');
       const data = await response.json();
       
       setStats(prev => ({ 
@@ -159,7 +105,7 @@ export function useStats(): UseStatsReturn {
         lettersLoaded: data.value || prev.lettersLoaded + 1 
       }));
       
-      // Letter loaded count updated successfully
+      console.log('Letter loaded! New count:', data.value);
     } catch (error) {
       console.error('Failed to increment load count:', error);
       // Fallback: increment locally

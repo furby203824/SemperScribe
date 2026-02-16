@@ -1,116 +1,169 @@
 /**
- * Naval Letter Data Package (NLDP) Format Specification
- * Version 1.0.0
+ * NLDP (Naval Letter Data Package) Format Specification
  * 
- * This module defines the structure and utilities for the NLDP file format,
- * which enables sharing of naval correspondence data between users.
+ * A standardized format for sharing Marine Corps Directive data between applications
+ * Uses .nldp extension with JSON structure for broad compatibility
  */
 
-import { FormData, ParagraphData } from '../types';
-
-// Current format version - increment for breaking changes
-export const NLDP_FORMAT_VERSION = '1.0.0';
-
-// File extension and MIME type
-export const NLDP_FILE_EXTENSION = '.nldp';
-export const NLDP_MIME_TYPE = 'application/json';
-
-// Metadata interface for data package files
 export interface NLDPMetadata {
-  /** Unique identifier for this data package */
-  packageId: string;
-  /** Version of the NLDP format specification */
-  formatVersion: string;
-  /** Date and time when the package was created (ISO 8601) */
+  /** Package creation timestamp */
   createdAt: string;
-  /** Author information */
-  author: {
-    /** Display name or username */
+  /** Format version for compatibility */
+  formatVersion: string;
+  /** Application that created the package */
+  createdBy: string;
+  /** Optional author information */
+  author?: {
     name?: string;
-    /** Unit or organization */
     unit?: string;
-    /** Email address (optional) */
     email?: string;
   };
-  /** Package metadata */
-  package: {
-    /** Descriptive title for the data package */
-    title: string;
-    /** Optional description */
+  /** Package description */
+  package?: {
+    title?: string;
     description?: string;
-    /** Subject line from the letter (for quick identification) */
-    subject: string;
-    /** Document type */
-    documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs' | 'multiple-address' | 'mfr' | 'from-to-memo' | 'letterhead-memo' | 'moa' | 'mou' | 'position-paper' | 'information-paper' | 'business-letter' | '';
-    /** Tags for categorization */
     tags?: string[];
   };
-  /** Validation checksums for data integrity */
-  checksums: {
-    /** SHA-256 hash of the data payload */
-    dataHash: string;
-    /** CRC32 checksum for quick validation */
-    crc32: string;
+}
+
+export interface NLDPDataIntegrity {
+  /** SHA-256 hash of the data section for integrity verification */
+  dataHash: string;
+  /** CRC32 checksum for additional verification */
+  crc32: string;
+  /** Number of records/items in the package */
+  recordCount: number;
+}
+
+export interface NLDPFormData {
+  documentType: string;
+  ssic_code?: string;
+  consecutive_point?: number;
+  revision_suffix?: string;
+  sponsor_code?: string;
+  date_signed?: string;
+  subj?: string;
+  line1?: string;
+  line2?: string;
+  line3?: string;
+  from?: string;
+  to?: string;
+  sig?: string;
+  delegationText?: string;
+  cancellationDate?: string;
+  basicDirectiveReference?: string;
+  changeNumber?: string;
+  pageReplacements?: Array<{
+    newPages: string;
+    replacesPages: string;
+  }>;
+  distributionStatement?: {
+    code: string;
+    reason?: string;
+    dateOfDetermination?: string;
+    originatingCommand?: string;
+  };
+  [key: string]: any; // Allow additional fields
+}
+
+export interface NLDPParagraph {
+  id: number;
+  level: number;
+  content: string;
+  isMandatory?: boolean;
+  title?: string;
+  acronymError?: string;
+}
+
+export interface NLDPReference {
+  text: string;
+  order?: number;
+}
+
+export interface NLDPEnclosure {
+  text: string;
+  order?: number;
+}
+
+export interface NLDPVia {
+  text: string;
+  order?: number;
+}
+
+export interface NLDPCopyTo {
+  text: string;
+  order?: number;
+}
+
+export interface NLDPData {
+  formData: NLDPFormData;
+  paragraphs: NLDPParagraph[];
+  references: NLDPReference[];
+  enclosures: NLDPEnclosure[];
+  vias: NLDPVia[];
+  copyTos: NLDPCopyTo[];
+  /** Additional metadata about the directive */
+  directiveMetadata?: {
+    estimatedPageCount?: number;
+    lastModified?: string;
+    status?: 'draft' | 'review' | 'final';
   };
 }
 
-export type { FormData, ParagraphData };
-
-
-// Data payload interface - the actual correspondence data
-export interface NLDPDataPayload {
-  /** Form data containing all correspondence fields */
-  formData: FormData;
-  /** Array of via entries */
-  vias: string[];
-  /** Array of reference entries */
-  references: string[];
-  /** Array of enclosure entries */
-  enclosures: string[];
-  /** Array of copy-to entries */
-  copyTos: string[];
-  /** Array of paragraph data */
-  paragraphs: ParagraphData[];
-}
-
-// Complete NLDP file structure
 export interface NLDPFile {
-  /** File format metadata */
+  /** File format identifier */
+  format: 'NLDP';
+  /** Format version */
+  version: '1.0';
+  /** Package metadata */
   metadata: NLDPMetadata;
-  /** Actual correspondence data */
-  data: NLDPDataPayload;
-}
-
-// Validation result interface
-export interface NLDPValidationResult {
-  isValid: boolean;
-  errors: string[];
-  warnings: string[];
-  formatVersion?: string;
-  isCompatible: boolean;
-}
-
-// Import result interface
-export interface NLDPImportResult {
-  success: boolean;
-  data?: NLDPDataPayload;
-  metadata?: NLDPMetadata;
-  errors: string[];
-  warnings: string[];
+  /** Data integrity verification */
+  integrity: NLDPDataIntegrity;
+  /** The actual directive data */
+  data: NLDPData;
 }
 
 // Export configuration interface
 export interface NLDPExportConfig {
-  author: {
+  /** Include personal information in export */
+  includePersonalInfo?: boolean;
+  /** Author information */
+  author?: {
     name?: string;
     unit?: string;
     email?: string;
   };
-  package: {
-    title: string;
+  /** Package information */
+  package?: {
+    title?: string;
     description?: string;
     tags?: string[];
   };
-  includePersonalInfo?: boolean;
-  compression?: boolean;
 }
+
+// Import result interface  
+export interface NLDPImportResult {
+  success: boolean;
+  data?: NLDPData;
+  error?: string;
+  warnings?: string[];
+  metadata?: NLDPMetadata;
+}
+
+// Validation interfaces
+export interface NLDPValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+// Constants
+export const NLDP_CONSTANTS = {
+  FORMAT_NAME: 'NLDP',
+  CURRENT_VERSION: '1.0',
+  FILE_EXTENSION: '.nldp',
+  MIME_TYPE: 'application/json',
+  MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
+  SUPPORTED_VERSIONS: ['1.0'],
+  CREATOR_APP: 'Marine Corps Directives Formatter'
+} as const;

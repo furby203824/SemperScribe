@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Document, Packer, Paragraph, TextRun, AlignmentType, TabStopType, Header, ImageRun, convertInchesToTwip, VerticalPositionAlign, HorizontalPositionAlign, TextWrappingType } from 'docx';
-import { saveAs } from 'file-saver';
+import { Document, Packer, Paragraph, TextRun, AlignmentType, TabStopType, Header, ImageRun, convertInchesToTwip, VerticalPositionAlign, HorizontalPositionAlign } from 'docx';
+// Removed saveAs import - using manual download method for better Next.js compatibility
 
 interface ParagraphData {
   id: number;
@@ -748,8 +748,8 @@ export default function NavalLetterGenerator() {
                     new ImageRun({
                       data: sealBuffer,
                       transformation: {
-                        width: convertInchesToTwip(1.0),
-                        height: convertInchesToTwip(1.0),
+                        width: convertInchesToTwip(0.5),
+                        height: convertInchesToTwip(0.5),
                       },
                       floating: {
                         horizontalPosition: {
@@ -759,9 +759,6 @@ export default function NavalLetterGenerator() {
                         verticalPosition: {
                           align: VerticalPositionAlign.TOP,
                           offset: convertInchesToTwip(0.5),
-                        },
-                        wrap: {
-                          type: TextWrappingType.TOP_AND_BOTTOM
                         },
                       },
                     }),
@@ -774,10 +771,60 @@ export default function NavalLetterGenerator() {
         }]
       });
 
-      // Generate and save
-      const filename = (formData.subj || "NavalLetter") + ".docx";
+      // Generate filename using SSIC and Subject format (e.g., "1615.2 EXAMPLE SUBJECT.docx")
+      const ssic = formData.ssic || '';
+      const subject = formData.subj || 'NavalLetter';
+      
+      let filename;
+      if (ssic && subject) {
+        // Clean the subject for filename (remove special characters but keep spaces)
+        const cleanSubject = subject
+          .replace(/[^a-zA-Z0-9\s]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+        filename = `${ssic} ${cleanSubject}.docx`;
+      } else {
+        // Fallback if missing SSIC or subject
+        filename = `${subject}.docx`;
+      }
+      // Enhanced download function for reliable file downloads
+      const downloadFile = (blob: Blob, filename: string) => {
+        console.log('Downloading file:', filename, 'Size:', blob.size, 'bytes');
+        
+        try {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.style.display = 'none';
+          a.style.position = 'absolute';
+          a.style.left = '-9999px';
+          document.body.appendChild(a);
+          a.click();
+          
+          // Clean up after delay
+          setTimeout(() => {
+            try {
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            } catch (cleanupError) {
+              console.warn('Cleanup error (non-critical):', cleanupError);
+            }
+          }, 100);
+          
+          console.log('Download completed successfully');
+        } catch (error) {
+          console.error('Download failed:', error);
+          throw new Error('Unable to download file. Please check browser settings.');
+        }
+      };
+
       const buffer = await Packer.toBlob(doc);
-      saveAs(buffer, filename);
+      console.log('Document blob created, size:', buffer.size, 'bytes');
+      console.log('Filename:', filename);
+      
+      // Use our reliable download function
+      downloadFile(buffer, filename);
       
     } catch (error) {
       console.error("Error generating document:", error);
