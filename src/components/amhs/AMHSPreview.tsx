@@ -27,10 +27,10 @@ export function AMHSPreview({ formData, references, className }: AMHSPreviewProp
       </div>
       
       {/* Content */}
-      <div className="flex-1 overflow-hidden relative bg-black">
+      <div className="flex-1 overflow-hidden relative bg-zinc-950">
         <ScrollArea className="h-full w-full">
             <div className="p-6">
-                <pre className="text-green-500 font-mono text-sm whitespace-pre leading-snug">
+                <pre className="text-green-400 font-mono text-sm whitespace-pre leading-snug">
                     {formattedMessage}
                 </pre>
             </div>

@@ -416,7 +416,7 @@ export function BatchGenerateModal({
             <div className="space-y-4 py-4">
               <div className="flex flex-col items-center gap-3">
                 {status === 'done' ? (
-                  <CheckCircle2 className="h-10 w-10 text-green-600" />
+                  <CheckCircle2 className="h-10 w-10 text-green-600 dark:text-green-400" />
                 ) : (
                   <AlertTriangle className="h-10 w-10 text-destructive" />
                 )}

@@ -211,10 +211,10 @@ export function ProofreadModal({
                         <Badge variant="destructive" className="text-[10px] px-1.5 h-5">{catSummary.fails}</Badge>
                       )}
                       {catSummary.warns > 0 && (
-                        <Badge variant="outline" className="text-[10px] px-1.5 h-5 text-amber-600 border-amber-300">{catSummary.warns}</Badge>
+                        <Badge variant="outline" className="text-[10px] px-1.5 h-5 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700">{catSummary.warns}</Badge>
                       )}
                       {catSummary.manuals > 0 && (
-                        <Badge variant="outline" className="text-[10px] px-1.5 h-5 text-blue-600 border-blue-300">{catSummary.manuals}</Badge>
+                        <Badge variant="outline" className="text-[10px] px-1.5 h-5 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-700">{catSummary.manuals}</Badge>
                       )}
                       {catSummary.fails === 0 && catSummary.warns === 0 && catSummary.manuals === 0 && (
                         <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
