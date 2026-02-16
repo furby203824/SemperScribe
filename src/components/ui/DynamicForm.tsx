@@ -56,7 +56,7 @@ function SSICCombobox({ value, onChange, placeholder }: { value: string; onChang
               key={s.code}
               type="button"
               className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer"
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 onChange(s.code);
                 setOpen(false);

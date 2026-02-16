@@ -94,6 +94,12 @@ export function EnclosuresSection({ enclosures, setEnclosures, formData, setForm
           </RadioGroup>
         </div>
 
+        {!showEncl && (
+          <p className="text-sm text-muted-foreground pt-1">
+            Select &quot;Yes&quot; to attach supporting documents (e.g., training certificates, reports).
+          </p>
+        )}
+
         {showEncl && (
           <div className="space-y-4 pt-2">
             {formData.documentType === 'endorsement' && (
@@ -143,6 +149,7 @@ export function EnclosuresSection({ enclosures, setEnclosures, formData, setForm
                     placeholder={itemPlaceholder}
                     value={encl}
                     onChange={(e) => updateItem(index, e.target.value)}
+                    aria-label={`${itemLabel} ${getEnclosureIndicator(index, formData.startingEnclosureNumber)}`}
                   />
                   {index === enclosures.length - 1 ? (
                     <Button

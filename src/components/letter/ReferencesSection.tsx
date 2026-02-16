@@ -81,6 +81,12 @@ export function ReferencesSection({ references, setReferences, formData, setForm
           </RadioGroup>
         </div>
 
+        {!showRef && (
+          <p className="text-sm text-muted-foreground pt-1">
+            Select &quot;Yes&quot; to cite source documents (e.g., NAVADMIN, OPNAVINST, prior correspondence).
+          </p>
+        )}
+
         {showRef && (
           <div className="space-y-4 pt-2">
             {formData.documentType === 'endorsement' && (
@@ -130,6 +136,7 @@ export function ReferencesSection({ references, setReferences, formData, setForm
                   placeholder="Enter reference information (e.g., NAVADMIN 123/24, OPNAVINST 5000.1)"
                   value={ref}
                   onChange={(e) => updateItem(index, e.target.value)}
+                  aria-label={`Reference (${getReferenceLetter(index, formData.startingReferenceLevel)})`}
                 />
                 {index === references.length - 1 ? (
                   <Button

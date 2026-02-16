@@ -505,6 +505,16 @@ function NavalLetterGeneratorInner() {
   };
 
   const handleDocumentTypeChange = (newType: string) => {
+    // Warn before destructive type switch if form has content
+    const hasContent = paragraphs.some(p => p.content.trim() !== '') ||
+      (formData.subj && formData.subj.trim() !== '') ||
+      references.some(r => r.trim() !== '') ||
+      enclosures.some(e => e.trim() !== '');
+
+    if (hasContent && !window.confirm('Changing the document type will reset paragraphs and some fields. Continue?')) {
+      return;
+    }
+
     let newParagraphs: ParagraphData[] = [{ id: 1, level: 1, content: '', acronymError: '' }];
     if (newType === 'mco') {
       newParagraphs = getMCOParagraphs();
