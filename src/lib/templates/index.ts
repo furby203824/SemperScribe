@@ -5,6 +5,7 @@ import { EndorsementTemplate } from './endorsement';
 import { MFRTemplate } from './mfr';
 import { AAFormTemplate } from './aa-form';
 import { PositionPaperTemplate, InformationPaperTemplate } from './staffing-paper';
+import { CoordinationPageTemplate } from './coordination-page';
 import { FromToMemoTemplate, LetterheadMemoTemplate, MOATemplate, MOUTemplate } from './memo';
 import { MCOTemplate, BulletinTemplate } from './orders';
 
@@ -16,6 +17,7 @@ export * from './endorsement';
 export * from './mfr';
 export * from './aa-form';
 export * from './staffing-paper';
+export * from './coordination-page';
 export * from './memo';
 export * from './orders';
 
@@ -35,6 +37,8 @@ export const DOCUMENT_TEMPLATES: Record<string, DocumentTemplate> = {
   'mco': MCOTemplate,
   'bulletin': BulletinTemplate,
   
+  'coordination-page': CoordinationPageTemplate,
+
   // Aliases or Additional Placeholders (Mapped to Basic if not implemented)
   'multiple-address': { ...BasicLetterTemplate, id: 'multiple-address-default', typeId: 'multiple-address', name: 'Multiple-Address Letter' },
   'page11': { ...BasicLetterTemplate, id: 'page11-default', typeId: 'page11', name: 'Page 11' }, // Placeholder

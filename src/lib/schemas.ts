@@ -634,39 +634,104 @@ export const LetterheadMemoDefinition: DocumentTypeDefinition = {
   ]
 };
 
-// 12. Coordination Page
+// 12. Coordination Page (MCO 5216.20B, Fig 13-8)
 export const CoordinationPageSchema = z.object({
   documentType: z.literal('coordination-page'),
-  subject: z.string().min(1, "Subject is required."),
-  summary: z.string().min(1, "Summary is required."),
+  subj: z.string().min(1, "Subject is required.").transform(val => val.toUpperCase()),
+  date: z.string().optional(),
+  actionOfficerName: z.string().min(1, "Action Officer name is required."),
+  actionOfficerRank: z.string().optional(),
+  actionOfficerOfficeCode: z.string().min(1, "Office code is required."),
+  actionOfficerPhone: z.string().optional(),
+  coordinatingOffices: z.array(z.object({
+    office: z.string().min(1, "Office/Agency is required."),
+    concurrence: z.enum(['concur', 'nonconcur', 'pending']).default('pending'),
+    aoName: z.string().optional(),
+    date: z.string().optional(),
+    initials: z.string().optional(),
+    comments: z.string().optional(),
+  })).optional(),
+  remarks: z.string().optional(),
 });
 
 export const CoordinationPageDefinition: DocumentTypeDefinition = {
   id: 'coordination-page',
   name: 'Coordination Page',
-  description: 'A document for coordinating actions and decisions.',
+  description: 'Mandatory staffing table for routing packages. Tracks concurrence/non-concurrence per MCO 5216.20B.',
   icon: '🔄',
   schema: CoordinationPageSchema,
   sections: [
     {
-      id: 'main',
-      title: 'Coordination Details',
+      id: 'action',
+      title: 'Action Information',
       fields: [
         {
-          name: 'subject',
+          name: 'subj',
           label: 'Subject',
           type: 'text',
           required: true,
-          placeholder: 'Coordination for new project initiative'
+          placeholder: 'SUBJECT OF THE ACTION BEING COORDINATED',
+          className: 'col-span-full',
+          description: 'Subject of the staffing action (ALL CAPS)'
         },
         {
-          name: 'summary',
-          label: 'Summary',
-          type: 'textarea',
-          required: true,
-          placeholder: 'A brief summary of the coordination required.',
-          rows: 5
+          name: 'date',
+          label: 'Date Prepared',
+          type: 'text',
+          placeholder: '10 Feb 26',
+          className: 'md:col-span-1',
+          description: 'DD Mmm YY format'
         },
+      ]
+    },
+    {
+      id: 'actionOfficer',
+      title: 'Action Officer',
+      fields: [
+        {
+          name: 'actionOfficerName',
+          label: 'Name',
+          type: 'text',
+          required: true,
+          placeholder: 'Capt J. M. Doe',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'actionOfficerRank',
+          label: 'Rank',
+          type: 'text',
+          placeholder: 'Capt',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'actionOfficerOfficeCode',
+          label: 'Office Code',
+          type: 'text',
+          required: true,
+          placeholder: 'G-3',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'actionOfficerPhone',
+          label: 'Phone',
+          type: 'text',
+          placeholder: '(703) 555-1234',
+          className: 'md:col-span-1'
+        },
+      ]
+    },
+    {
+      id: 'remarks',
+      title: 'Remarks',
+      fields: [
+        {
+          name: 'remarks',
+          label: 'Remarks',
+          type: 'textarea',
+          placeholder: 'Additional remarks or notes regarding the coordination...',
+          rows: 3,
+          className: 'col-span-full'
+        }
       ]
     }
   ]
