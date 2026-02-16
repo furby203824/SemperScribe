@@ -76,7 +76,7 @@ export function BusinessLetterForm() {
           />
            <FormField
             control={control}
-            name="closing"
+            name="complimentaryClose"
             render={({ field }) => (
               <FormItem className="md:col-span-1">
                 <FormLabel>Closing *</FormLabel>
@@ -89,7 +89,7 @@ export function BusinessLetterForm() {
           />
           <FormField
             control={control}
-            name="signatureName"
+            name="sig"
             render={({ field }) => (
               <FormItem className="md:col-span-2">
                 <FormLabel>Signature Name *</FormLabel>

@@ -999,6 +999,7 @@ export const BusinessLetterSchema = z.object({
   recipientName: z.string().min(1, "Recipient Name is required"),
   recipientTitle: z.string().optional(),
   businessName: z.string().optional(),
+  senderAddress: z.string().optional(),
   recipientAddress: z.string().min(1, "Recipient Address is required"),
   attentionLine: z.string().optional(),
   salutation: z.string().min(1, "Salutation is required").transform(val => {
