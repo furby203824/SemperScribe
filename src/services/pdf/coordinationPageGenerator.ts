@@ -9,7 +9,7 @@ interface CoordinatingOffice {
   comments?: string;
 }
 
-interface CoordinationPageData {
+export interface CoordinationPageData {
   documentType: string;
   subj: string;
   date?: string;

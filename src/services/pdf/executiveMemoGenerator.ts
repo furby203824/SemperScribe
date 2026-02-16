@@ -1,6 +1,6 @@
 import { PDFDocument, rgb, StandardFonts, PDFPage, PDFFont } from 'pdf-lib';
 
-interface ExecMemoData {
+export interface ExecMemoData {
   execFormat: 'standard-memo' | 'action-memo' | 'info-memo';
   date?: string;
   omitDate?: boolean;

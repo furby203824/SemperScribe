@@ -40,6 +40,7 @@ interface ParagraphItemProps {
   onFocus: (id: number) => void;
   isFocused: boolean;
   documentType?: string;
+  nextCitations?: { main?: string; sub?: string; same?: string; up?: string };
 }
 
 /**
@@ -81,7 +82,8 @@ export function ParagraphItem({
   onRemove,
   onFocus,
   isFocused,
-  documentType
+  documentType,
+  nextCitations
 }: ParagraphItemProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [localContent, setLocalContent] = useState(paragraph.content || '');
@@ -328,7 +330,7 @@ export function ParagraphItem({
                 title="Add Main Paragraph (Next Number)"
               >
                 <Plus className="h-3.5 w-3.5 mr-1" />
-                Main
+                {nextCitations?.main ? `+ ${nextCitations.main}` : 'Main'}
               </Button>
             )}
 
@@ -343,7 +345,7 @@ export function ParagraphItem({
                 title="Add Sub-paragraph (Indent)"
               >
                 <Indent className="h-3.5 w-3.5 mr-1" />
-                Sub
+                {nextCitations?.sub ? `+ ${nextCitations.sub}` : 'Sub'}
               </Button>
             )}
 
@@ -356,7 +358,7 @@ export function ParagraphItem({
                 title="Add Sibling Paragraph (Same Level)"
               >
                 <ArrowRight className="h-3.5 w-3.5 mr-1" />
-                Same
+                {nextCitations?.same ? `+ ${nextCitations.same}` : 'Same'}
               </Button>
             )}
 
@@ -369,7 +371,7 @@ export function ParagraphItem({
                     title="Add Paragraph Level Up (Outdent)"
                 >
                     <ArrowRight className="h-3.5 w-3.5 mr-1 transform rotate-180" />
-                    Up
+                    {nextCitations?.up ? `+ ${nextCitations.up}` : 'Up'}
                 </Button>
             )}
           </div>

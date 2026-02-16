@@ -20,6 +20,58 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AutoSuggestInput } from '@/components/ui/AutoSuggestInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SSICS } from '@/lib/ssic';
+
+function SSICCombobox({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  const [open, setOpen] = React.useState(false);
+  const [query, setQuery] = React.useState('');
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  const filtered = React.useMemo(() => {
+    if (query.length < 2) return [];
+    const q = query.toLowerCase();
+    return SSICS.filter(s =>
+      s.code.toLowerCase().includes(q) || s.nomenclature.toLowerCase().includes(q)
+    ).slice(0, 30);
+  }, [query]);
+
+  return (
+    <div className="relative">
+      <Input
+        ref={inputRef}
+        placeholder={placeholder || 'Search SSIC by code or name...'}
+        value={value}
+        onChange={(e) => {
+          onChange(e.target.value);
+          setQuery(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => { setQuery(value); setOpen(true); }}
+        onBlur={() => setTimeout(() => setOpen(false), 200)}
+      />
+      {open && filtered.length > 0 && (
+        <div className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto rounded-md border bg-popover text-popover-foreground shadow-md">
+          {filtered.map((s) => (
+            <button
+              key={s.code}
+              type="button"
+              className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onChange(s.code);
+                setOpen(false);
+                inputRef.current?.blur();
+              }}
+            >
+              <span className="font-mono font-bold">{s.code}</span>
+              <span className="ml-2 text-muted-foreground">{s.nomenclature}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface DynamicFormProps {
   documentType: DocumentTypeDefinition;
@@ -101,7 +153,9 @@ export function DynamicForm({ documentType, onSubmit, defaultValues, children }:
           <FormItem className={field.className}>
             <FormLabel>{field.label} {field.required && <span className="text-destructive">*</span>}</FormLabel>
             <FormControl>
-              {field.type === 'text' || field.type === 'combobox' ? (
+              {field.type === 'combobox' ? (
+                <SSICCombobox value={formField.value ?? ''} onChange={formField.onChange} placeholder={field.placeholder} />
+              ) : field.type === 'text' ? (
                 <Input placeholder={field.placeholder} {...formField} value={formField.value ?? ''} />
               ) : field.type === 'date' ? (
                 <Input type="text" placeholder={field.placeholder || 'DD MMM YY'} {...formField} value={formField.value ?? ''} />

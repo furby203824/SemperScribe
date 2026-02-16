@@ -76,7 +76,7 @@ export function SpellCheckBar({ issues, className }: SpellCheckBarProps) {
                 </p>
               ) : (
                 <p>
-                  <span className="font-semibold">{issue.word}</span>: {issue.suggestion}
+                  Spell out on first use: <span className="font-semibold">{issue.suggestion}</span>
                 </p>
               )}
             </TooltipContent>

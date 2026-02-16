@@ -110,13 +110,10 @@ function checkWord(word: string, index: number, milWords: Set<string>): SpellIss
   // Check military word set
   if (milWords.has(upper)) return null;
 
-  // Check the acronyms object
-  if (MILITARY_ACRONYMS[upper] || MILITARY_ACRONYMS[word]) return null;
-
-  // Check if it's a known acronym that should be expanded
-  const acronymMeaning = MILITARY_ACRONYMS[upper];
+  // Check if it's a known military acronym — show its expansion as a suggestion
+  const acronymMeaning = MILITARY_ACRONYMS[upper] || MILITARY_ACRONYMS[word];
   if (acronymMeaning) {
-    return { word, index, type: 'acronym-suggestion', suggestion: acronymMeaning };
+    return { word, index, type: 'acronym-suggestion', suggestion: `${acronymMeaning} (${upper})` };
   }
 
   // If it looks like an all-caps acronym (3+ caps), be lenient — many acronyms
