@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Info } from 'lucide-react';
 
 export interface StructuredReferenceInputProps {
-  formData: Pick<FormData, 'referenceWho' | 'referenceType' | 'referenceDate' | 'basicLetterReference' | 'endorsementLevel' | 'basicLetterSsic'>;
+  formData: FormData;
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
 }
 

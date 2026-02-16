@@ -572,7 +572,7 @@ export function NavalLetterPDF({
   // Logic to determine if we are in "Multiple Address" mode with MANY recipients (automatic list)
   // If true, we use the automatic list and HIDE the manual list to avoid duplication.
   const isMultipleAddressMany = formData.documentType === 'multiple-address' && 
-                               (formData.distribution?.recipients?.filter(r => r && r.trim()).length || 0) > 1;
+                               (formData.distribution?.recipients?.filter((r: string) => r && r.trim()).length || 0) > 1;
 
   const getFromToSpacing = (label: string): string => {
     if (formData.bodyFont === 'courier') {
@@ -708,7 +708,7 @@ export function NavalLetterPDF({
                  {formData.recipientName && <Text style={styles.addressLine}>{formData.recipientName}</Text>}
                  {formData.recipientTitle && <Text style={styles.addressLine}>{formData.recipientTitle}</Text>}
                  {formData.businessName && <Text style={styles.addressLine}>{formData.businessName}</Text>}
-                 {(formData.recipientAddress || '').split('\n').map((line, i) => (
+                 {(formData.recipientAddress || '').split('\n').map((line: string, i: number) => (
                      <Text key={i} style={styles.addressLine}>{line}</Text>
                  ))}
 
@@ -913,7 +913,7 @@ export function NavalLetterPDF({
              // Multiple Address Logic
              (() => {
                 const recipients = formData.distribution?.recipients || (formData.to ? [formData.to] : ["Addressee"]);
-                const recipientsWithContent = recipients.filter(r => r && r.trim());
+                const recipientsWithContent = recipients.filter((r: string) => r && r.trim());
                 if (recipientsWithContent.length === 0) recipientsWithContent.push("Addressee");
 
                 if (recipientsWithContent.length > 1) {
@@ -930,7 +930,7 @@ export function NavalLetterPDF({
                     // 1 Recipient: Stacked (which is just one)
                     return formData.bodyFont === 'courier' ? (
                         <>
-                          {recipientsWithContent.map((r, i) => (
+                          {recipientsWithContent.map((r: string, i: number) => (
                              <Text key={i} style={styles.addressLine}>
                                {i === 0 ? getFromToSpacing('To') : '       '}
                                {r}
@@ -941,7 +941,7 @@ export function NavalLetterPDF({
                         <View style={styles.fromToLine}>
                            <Text style={styles.fromToLabel}>To:</Text>
                            <View style={{ flex: 1 }}>
-                              {recipientsWithContent.map((r, i) => (
+                              {recipientsWithContent.map((r: string, i: number) => (
                                  <Text key={i} style={{ marginBottom: 0 }}>{r}</Text>
                               ))}
                            </View>
@@ -1108,7 +1108,7 @@ export function NavalLetterPDF({
                          {formData.decisionMode === 'MULTIPLE_RECS' ? (
                             // MULTIPLE_RECS Logic (Embedded Grid)
                             // We re-use the SINGLE/MULTIPLE_CHOICE layout logic for each recommendation item.
-                            formData.decisionGrid?.recommendationItems?.map((item, idx) => (
+                            formData.decisionGrid?.recommendationItems?.map((item: { id: string; text: string }, idx: number) => (
                                  <View key={item.id} style={{ marginTop: 12, marginRight: 0 }}> 
                                      {/* Item Text: a. Approve adoption... */}
                                      <Text style={{ marginBottom: 12, fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
@@ -1116,13 +1116,13 @@ export function NavalLetterPDF({
                                      </Text>
                                      
                                      {/* Routing Chain - Same layout as SINGLE mode */}
-                                     {formData.decisionGrid?.recommenders.map((rec, rIdx) => (
+                                     {formData.decisionGrid?.recommenders.map((rec: { id: string; role: string; options: string[] }, rIdx: number) => (
                                         <View key={rIdx} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                                             <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, maxWidth: '50%' }}>
                                                 {rec.role} recommends:
                                             </Text>
                                             <View style={{ flexDirection: 'column', alignItems: 'flex-end' }}>
-                                                {rec.options.map((opt, j) => {
+                                                {rec.options.map((opt: string, j: number) => {
                                                     // Mapping "Approve" -> "Approval" for display consistency
                                                     let displayOpt = opt;
                                                     if (opt === 'Approve') displayOpt = 'Approval';
@@ -1148,7 +1148,7 @@ export function NavalLetterPDF({
                                                {formData.decisionGrid.finalDecision.role} decision:
                                            </Text>
                                            <View style={{ flexDirection: 'column', alignItems: 'flex-end' }}>
-                                               {formData.decisionGrid.finalDecision.options.map((opt, j) => {
+                                               {formData.decisionGrid.finalDecision.options.map((opt: string, j: number) => {
                                                    // Mapping "Approved" -> "Approved" (no change needed usually, but just in case)
                                                    let displayOpt = opt;
                                                    // Ensure consistent past tense if needed, but usually it's "Approved" / "Disapproved" in the data
@@ -1174,13 +1174,13 @@ export function NavalLetterPDF({
                                 {formData.decisionGrid && (
                                     <View style={{ marginTop: 12, marginRight: 0 }}>
                                        {/* Recommenders */}
-                                       {formData.decisionGrid.recommenders.map((rec, rIdx) => (
+                                       {formData.decisionGrid.recommenders.map((rec: { id: string; role: string; options: string[] }, rIdx: number) => (
                                           <View key={rIdx} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                                               <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, maxWidth: '50%' }}>
                                                   {rec.role} recommends:
                                               </Text>
                                               <View style={{ flexDirection: 'column', alignItems: 'flex-end' }}>
-                                                  {rec.options.map((opt, j) => {
+                                                  {rec.options.map((opt: string, j: number) => {
                                                       let displayOpt = opt;
                                                       if (formData.decisionMode === 'SINGLE') {
                                                           if (opt === 'Approve') displayOpt = 'Approval';
@@ -1211,7 +1211,7 @@ export function NavalLetterPDF({
                                                           ? formData.decisionGrid.recommenders[0].options
                                                           : formData.decisionGrid.finalDecision.options;
                           
-                                                       return finalOptions.map((opt, j) => {
+                                                       return finalOptions.map((opt: string, j: number) => {
                                                            let displayOpt = opt;
                                                            if (formData.decisionMode === 'SINGLE') {
                                                                if (opt === 'Approved') displayOpt = 'Approved';
@@ -1262,7 +1262,7 @@ export function NavalLetterPDF({
              <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body }}>
                REPORTS REQUIRED:
              </Text>
-             {formData.reports.map((report, i) => {
+             {formData.reports.map((report: { id: string; title: string; controlSymbol: string; paragraphRef: string; exempt?: boolean }, i: number) => {
                let reportText = report.title;
                if (report.controlSymbol) reportText += ` (${report.controlSymbol})`;
                if (report.exempt) reportText += " (Exempt)";
@@ -1400,7 +1400,7 @@ export function NavalLetterPDF({
                     <View style={{ flexDirection: 'row', marginTop: PDF_SPACING.paragraph }}>
                         <Text style={styles.copyToLabel}>Copy to: </Text>
                         <Text style={styles.copyToLine}>
-                            {formData.distribution.copyTo.map(c => c.code).join(', ')}
+                            {formData.distribution.copyTo.map((c: { code: string; qty: number }) => c.code).join(', ')}
                         </Text>
                     </View>
                 )}
@@ -1414,7 +1414,7 @@ export function NavalLetterPDF({
             <View style={styles.copyToSection}>
                 <View style={styles.emptyLine} />
                 <Text style={styles.copyToLabel}>Distribution:</Text>
-                {formData.distribution?.recipients?.filter(r => r && r.trim()).map((r, i) => (
+                {formData.distribution?.recipients?.filter((r: string) => r && r.trim()).map((r: string, i: number) => (
                     <Text key={i} style={styles.copyToLine}>
                         {r}
                     </Text>

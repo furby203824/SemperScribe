@@ -1,8 +1,12 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import { CoordinationPageSchema } from '@/lib/schemas';
-import { z } from 'zod';
 
-type CoordinationPageData = z.infer<typeof CoordinationPageSchema>;
+interface CoordinationPageData {
+  documentType: string;
+  subject: string;
+  summary: string;
+  routing?: Array<{ name: string; department: string }>;
+  [key: string]: unknown;
+}
 
 export async function createCoordinationPagePdf(data: CoordinationPageData): Promise<Uint8Array> {
     const pdfDoc = await PDFDocument.create();
@@ -89,7 +93,7 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
     });
 
     // Table Rows
-    for (const route of data.routing) {
+    for (const route of (data.routing || [])) {
         if (y < margin + rowHeight) {
             // Add a new page if there is no more space
             const newPage = pdfDoc.addPage();

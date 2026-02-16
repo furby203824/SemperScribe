@@ -179,7 +179,7 @@ export function generateFullMessage(data: FormData, references: AMHSReference[] 
     // Split by newline to preserve paragraphs
     const paragraphs = data.amhsTextBody.split('\n');
     
-    paragraphs.forEach(para => {
+    paragraphs.forEach((para: string) => {
       const trimmed = para.trimEnd(); // Don't trim start to preserve indentation
       if (trimmed === '') {
         lines.push(''); // Empty line

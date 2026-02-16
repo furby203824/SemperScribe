@@ -1,5 +1,13 @@
 import { LetterFormData } from '@/lib/schemas';
 
+// FormData is a permissive type covering all document form fields.
+// The strict discriminated union is LetterFormData; FormData is used
+// throughout the codebase as a loose bag of optional properties.
+export type FormData = {
+  documentType: string;
+  [key: string]: any;
+};
+
 /**
  * Shared type definitions for the Naval Letter Formatter application
  */
@@ -46,7 +54,7 @@ export interface AdminSubsections {
 
 
 
-export type SavedLetter = LetterFormData & {
+export type SavedLetter = FormData & {
   id: string;
   savedAt: string;
   vias: string[];

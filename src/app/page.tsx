@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
-import { ParagraphData, SavedLetter, ValidationState, AdminSubsections } from '@/types';
+import { FormData, ParagraphData, SavedLetter, ValidationState, AdminSubsections } from '@/types';
 import { BusinessLetterForm } from '@/components/letter/BusinessLetterForm';
 import { ModernAppShell } from '@/components/layout/ModernAppShell';
 import { UnitInfoSection } from '@/components/letter/UnitInfoSection';
@@ -54,7 +54,7 @@ import { useImportExport } from '@/hooks/useImportExport';
 import { CopyToSection } from '@/components/letter/CopyToSection';
 
 // Inner component that uses useSearchParams (requires Suspense boundary)
-const initialState: LetterFormData = {
+const initialState: FormData = {
   documentType: 'basic',
   ssic: '',
   originatorCode: '',
@@ -76,7 +76,7 @@ function NavalLetterGeneratorInner() {
 
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState<LetterFormData>(initialState);
+  const [formData, setFormData] = useState<FormData>(initialState);
 
   const handleDynamicFormSubmit = useCallback((data: any) => {
     // Merge dynamic form data into main state
@@ -332,14 +332,14 @@ function NavalLetterGeneratorInner() {
          });
          blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
       } else if (formData.documentType === 'decision-paper') {
-        const pdfBytes = await createDecisionPaperPdf(formData);
-        blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const pdfBytes = await createDecisionPaperPdf(formData as any);
+        blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
       } else if (formData.documentType === 'coordination-page') {
-        const pdfBytes = await createCoordinationPagePdf(formData);
-        blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const pdfBytes = await createCoordinationPagePdf(formData as any);
+        blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
       } else if (formData.documentType === 'business-letter') {
-        const pdfBytes = await createBusinessLetterPdf(formData);
-        blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const pdfBytes = await createBusinessLetterPdf(formData as any);
+        blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
       } else if (['basic', 'multiple-address', 'endorsement', 'mco', 'bulletin', 'mfr', 'from-to-memo', 'letterhead-memo', 'moa', 'mou', 'position-paper', 'information-paper'].includes(formData.documentType)) {
         // Standard Naval Letter logic for applicable types
         if (!formData.subj && !('originatorCode' in formData && formData.originatorCode)) {

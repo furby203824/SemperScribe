@@ -202,7 +202,7 @@ export async function createNLDPFile(
       title: config.package.title,
       description: config.package.description,
       subject: formData.subj || 'Untitled Letter',
-      documentType: formData.documentType,
+      documentType: formData.documentType as NLDPMetadata['package']['documentType'],
       tags: config.package.tags
     },
     checksums: {
