@@ -21,40 +21,61 @@ export const MFRTemplate: DocumentTemplate = {
       {
         id: 1,
         level: 1,
-        content: 'Purpose. To record the events of the meeting held on...',
+        content: 'Purpose. To record the events and decisions of the quarterly training review meeting held on 8 Feb 26 at Building 1234, Camp Pendleton, CA.',
         isMandatory: true
       },
       {
         id: 2,
         level: 1,
-        content: 'Discussion. The following points were discussed...'
+        content: 'Attendees. LtCol J. Smith (G-3), Maj R. Jones (G-3 Ops), Capt M. Davis (S-3), GySgt T. Wilson (Training Chief).'
       },
       {
         id: 3,
-        level: 2,
-        content: 'First point discussed.'
+        level: 1,
+        content: 'Discussion. The following points were discussed during the meeting.'
       },
       {
         id: 4,
         level: 2,
-        content: 'Second point discussed.'
+        content: 'Current training readiness stands at 87% across all units.'
       },
       {
         id: 5,
+        level: 2,
+        content: 'Range availability for Q2 has been confirmed with Range Control.'
+      },
+      {
+        id: 6,
         level: 3,
-        content: 'Detail about the second point.'
+        content: 'Known Distances range is available 1-15 Mar 26.'
+      },
+      {
+        id: 7,
+        level: 1,
+        content: 'Action Items. The following actions were assigned.'
+      },
+      {
+        id: 8,
+        level: 2,
+        content: 'S-3 to submit range request NLT 20 Feb 26.'
       }
     ],
 
     // Footer
-    sig: 'I. M. MARINE', // Signer
-    
+    sig: 'I. M. MARINE',
+
     // Unused/Defaults
-    from: '', // Not used
-    to: '', // Not used
+    from: '',
+    to: '',
     vias: [],
-    references: [],
-    enclosures: [],
+    references: [
+      '(a) MCO 1553.3B',
+      '(b) Quarterly Training Plan dtd 1 Jan 26'
+    ],
+    enclosures: [
+      '(1) Meeting Agenda',
+      '(2) Training Readiness Slides'
+    ],
     copyTos: [],
     line1: '',
     line2: '',

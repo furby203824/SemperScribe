@@ -11,32 +11,43 @@ export const AAFormTemplate: DocumentTemplate = {
     documentType: 'aa-form',
     
     // AA Form Specifics
-    actionNo: '',
-    orgStation: 'Unit Name\nAddress\nCity, State Zip',
-    
+    actionNo: '001-26',
+    orgStation: '1st Battalion, 5th Marines\n Marine Corps Base Camp Pendleton\nCamp Pendleton, CA 92055',
+
     // Standard Fields
-    from: 'Rank First MI Last, EDIPI/MOS, USMC',
-    to: 'Commanding General, Higher Headquarters',
-    subj: 'REQUEST FOR ADMINISTRATIVE ACTION',
+    from: 'Cpl John A. Smith, 1234567890/0311, USMC',
+    to: 'Commanding Officer, 1st Battalion, 5th Marines',
+    subj: 'REQUEST FOR SPECIAL LIBERTY',
     date: '10 Feb 26',
-    
+
     // Body (Block 12)
     paragraphs: [
       {
         id: 1,
         level: 1,
-        content: 'It is requested that...',
+        content: 'It is requested that special liberty be granted from 14 Feb 26 to 17 Feb 26 in order to attend a family event in San Diego, CA.',
         isMandatory: true
+      },
+      {
+        id: 2,
+        level: 1,
+        content: 'Contact information during the liberty period: (555) 123-4567.',
       }
     ],
 
     // Footer
-    sig: 'I. M. MARINE',
-    
+    sig: 'J. A. SMITH',
+
     // Arrays
-    vias: [], // "Via" lines
-    references: [],
-    enclosures: [],
+    vias: [
+      'Company Commander, Alpha Company'
+    ],
+    references: [
+      '(a) MCO 1050.3J'
+    ],
+    enclosures: [
+      '(1) Leave and Liberty Request Form'
+    ],
     copyTos: [],
     
     // Defaults
