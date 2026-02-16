@@ -1282,7 +1282,6 @@ export function NavalLetterPDF({
           <View style={styles.signatureBlock}>
             <View style={styles.emptyLine} />
             <View style={styles.emptyLine} />
-            <View style={styles.emptyLine} />
             <Text style={[styles.signatureLine, { textAlign: 'left' }]}>{formData.sig.toUpperCase()}</Text>
             {!isFromToMemo && formData.delegationText && (
               <Text style={[styles.signatureLine, { textAlign: 'left' }]}>{formData.delegationText}</Text>
@@ -1303,7 +1302,6 @@ export function NavalLetterPDF({
 
                 {/* Signature Block (Centered) */}
                 <View style={{ marginBottom: PDF_SPACING.sectionGap, marginLeft: PDF_INDENTS.signature }}>
-                     <View style={styles.emptyLine} />
                      <View style={styles.emptyLine} />
                      <View style={styles.emptyLine} />
                      <Text style={styles.addressLine}>{formData.sig}</Text>
