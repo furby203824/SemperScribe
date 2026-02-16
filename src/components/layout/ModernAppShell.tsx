@@ -167,7 +167,7 @@ export function ModernAppShell({
 
         {/* Center Pane: Editor */}
         <main className="flex-1 overflow-y-auto bg-muted/10 p-4 md:p-6 lg:p-8 relative scroll-smooth">
-          <div className="max-w-4xl mx-auto space-y-6 pb-20">
+          <div className="max-w-4xl mx-auto space-y-6 pb-8">
              {children}
           </div>
         </main>

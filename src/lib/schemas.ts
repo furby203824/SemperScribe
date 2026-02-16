@@ -135,8 +135,9 @@ export const BasicLetterDefinition: DocumentTypeDefinition = {
         {
           name: 'ssic',
           label: 'SSIC',
-          type: 'combobox', // In reality, this needs a data source. For now, we simulate.
+          type: 'combobox',
           placeholder: 'Search SSIC...',
+          description: 'Standard Subject Identification Code (4-5 digit number from SECNAV M-5210.2)',
           required: true,
           className: 'md:col-span-1'
         },
@@ -145,6 +146,7 @@ export const BasicLetterDefinition: DocumentTypeDefinition = {
           label: 'Originator Code',
           type: 'text',
           placeholder: 'e.g., G-1',
+          description: 'Office code of the drafting section (e.g., G-1, S-3, CO)',
           required: true,
           className: 'md:col-span-1'
         },
@@ -153,6 +155,7 @@ export const BasicLetterDefinition: DocumentTypeDefinition = {
           label: 'Date',
           type: 'date',
           placeholder: 'DD Mmm YY',
+          description: 'Day Month Year format (e.g., 16 Feb 26)',
           required: true,
           className: 'md:col-span-1'
         },
@@ -161,6 +164,7 @@ export const BasicLetterDefinition: DocumentTypeDefinition = {
           label: 'From',
           type: 'autosuggest',
           placeholder: 'Commanding Officer...',
+          description: 'Title of the signing authority (not the individual\'s name)',
           required: true,
           className: 'col-span-full'
         },
@@ -169,6 +173,7 @@ export const BasicLetterDefinition: DocumentTypeDefinition = {
           label: 'To',
           type: 'text',
           placeholder: 'Commanding Officer...',
+          description: 'Title of the addressee or "Distribution List" for multiple recipients',
           required: true,
           className: 'col-span-full'
         },
@@ -177,6 +182,7 @@ export const BasicLetterDefinition: DocumentTypeDefinition = {
           label: 'Subject',
           type: 'autosuggest',
           placeholder: 'SUBJECT LINE (ALL CAPS)',
+          description: 'Brief topic in ALL CAPS — do not use abbreviations unless widely recognized',
           required: true,
           className: 'col-span-full'
         }

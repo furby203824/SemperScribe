@@ -60,7 +60,7 @@ export function Combobox({ items, onSelect, placeholder, searchMessage, inputPla
         type="button"
         onClick={() => setOpen(!open)}
         className={cn(
-          "flex items-center justify-between w-full min-h-[48px] px-3 py-2 text-base md:text-sm",
+          "flex items-center justify-between w-full min-h-[48px] px-3 py-2 text-sm",
           "bg-background border-2 border-input rounded-r-lg transition-all duration-300",
           "focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25",
           "hover:border-primary/50",

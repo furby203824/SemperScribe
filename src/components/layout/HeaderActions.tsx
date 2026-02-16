@@ -415,18 +415,18 @@ export function HeaderActions({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-card border-border text-card-foreground">
-                <DropdownMenuItem onClick={onGeneratePdf} className="cursor-pointer focus:bg-accent focus:text-accent-foreground">
+                <DropdownMenuItem onClick={onGeneratePdf} disabled={isGenerating} className="cursor-pointer focus:bg-accent focus:text-accent-foreground">
                   <Download className="w-4 h-4 mr-2" />
-                  PDF Document (.pdf)
+                  {isGenerating ? 'Generating PDF...' : 'PDF Document (.pdf)'}
                 </DropdownMenuItem>
                 {onAddSignature && (
-                  <DropdownMenuItem onClick={onAddSignature} className="cursor-pointer focus:bg-accent focus:text-accent-foreground">
+                  <DropdownMenuItem onClick={onAddSignature} disabled={isGenerating} className="cursor-pointer focus:bg-accent focus:text-accent-foreground">
                     <FileText className="w-4 h-4 mr-2" />
                     PDF with Signature Fields
                   </DropdownMenuItem>
                 )}
                 {documentType !== 'page11' && (
-                  <DropdownMenuItem onClick={onExportDocx} className="cursor-pointer focus:bg-accent focus:text-accent-foreground">
+                  <DropdownMenuItem onClick={onExportDocx} disabled={isGenerating} className="cursor-pointer focus:bg-accent focus:text-accent-foreground">
                     <FileText className="w-4 h-4 mr-2" />
                     Word Document (.docx)
                   </DropdownMenuItem>
@@ -434,7 +434,7 @@ export function HeaderActions({
                 {onBatchGenerate && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={onBatchGenerate} className="cursor-pointer focus:bg-accent focus:text-accent-foreground">
+                    <DropdownMenuItem onClick={onBatchGenerate} disabled={isGenerating} className="cursor-pointer focus:bg-accent focus:text-accent-foreground">
                       <FileSpreadsheet className="w-4 h-4 mr-2" />
                       Batch Generate (Mail Merge)
                     </DropdownMenuItem>
