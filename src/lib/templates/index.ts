@@ -9,7 +9,7 @@ import { DecisionPaperTemplate } from './decision-paper';
 import { CoordinationPageTemplate } from './coordination-page';
 import { ExecutiveCorrespondenceTemplate } from './executive-correspondence';
 import { FromToMemoTemplate, LetterheadMemoTemplate, MOATemplate, MOUTemplate } from './memo';
-import { MCOTemplate, BulletinTemplate } from './orders';
+import { MCOTemplate, BulletinTemplate, ChangeTransmittalTemplate, AssumptionOfCommandTemplate } from './orders';
 
 // Re-export all templates
 export * from './types';
@@ -41,6 +41,8 @@ export const DOCUMENT_TEMPLATES: Record<string, DocumentTemplate> = {
   'mou': MOUTemplate,
   'mco': MCOTemplate,
   'bulletin': BulletinTemplate,
+  'change-transmittal': ChangeTransmittalTemplate,
+  'assumption-of-command': AssumptionOfCommandTemplate,
   
   'coordination-page': CoordinationPageTemplate,
   'executive-correspondence': ExecutiveCorrespondenceTemplate,

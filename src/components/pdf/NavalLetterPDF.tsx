@@ -28,7 +28,7 @@ import {
 const CONTINUATION_HEADER_HEIGHT = 48;
 import { getPDFSealDataUrl } from '@/lib/pdf-seal';
 import { parseAndFormatDate, formatBusinessDate } from '@/lib/date-utils';
-import { splitSubject, formatCancellationDate } from '@/lib/naval-format-utils';
+import { splitSubject, formatCancellationDate, formatDirectiveSSICBlock, buildDirectiveTitle } from '@/lib/naval-format-utils';
 import { DISTRIBUTION_STATEMENTS } from '@/lib/constants';
 import { parseFormattedText } from '@/lib/pdf-text-parser';
 
@@ -550,7 +550,7 @@ export function NavalLetterPDF({
   const paragraphsWithContent = paragraphs.filter((p) => p.content.trim() || p.title);
 
   const formattedSubjLines = splitSubject((formData.subj || '').toUpperCase(), PDF_SUBJECT.maxLineLength);
-  const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin';
+  const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin' || formData.documentType === 'change-transmittal';
   const isFromToMemo = formData.documentType === 'from-to-memo';
   const isMfr = formData.documentType === 'mfr';
   const isMoaOrMou = formData.documentType === 'moa' || formData.documentType === 'mou';
@@ -618,6 +618,7 @@ export function NavalLetterPDF({
     >
       <Page size="LETTER" style={[styles.page, formData.isShortLetter ? { paddingLeft: 144, paddingRight: 144 } : {}]}>
         {/* Continuation page header - Subject line on pages 2+ (absolutely positioned) */}
+        {/* For directives: show directive ID block (SSIC + date) per MCO 5215.1K para 38 */}
         <View
           style={styles.continuationHeader}
           fixed
@@ -631,7 +632,17 @@ export function NavalLetterPDF({
                       {!formData.omitDate && <Text style={styles.addressLine}>{formattedDate}</Text>}
                    </View>
                 )}
-                {!isCivilianStyle && (
+                {isDirective && (
+                   <View style={{ alignItems: 'flex-end' }}>
+                      <View style={{ alignItems: 'flex-start' }}>
+                        <Text style={styles.addressLine}>
+                          {formData.directiveTitle || buildDirectiveTitle(formData)}
+                        </Text>
+                        <Text style={styles.addressLine}>{formattedDate}</Text>
+                      </View>
+                   </View>
+                )}
+                {!isCivilianStyle && !isDirective && (
                   <>
                     <View style={styles.continuationSubjLine}>
                       <Text style={styles.continuationSubjLabel}>Subj:</Text>
@@ -694,7 +705,9 @@ export function NavalLetterPDF({
                     {formData.cancellationType === 'contingent' ? 'Canc frp: ' : 'Canc: '}{formatCancellationDate(formData.cancellationDate)}
                   </Text>
                 )}
-                <Text style={styles.addressLine}>{formData.ssic || ''}</Text>
+                <Text style={styles.addressLine}>
+                  {isDirective ? formatDirectiveSSICBlock(formData) : (formData.ssic || '')}
+                </Text>
                 <Text style={styles.addressLine}>{formData.originatorCode || ''}</Text>
                 <Text style={styles.addressLine}>{formattedDate}</Text>
              </View>
@@ -780,10 +793,10 @@ export function NavalLetterPDF({
         )}
 
         {/* Directive Title Line - Between date and From (MCO/Bulletin) */}
-        {isDirective && formData.directiveTitle && (
+        {isDirective && (formData.directiveTitle || formData.ssic) && (
           <View style={{ marginBottom: PDF_SPACING.sectionGap }}>
             <Text style={[styles.addressLine, { textDecoration: 'underline' }]}>
-              {formData.directiveTitle}
+              {formData.directiveTitle || buildDirectiveTitle(formData)}
             </Text>
           </View>
         )}
@@ -1510,6 +1523,36 @@ export function NavalLetterPDF({
           }}
           fixed
         />
+
+        {/* FOUO Footer - Per MCO 5215.1K para 10 */}
+        {/* "FOR OFFICIAL USE ONLY" centered at bottom of pages for FOUO-designated directives */}
+        {isDirective && formData.fouoDesignation && formData.fouoDesignation !== '' && (
+          <Text
+            style={{
+              position: 'absolute',
+              bottom: 18,
+              left: 0,
+              right: 0,
+              textAlign: 'center',
+              fontSize: PDF_FONT_SIZES.body,
+              fontFamily: fontFamily,
+            }}
+            fixed
+            render={({ pageNumber, totalPages }) => {
+              // Full FOUO: show on letterhead (page 1) and last page
+              if (formData.fouoDesignation === 'full') {
+                if (pageNumber === 1 || pageNumber === totalPages) {
+                  return 'FOR OFFICIAL USE ONLY';
+                }
+              }
+              // Partial FOUO: show on all pages (user decides which pages have FOUO content)
+              if (formData.fouoDesignation === 'partial') {
+                return 'FOR OFFICIAL USE ONLY';
+              }
+              return '';
+            }}
+          />
+        )}
 
         {/* Staffing Paper Footer */}
         {isStaffingPaper && (
