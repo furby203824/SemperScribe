@@ -32,8 +32,19 @@ export function EnclosuresSection({ enclosures, setEnclosures, formData, setForm
   const removeItem = useCallback((index: number) => setEnclosures(enclosures.filter((_, i) => i !== index)), [enclosures, setEnclosures]);
   const updateItem = useCallback((index: number, value: string) => setEnclosures(enclosures.map((item, i) => i === index ? value : item)), [enclosures, setEnclosures]);
 
-  const getEnclosureNumber = (index: number, startingNumber: string): number => {
-    return parseInt(startingNumber, 10) + index;
+  const isPositionPaper = formData.documentType === 'position-paper';
+  const labelText = isPositionPaper ? 'Tabs' : 'Enclosures';
+  const itemLabel = isPositionPaper ? 'Tab' : 'Enclosure';
+  const itemPlaceholder = isPositionPaper 
+    ? 'Enter tab details (e.g., Detailed Financial Analysis)' 
+    : 'Enter enclosure details (e.g., Training Certificate, Medical Records)';
+
+  const getEnclosureIndicator = (index: number, startingNumber: string): string => {
+    if (isPositionPaper) {
+        // Tabs use Letters (A, B, C...)
+        return String.fromCharCode(65 + index); // 65 is 'A'
+    }
+    return `(${parseInt(startingNumber, 10) + index})`;
   };
 
   const handleRadioChange = (value: string) => {
@@ -61,7 +72,7 @@ export function EnclosuresSection({ enclosures, setEnclosures, formData, setForm
       <CardHeader className="pb-3 bg-secondary text-secondary-foreground rounded-t-lg">
         <CardTitle className="flex items-center text-lg font-semibold font-headline tracking-wide">
           <Paperclip className="mr-2 h-5 w-5 text-primary-foreground" />
-          Enclosures
+          {labelText}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -119,17 +130,17 @@ export function EnclosuresSection({ enclosures, setEnclosures, formData, setForm
             <div className="space-y-3">
               <Label className="font-semibold mb-2 flex items-center">
                 <Paperclip className="mr-2 h-4 w-4" />
-                Enter Enclosure(s):
+                Enter {itemLabel}(s):
               </Label>
               {enclosures.map((encl, index) => (
                 <div key={`encl-${index}`} className="flex w-full gap-2 items-center">
                   <span className="flex h-10 w-12 items-center justify-center flex-shrink-0 rounded-md bg-secondary text-primary-foreground border border-secondary font-medium shadow-sm">
-                    ({getEnclosureNumber(index, formData.startingEnclosureNumber)})
+                    {getEnclosureIndicator(index, formData.startingEnclosureNumber)}
                   </span>
                   <Input
                     className="flex-1 border-input focus-visible:ring-primary"
                     type="text"
-                    placeholder="Enter enclosure details (e.g., Training Certificate, Medical Records)"
+                    placeholder={itemPlaceholder}
                     value={encl}
                     onChange={(e) => updateItem(index, e.target.value)}
                   />

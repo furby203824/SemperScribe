@@ -186,7 +186,57 @@ export function ParagraphSection({
 
         <div className="space-y-4">
           {paragraphs.map((paragraph, index) => {
-            const citation = getUiCitation(paragraph, index, paragraphs);
+            let citation = getUiCitation(paragraph, index, paragraphs);
+            
+            if (documentType === 'information-paper' && paragraph.level > 1) {
+              citation = (paragraph.level === 2 ? '•' : paragraph.level === 3 ? '◦' : '▪');
+            } else if (documentType === 'business-letter') {
+               if (paragraph.level === 1) {
+                   citation = '';
+               } else {
+                   // Strip parent prefixes for business letters as main paragraphs aren't numbered
+                   // This is a heuristic: take the last part of the citation if it looks like a path
+                   // But getUiCitation returns things like "1a". We just want "a".
+                   // Actually, standard naval letter format for sub-paragraphs is just "a", "b", etc. 
+                   // If getUiCitation returns "1a", we need to strip the "1".
+                   // A simple way is to re-calculate the local marker or strip digits from start.
+                   // However, for level 3 "(1)", it might be "1a(1)".
+                   
+                   // Let's rely on the fact that getUiCitation composes paths.
+                   // We basically want the "local" citation part.
+                   // But we don't have access to getCitationPart here.
+                   
+                   // HACK: Use a regex to extract the last segment?
+                   // Level 2: "a" (from "1a")
+                   // Level 3: "(1)" (from "1a(1)")
+                   
+                   // Actually, let's just show the full citation for now but check if it looks weird.
+                   // If level 1 is hidden, level 2 "1a" looks weird.
+                   // Let's try to match the last character(s).
+                   
+                   // Better approach: Re-implement local counting for business letter here or update useParagraphs.
+                   // Since useParagraphs is a hook, updating it affects everything.
+                   // Let's just do a localized fix.
+                   
+                   // For level 2 (a, b, c):
+                   const matchAlpha = citation.match(/[a-z]$/);
+                   if (paragraph.level === 2 && matchAlpha) {
+                       citation = matchAlpha[0] + ".";
+                   }
+                   
+                   // For level 3 (1), (2):
+                   const matchParen = citation.match(/\(\d+\)$/);
+                   if (paragraph.level === 3 && matchParen) {
+                       citation = matchParen[0];
+                   }
+                   
+                   // For level 4 (a), (b):
+                   const matchParenAlpha = citation.match(/\([a-z]\)$/);
+                   if (paragraph.level === 4 && matchParenAlpha) {
+                       citation = matchParenAlpha[0];
+                   }
+               }
+            }
             
             return (
               <ParagraphItem
@@ -195,7 +245,7 @@ export function ParagraphSection({
             index={index}
             totalParagraphs={paragraphs.length}
             activeVoiceInput={activeVoiceInput}
-            citation={getUiCitation(paragraph, index, paragraphs)}
+            citation={citation}
             levelColor={getLevelColor(paragraph.level)}
             titleBadgeColor="bg-primary/10 text-primary border border-primary/20"
             onUpdateContent={updateParagraphContent}

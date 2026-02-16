@@ -14,7 +14,8 @@ import {
   Mail,
   ScrollText,
   ClipboardList,
-  Notebook
+  Notebook,
+  Briefcase
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -138,26 +139,34 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
               </AccordionTrigger>
               <AccordionContent className="pb-2">
                 <div className="space-y-1 pl-2">
-
                   <DocumentTypeButton
-                    active={documentType === 'talking-paper'}
-                    onClick={() => onDocumentTypeChange('talking-paper')}
-                    label="Talking Paper"
-                  />
-                  <DocumentTypeButton
-                    active={documentType === 'briefing-paper'}
-                    onClick={() => onDocumentTypeChange('briefing-paper')}
-                    label="Briefing Paper"
+                    active={documentType === 'information-paper'}
+                    onClick={() => onDocumentTypeChange('information-paper')}
+                    label="Information Paper"
                   />
                   <DocumentTypeButton
                     active={documentType === 'position-paper'}
                     onClick={() => onDocumentTypeChange('position-paper')}
                     label="Position Paper"
                   />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* External & Executive Group */}
+            <AccordionItem value="external-executive" className="border-none">
+              <AccordionTrigger className="py-2 text-sm font-semibold text-foreground hover:no-underline">
+                <span className="flex items-center">
+                  <Briefcase className="w-4 h-4 mr-2 text-primary" />
+                  External & Executive
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-2">
+                <div className="space-y-1 pl-2">
                   <DocumentTypeButton
-                    active={documentType === 'trip-report'}
-                    onClick={() => onDocumentTypeChange('trip-report')}
-                    label="Trip Report"
+                    active={documentType === 'business-letter'}
+                    onClick={() => onDocumentTypeChange('business-letter')}
+                    label="Business Letter"
                   />
                 </div>
               </AccordionContent>

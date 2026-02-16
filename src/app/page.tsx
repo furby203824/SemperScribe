@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
-import { ParagraphData, SavedLetter, ValidationState, FormData } from '@/types';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { ParagraphData, SavedLetter, ValidationState, FormData, AdminSubsections } from '@/types';
 import { ModernAppShell } from '@/components/layout/ModernAppShell';
 import { UnitInfoSection } from '@/components/letter/UnitInfoSection';
 import { ParagraphSection } from '@/components/letter/ParagraphSection';
@@ -10,6 +10,7 @@ import { ViaSection } from '@/components/letter/ViaSection';
 import { ReferencesSection } from '@/components/letter/ReferencesSection';
 import { EnclosuresSection } from '@/components/letter/EnclosuresSection';
 import { MOAFormSection } from '@/components/letter/MOAFormSection';
+import { DecisionGridSection } from '@/components/letter/DecisionGridSection';
 import { ReportsSection } from '@/components/letter/ReportsSection';
 import { DistributionStatementSection } from '@/components/letter/DistributionStatementSection';
 import { DistributionSection } from '@/components/letter/DistributionSection';
@@ -17,34 +18,34 @@ import { StructuredReferenceInput } from '@/components/letter/StructuredReferenc
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { FileSignature } from 'lucide-react';
 import { useEDMSContext, isEditMode } from '@/hooks/useEDMSContext';
 import { UNITS } from '@/lib/units';
 import { getTodaysDate } from '@/lib/date-utils';
-import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getExportFilename, mergeAdminSubsections } from '@/lib/naval-format-utils';
+import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getInformationPaperParagraphs, getPositionPaperParagraphs, getBusinessLetterParagraphs, mergeAdminSubsections } from '@/lib/naval-format-utils';
 import { validateSSIC, validateSubject, validateFromTo } from '@/lib/validation-utils';
-import { loadSavedLetters, saveLetterToStorage, findLetterById } from '@/lib/storage-utils';
-import { generateBasePDFBlob, generatePDFBlob, getPDFPageCount, addMultipleSignaturesToBlob, ManualSignaturePosition } from '@/lib/pdf-generator';
-import { generateDocxBlob } from '@/lib/docx-generator';
-import { SignaturePlacementModal, SignaturePosition } from '@/components/SignaturePlacementModal';
-import { configureConsole, logError, debugUserAction, debugFormChange } from '@/lib/console-utils';
-import { getDoDSealBufferSync } from '@/lib/dod-seal';
-import { createFormattedParagraph } from '@/lib/paragraph-formatter';
-import { DOC_SETTINGS } from '@/lib/doc-settings';
+import { loadSavedLetters, saveLetterToStorage } from '@/lib/storage-utils';
+import { generateBasePDFBlob, getPDFPageCount } from '@/lib/pdf-generator';
 import { generateNavmc10274 } from '@/services/pdf/navmc10274Generator';
 import { generateNavmc11811 } from '@/services/pdf/navmc11811Generator';
 import { Navmc11811Data } from '@/types/navmc';
-import { openBlobInNewTab } from '@/lib/blob-utils';
-import { getBasePath } from '@/lib/path-utils';
+import { SignaturePlacementModal } from '@/components/SignaturePlacementModal';
+import { configureConsole, debugUserAction, debugFormChange } from '@/lib/console-utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DynamicForm } from '@/components/ui/DynamicForm';
 import { DOCUMENT_TYPES } from '@/lib/schemas';
 import { AMHSEditor } from '@/components/amhs/AMHSEditor';
 import { AMHSPreview } from '@/components/amhs/AMHSPreview';
 import { LandingPage } from '@/components/layout/LandingPage';
-import { generateFullMessage, validateAMHSMessage } from '@/services/amhs/amhsFormatter';
 import { useToast } from '@/hooks/use-toast';
-import { generateShareableUrl, getStateFromUrl, clearShareParam, copyToClipboard, ShareableState } from '@/lib/url-state';
+import { getStateFromUrl, clearShareParam } from '@/lib/url-state';
+import { useParagraphs } from '@/hooks/useParagraphs';
+import { useVoiceInput } from '@/hooks/useVoiceInput';
+import { useDocumentExport } from '@/hooks/useDocumentExport';
+import { useImportExport } from '@/hooks/useImportExport';
+
+import { CopyToSection } from '@/components/letter/CopyToSection';
 
 // Inner component that uses useSearchParams (requires Suspense boundary)
 function NavalLetterGeneratorInner() {
@@ -84,16 +85,31 @@ function NavalLetterGeneratorInner() {
     orgStation: '',
     name: '',
     edipi: '',
-    box11: ''
   });
 
   const handleDynamicFormSubmit = useCallback((data: any) => {
     // Merge dynamic form data into main state
-    setFormData(prev => ({
-        ...prev,
-        ...data,
-        // Ensure complex objects are merged correctly if needed
-    }));
+    setFormData(prev => {
+        // Defensive check: Ensure Unit Info fields are not accidentally overwritten
+        // if the dynamic form sends empty values for them (which it shouldn't, but for safety).
+        // Only allow overwrite if the new value is truthy or if we are sure it's intentional.
+        // Since DynamicForm schemas don't manage these fields, we preserve previous values if data tries to clear them.
+        
+        const protectedFields = ['line1', 'line2', 'line3'];
+        const safeData = { ...data };
+        
+        protectedFields.forEach(field => {
+            // If prev has a value, and data has a falsy value (undefined/empty), preserve prev
+            if (prev[field as keyof FormData] && !safeData[field]) {
+                delete safeData[field];
+            }
+        });
+
+        return {
+            ...prev,
+            ...safeData,
+        };
+    });
     debugFormChange('Dynamic Form Update', data);
   }, []);
 
@@ -110,44 +126,42 @@ function NavalLetterGeneratorInner() {
   const [copyTos, setCopyTos] = useState<string[]>(['']);
   const [distList, setDistList] = useState<string[]>(['']);
 
-  const [paragraphs, setParagraphs] = useState<ParagraphData[]>([{ id: 1, level: 1, content: '', acronymError: '' }]);
+  // Paragraph management (extracted hook)
+  const {
+    paragraphs, setParagraphs,
+    addParagraph, removeParagraph, updateParagraphContent,
+    moveParagraphUp, moveParagraphDown,
+    getUiCitation, validateParagraphNumbering,
+  } = useParagraphs();
+
   const [savedLetters, setSavedLetters] = useState<SavedLetter[]>([]);
 
   // Preview State
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(undefined);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
-  
-  // Voice recognition state
-  const [voiceRecognition, setVoiceRecognition] = useState<any>(null);
-  const [activeVoiceInput, setActiveVoiceInput] = useState<number | null>(null);
+
+  // Voice input (extracted hook)
+  const { activeVoiceInput, toggleVoiceInput } = useVoiceInput(paragraphs, updateParagraphContent);
 
   // Key to force form remount on import
   const [formKey, setFormKey] = useState(0);
 
-  // Signature placement state
-  const [showSignatureModal, setShowSignatureModal] = useState(false);
-  const [signaturePdfBlob, setSignaturePdfBlob] = useState<Blob | null>(null);
-  const [signaturePdfPageCount, setSignaturePdfPageCount] = useState(1);
-  const [signaturePosition, setSignaturePosition] = useState<ManualSignaturePosition | null>(null);
-
-  // Refs
-  const activeVoiceInputRef = useRef<number | null>(null);
-  const paragraphsRef = useRef<ParagraphData[]>(paragraphs);
+  // Document export (extracted hook)
+  const {
+    generateDocument: generateDocumentFromHook,
+    handleOpenSignaturePlacement,
+    showSignatureModal,
+    signaturePdfBlob,
+    signaturePdfPageCount,
+    handleSignatureConfirm,
+    handleSignatureCancel
+  } = useDocumentExport();
 
   // EDMS Integration
   const edmsContext = useEDMSContext();
   const [currentUnitCode, setCurrentUnitCode] = useState<string | undefined>(undefined);
   const [currentUnitName, setCurrentUnitName] = useState<string | undefined>(undefined);
   const [isLoadingFromEDMS, setIsLoadingFromEDMS] = useState(false);
-
-  // Update refs when state changes
-  useEffect(() => {
-    activeVoiceInputRef.current = activeVoiceInput;
-  }, [activeVoiceInput]);
-  
-  useEffect(() => {
-    paragraphsRef.current = paragraphs;
-  }, [paragraphs]);
 
   // Load saved letters
   useEffect(() => {
@@ -243,9 +257,20 @@ function NavalLetterGeneratorInner() {
     }
   }, [formData.documentType, formData.cancellationType, paragraphs]);
 
+  // VIP Mode Logic for Business Letter
+  useEffect(() => {
+    if (formData.documentType === 'business-letter') {
+        if (formData.isVipMode) {
+            setFormData(prev => ({ ...prev, complimentaryClose: 'Very respectfully,' }));
+        } else if (formData.complimentaryClose === 'Very respectfully,') {
+            setFormData(prev => ({ ...prev, complimentaryClose: 'Sincerely,' }));
+        }
+    }
+  }, [formData.documentType, formData.isVipMode]);
+
   // Sync Reports to Admin Subsections
   useEffect(() => {
-    if (formData.documentType === 'mco' || formData.documentType === 'order') {
+    if (formData.documentType === 'mco') {
       let content = 'None.';
       const validReports = formData.reports?.filter(r => r.title) || [];
       
@@ -289,13 +314,8 @@ function NavalLetterGeneratorInner() {
           remarksRight: formData.remarksRight
         };
         const pdfBytes = await generateNavmc11811(page11Data);
-        blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      } else if (formData.documentType === 'navmc10274') {
-         // Placeholder for AA Form if needed later, or use base generator if it supports it
-         // For now, fall back to base or implement specific if known. 
-         // Assuming base for now or separate generator. 
-         // The user asked for Pg 11 specifically.
-         // Let's check if generateNavmc10274 is available (it is imported).
+        blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
+      } else if (formData.documentType === 'aa-form') {
          const pdfBytes = await generateNavmc10274({
             actionNo: formData.actionNo || '',
             ssic: formData.ssic || '',
@@ -303,15 +323,15 @@ function NavalLetterGeneratorInner() {
             from: formData.from || '',
             orgStation: formData.orgStation || '',
             to: formData.to || '',
-            via: vias[0] || '', // Simple mapping for now
+            via: vias[0] || '',
             subject: formData.subj || '',
             reference: references[0] || '',
             enclosure: enclosures[0] || '',
-            supplementalInfo: '', // Need to map this from somewhere if it exists
+            supplementalInfo: '',
             copyTo: copyTos[0] || '',
             isDraft: true
          });
-         blob = new Blob([pdfBytes], { type: 'application/pdf' });
+         blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
       } else {
         // Standard Naval Letter
         // Skip if critical data is missing
@@ -334,16 +354,36 @@ function NavalLetterGeneratorInner() {
         );
 
         // Check for One Page Limit for Staffing Papers
-        if (['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType)) {
+        if (['position-paper', 'information-paper'].includes(formData.documentType)) {
              try {
                  const pageCount = await getPDFPageCount(blob);
-                 if (pageCount > 1) {
-                     toast({
-                         title: "Content Exceeds One Page",
-                         description: `${formData.documentType.replace('-', ' ').toUpperCase()}s must be strictly one page. Please reduce content.`,
-                         variant: "destructive",
-                         duration: 5000,
-                     });
+                 if (formData.documentType === 'position-paper') {
+                     // MCO 5216.20B: 1 Page Preferred, 2 Pages Max
+                     if (pageCount > 2) {
+                         toast({
+                             title: "Exceeds 2-Page Limit",
+                             description: "Position Papers must strictly not exceed 2 pages. Move detailed analysis to Tabs.",
+                             variant: "destructive",
+                             duration: 6000,
+                         });
+                     } else if (pageCount === 2) {
+                         toast({
+                             title: "Approaching Limit (2 Pages)",
+                             description: "Position Papers are preferred to be 1 page. Ensure complexity justifies the 2nd page.",
+                             variant: "default",
+                             duration: 4000,
+                         });
+                     }
+                 } else {
+                     // Other staffing papers usually 1 page
+                     if (pageCount > 1) {
+                         toast({
+                             title: "Content Exceeds One Page",
+                             description: `${formData.documentType.replace('-', ' ').toUpperCase()}s must be strictly one page. Please reduce content.`,
+                             variant: "destructive",
+                             duration: 5000,
+                         });
+                     }
                  }
              } catch (err) {
                  console.error("Failed to check page count", err);
@@ -381,6 +421,18 @@ function NavalLetterGeneratorInner() {
     setValidation(prev => ({ ...prev, [field]: validateFromTo(value) }));
   };
 
+  // Import/Export operations (extracted hook)
+  const {
+    handleImport, handleLoadDraft, handleLoadTemplateUrl,
+    handleExportNldp, handleShareLink, handleCopyAMHS, handleExportAMHS,
+  } = useImportExport({
+    formData, setFormData, paragraphs, setParagraphs,
+    vias, setVias, references, setReferences,
+    enclosures, setEnclosures, copyTos, setCopyTos,
+    distList, setDistList, setFormKey, setValidation,
+    savedLetters, toast,
+  });
+
   const handleUpdateAdminSubsection = (key: keyof AdminSubsections, field: 'show' | 'content' | 'order', value: any) => {
     setFormData(prev => {
         const currentSubsections = prev.adminSubsections || {
@@ -410,6 +462,12 @@ function NavalLetterGeneratorInner() {
       newParagraphs = getMCBulParagraphs();
     } else if (newType === 'moa' || newType === 'mou') {
       newParagraphs = getMOAParagraphs(newType as 'moa' | 'mou');
+    } else if (newType === 'information-paper') {
+      newParagraphs = getInformationPaperParagraphs();
+    } else if (newType === 'position-paper') {
+      newParagraphs = getPositionPaperParagraphs();
+    } else if (newType === 'business-letter') {
+      newParagraphs = getBusinessLetterParagraphs();
     } else {
        if (formData.documentType === 'mco' || formData.documentType === 'bulletin') {
           newParagraphs = [{ id: 1, level: 1, content: '', acronymError: '' }];
@@ -430,20 +488,10 @@ function NavalLetterGeneratorInner() {
       startingEnclosureNumber: '1',
       startingPageNumber: 1,
       previousPackagePageCount: 0,
-      policyMode: false, // Reset policy mode on type change
     }));
     
     setParagraphs(newParagraphs);
   };
-
-  // Effect to handle Policy Mode toggle
-  useEffect(() => {
-    if (formData.documentType === 'basic' && formData.policyMode) {
-      if (window.confirm('Switching to Policy Mode will replace existing paragraphs. Continue?')) {
-        setParagraphs(getPolicyLetterParagraphs());
-      }
-    }
-  }, [formData.policyMode, formData.documentType]);
 
   const saveLetter = () => {
     debugUserAction('Save Letter', {
@@ -468,570 +516,21 @@ function NavalLetterGeneratorInner() {
     setSavedLetters(updatedLetters);
   };
 
-  // Paragraph Management Logic
-  const addParagraph = (type: 'main' | 'sub' | 'same' | 'up', afterId: number) => {
-    const currentParagraph = paragraphs.find(p => p.id === afterId);
-    if (!currentParagraph) return;
+  // Thin wrappers for hook-based document generation
+  const generateDocument = (format: 'docx' | 'pdf') =>
+    generateDocumentFromHook(format, formData, vias, references, enclosures, copyTos, paragraphs, distList);
 
-    let newLevel = 1;
-    switch (type) {
-      case 'main': newLevel = 1; break;
-      case 'same': newLevel = currentParagraph.level; break;
-      case 'sub': newLevel = Math.min(currentParagraph.level + 1, 8); break;
-      case 'up': newLevel = Math.max(currentParagraph.level - 1, 1); break;
-    }
-
-    const newId = (paragraphs.length > 0 ? Math.max(...paragraphs.map(p => p.id)) : 0) + 1;
-    const currentIndex = paragraphs.findIndex(p => p.id === afterId);
-    const newParagraphs = [...paragraphs];
-    newParagraphs.splice(currentIndex + 1, 0, { id: newId, level: newLevel, content: '' });
-
-    setParagraphs(newParagraphs);
-  };
-
-  const removeParagraph = (id: number) => {
-    const paragraphToRemove = paragraphs.find(p => p.id === id);
-    if (paragraphToRemove?.isMandatory) {
-      alert("This paragraph is mandatory for the selected document type and cannot be removed.");
-      return;
-    }
-
-    if (paragraphs.length <= 1) {
-      if (paragraphs[0].id === id) {
-        updateParagraphContent(id, '');
-        return;
-      }
-    }
-
-    const newParagraphs = paragraphs.filter(p => p.id !== id);
-    const numberingErrors = validateParagraphNumbering(newParagraphs);
-    if (numberingErrors.length > 0) {
-      const proceed = window.confirm(
-        `Removing this paragraph may create numbering issues:\n\n${numberingErrors.join('\n')}\n\nDo you want to proceed?`
-      );
-      if (!proceed) return;
-    }
-
-    setParagraphs(newParagraphs);
-  };
-
-  const updateParagraphContent = (id: number, content: string) => {
-    const cleanedContent = content
-      .replace(/\u00A0/g, ' ')
-      .replace(/\u2007/g, ' ')
-      .replace(/\u202F/g, ' ')
-      .replace(/[\r\n]/g, ' ');
-
-    const newParagraphs = paragraphs.map(p => p.id === id ? { ...p, content: cleanedContent } : p)
-    setParagraphs(newParagraphs);
-    // validateAcronyms(newParagraphs); // Temporarily removed for performance or re-implement if needed
-  };
-
-  const moveParagraphUp = (id: number) => {
-    const currentIndex = paragraphs.findIndex(p => p.id === id);
-    if (currentIndex > 0) {
-      const currentPara = paragraphs[currentIndex];
-      const paraAbove = paragraphs[currentIndex - 1];
-      if (currentPara.level > paraAbove.level) return;
-
-      const newParagraphs = [...paragraphs];
-      [newParagraphs[currentIndex - 1], newParagraphs[currentIndex]] = [newParagraphs[currentIndex], newParagraphs[currentIndex - 1]];
-      setParagraphs(newParagraphs);
-    }
-  };
-
-  const moveParagraphDown = (id: number) => {
-    const currentIndex = paragraphs.findIndex(p => p.id === id);
-    if (currentIndex < paragraphs.length - 1) {
-      const newParagraphs = [...paragraphs];
-      [newParagraphs[currentIndex], newParagraphs[currentIndex + 1]] = [newParagraphs[currentIndex + 1], newParagraphs[currentIndex]];
-      setParagraphs(newParagraphs);
-    }
-  };
-
-  // Helper functions for paragraph UI
-  const getUiCitation = (paragraph: ParagraphData, index: number, allParagraphs: ParagraphData[]): string => {
-    const { level } = paragraph;
-
-    const getCitationPart = (targetLevel: number, parentIndex: number) => {
-      let listStartIndex = 0;
-      if (targetLevel > 1) {
-        for (let i = parentIndex - 1; i >= 0; i--) {
-          if (allParagraphs[i].level < targetLevel) {
-            listStartIndex = i + 1;
-            break;
-          }
-        }
-      }
-
-      let count = 0;
-      for (let i = listStartIndex; i <= parentIndex; i++) {
-        if (allParagraphs[i].level === targetLevel) {
-          count++;
-        }
-      }
-
-      switch (targetLevel) {
-        case 1: return `${count}.`;
-        case 2: return `${String.fromCharCode(96 + count)}`;
-        case 3: return `(${count})`;
-        case 4: return `(${String.fromCharCode(96 + count)})`;
-        case 5: return `${count}.`;
-        case 6: return `${String.fromCharCode(96 + count)}.`;
-        case 7: return `(${count})`;
-        case 8: return `(${String.fromCharCode(96 + count)})`;
-        default: return '';
-      }
-    };
-
-    if (level === 1) return getCitationPart(1, index);
-    if (level === 2) {
-      let parentCitation = '';
-      for (let i = index - 1; i >= 0; i--) {
-        if (allParagraphs[i].level === 1) {
-          parentCitation = getCitationPart(1, i).replace('.', '');
-          break;
-        }
-      }
-      return `${parentCitation}${getCitationPart(2, index)}`;
-    }
-
-    let citationPath = [];
-    let parentLevel = level - 1;
-    for (let i = index - 1; i >= 0; i--) {
-      const p = allParagraphs[i];
-      if (p.level === parentLevel) {
-        citationPath.unshift(getCitationPart(p.level, i).replace(/[.()]/g, ''));
-        parentLevel--;
-        if (parentLevel === 0) break;
-      }
-    }
-    citationPath.push(getCitationPart(level, index));
-    return citationPath.join('');
-  };
-
-  const validateParagraphNumbering = useCallback((allParagraphs: ParagraphData[]): string[] => {
-    const errors: string[] = [];
-    const levelGroups: { [key: string]: number[] } = {};
-
-    allParagraphs.forEach((paragraph, index) => {
-      const { level } = paragraph;
-      let parentPath = '';
-      let currentLevel = level - 1;
-      for (let i = index - 1; i >= 0 && currentLevel > 0; i--) {
-        if (allParagraphs[i].level === currentLevel) {
-          const citation = getUiCitation(allParagraphs[i], i, allParagraphs);
-          parentPath = citation.replace(/[.()]/g, '') + parentPath;
-          currentLevel--;
-        }
-      }
-      const groupKey = `${parentPath}_level${level}`;
-      if (!levelGroups[groupKey]) levelGroups[groupKey] = [];
-      levelGroups[groupKey].push(index);
-    });
-
-    Object.entries(levelGroups).forEach(([groupKey, indices]) => {
-      if (indices.length === 1) {
-        const index = indices[0];
-        const paragraph = allParagraphs[index];
-        const citation = getUiCitation(paragraph, index, allParagraphs);
-        if (paragraph.level > 1) {
-          errors.push(`Paragraph ${citation} requires at least one sibling paragraph at the same level.`);
-        }
-      }
-    });
-    return errors;
-  }, []);
-
-  // Voice Recognition
-  const initializeVoiceRecognition = useCallback(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'en-US';
-      
-      recognition.onresult = function(event: any) {
-        let finalTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          }
-        }
-        if (finalTranscript && activeVoiceInputRef.current !== null) {
-          const currentParagraph = paragraphsRef.current.find(p => p.id === activeVoiceInputRef.current);
-          if (currentParagraph) {
-            const newContent = currentParagraph.content + (currentParagraph.content ? ' ' : '') + finalTranscript;
-            updateParagraphContent(activeVoiceInputRef.current, newContent);
-          }
-        }
-      };
-
-      recognition.onerror = function(event: any) {
-        logError('Voice Recognition', event.error);
-        setActiveVoiceInput(null);
-      };
-      
-      recognition.onend = function() {
-        setActiveVoiceInput(null);
-      };
-      
-      setVoiceRecognition(recognition);
-    }
-  }, []);
-
-  useEffect(() => {
-    initializeVoiceRecognition();
-  }, []);
-
-  const toggleVoiceInput = (paragraphId: number) => {
-    if (!voiceRecognition) {
-      alert('Voice recognition not supported in this browser');
-      return;
-    }
-    if (activeVoiceInput === paragraphId) {
-      voiceRecognition.stop();
-      setActiveVoiceInput(null);
-    } else {
-      if (activeVoiceInput !== null) voiceRecognition.stop();
-      setActiveVoiceInput(paragraphId);
-      voiceRecognition.start();
-    }
-  };
-
-  const downloadPDF = async (formData: FormData, vias: string[], references: string[], enclosures: string[], copyTos: string[], paragraphs: ParagraphData[], withSignature?: ManualSignaturePosition, distList?: string[]) => {
-    try {
-      // Merge Admin Subsections for export
-      const paragraphsToRender = mergeAdminSubsections(paragraphs, formData.adminSubsections);
-
-      let blob: Blob;
-      if (withSignature) {
-        // Generate PDF with signature field at specified position
-        blob = await generatePDFBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender, distList || [], withSignature);
-      } else {
-        // Generate base PDF without signature field
-        blob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender, distList || []);
-      }
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = getExportFilename(formData, 'pdf');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please check the console for details.');
-    }
-  };
-
-  // Signature placement workflow handlers
-  const handleOpenSignaturePlacement = async () => {
-    try {
-      let blob: Blob;
-
-      if (formData.documentType === 'aa-form') {
-        // ... (AA Form logic remains same)
-        // Generate AA Form PDF
-        const aaFormData = {
-          actionNo: formData.actionNo || '',
-          ssic: formData.ssic || '',
-          date: formData.date || '',
-          from: formData.from || '',
-          orgStation: formData.orgStation || '',
-          to: formData.to || '',
-          via: vias.filter(v => v.trim()).join('\n'),
-          subject: formData.subj || '',
-          reference: references.filter(r => r.trim()).join('\n'),
-          enclosure: enclosures.filter(e => e.trim()).join('\n'),
-          supplementalInfo: paragraphs.map(p => p.content).join('\n'),
-          supplementalInfoParagraphs: paragraphs,
-          copyTo: copyTos.filter(c => c.trim()).join('\n'),
-          signature: formData.sig || '',
-        };
-        const pdfBytes = await generateNavmc10274(aaFormData);
-        blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      } else if (formData.documentType === 'page11') {
-        // ... (Page 11 logic remains same)
-        const navmcData: Navmc11811Data = {
-          name: formData.name || '',
-          edipi: formData.edipi || '',
-          remarksLeft: formData.remarksLeft || '',
-          remarksRight: formData.remarksRight || ''
-        };
-        const pdfBytes = await generateNavmc11811(navmcData);
-        blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      } else {
-        // Generate standard letter PDF
-        // Merge Admin Subsections
-        const paragraphsToRender = mergeAdminSubsections(paragraphs, formData.adminSubsections);
-        blob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender, distList);
-      }
-
-      const pageCount = await getPDFPageCount(blob);
-      setSignaturePdfBlob(blob);
-      setSignaturePdfPageCount(pageCount);
-      setShowSignatureModal(true);
-    } catch (error) {
-      console.error('Error preparing signature placement:', error);
-      alert('Failed to prepare PDF for signature placement.');
-    }
-  };
-
-  const handleSignatureConfirm = async (positions: SignaturePosition[]) => {
-    try {
-      setShowSignatureModal(false);
-
-      let baseBlob: Blob;
-
-      // Generate appropriate PDF based on document type
-      if (formData.documentType === 'aa-form') {
-         // ... AA Form logic
-        const aaFormData = {
-          actionNo: formData.actionNo || '',
-          ssic: formData.ssic || '',
-          date: formData.date || '',
-          from: formData.from || '',
-          orgStation: formData.orgStation || '',
-          to: formData.to || '',
-          via: vias.filter(v => v.trim()).join('\n'),
-          subject: formData.subj || '',
-          reference: references.filter(r => r.trim()).join('\n'),
-          enclosure: enclosures.filter(e => e.trim()).join('\n'),
-          supplementalInfo: paragraphs.map(p => p.content).join('\n'),
-          supplementalInfoParagraphs: paragraphs,
-          copyTo: copyTos.filter(c => c.trim()).join('\n'),
-          signature: formData.sig || '',
-        };
-        const pdfBytes = await generateNavmc10274(aaFormData);
-        baseBlob = new Blob([pdfBytes], { type: 'application/pdf' });
-      } else if (formData.documentType === 'page11') {
-        // ... Page 11 logic
-        const navmcData: Navmc11811Data = {
-          name: formData.name || '',
-          edipi: formData.edipi || '',
-          remarksLeft: formData.remarksLeft || '',
-          remarksRight: formData.remarksRight || ''
-        };
-        const pdfBytes = await generateNavmc11811(navmcData);
-        baseBlob = new Blob([pdfBytes], { type: 'application/pdf' });
-      } else {
-        // Generate standard letter PDF
-        // Merge Admin Subsections
-        const paragraphsToRender = mergeAdminSubsections(paragraphs, formData.adminSubsections);
-        baseBlob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender, distList);
-      }
-
-      // Convert SignaturePositions to ManualSignaturePositions
-      const manualPositions: ManualSignaturePosition[] = positions.map(pos => ({
-        page: pos.page,
-        x: pos.x,
-        y: pos.y,
-        width: pos.width,
-        height: pos.height
-      }));
-
-      // Add all signature fields
-      const signedBlob = await addMultipleSignaturesToBlob(baseBlob, manualPositions);
-
-      // Download the PDF
-      const filename = getExportFilename(formData, 'pdf');
-
-      const url = window.URL.createObjectURL(signedBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      setSignaturePdfBlob(null);
-    } catch (error) {
-      console.error('Error adding signature:', error);
-      alert('Failed to add signature fields to PDF.');
-    }
-  };
-
-  const handleSignatureCancel = () => {
-    setShowSignatureModal(false);
-    setSignaturePdfBlob(null);
-  };
-
-  const generateDocument = async (format: 'docx' | 'pdf') => {
-    if (format === 'pdf') {
-      // Check if this is an AA Form
-      if (formData.documentType === 'aa-form') {
-        try {
-          // Map formData to Navmc10274Data
-          const aaFormData = {
-            actionNo: formData.actionNo || '',
-            ssic: formData.ssic || '',
-            date: formData.date || '',
-            from: formData.from || '',
-            orgStation: formData.orgStation || '',
-            to: formData.to || '',
-            via: vias.filter(v => v.trim()).join('\n'),
-            subject: formData.subj || '',
-            reference: references.filter(r => r.trim()).join('\n'),
-            enclosure: enclosures.filter(e => e.trim()).join('\n'),
-            supplementalInfo: paragraphs.map(p => p.content).join('\n'),
-            supplementalInfoParagraphs: paragraphs,
-            copyTo: copyTos.filter(c => c.trim()).join('\n'),
-            signature: formData.sig || '',
-          };
-
-          const pdfBytes = await generateNavmc10274(aaFormData);
-          const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = getExportFilename(formData, 'pdf');
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
-        } catch (error) {
-          console.error('Error generating AA Form PDF:', error);
-          alert('Failed to generate AA Form PDF. Please check the console for details.');
-        }
-      } else if (formData.documentType === 'page11') {
-        try {
-          const navmcData: Navmc11811Data = {
-            name: formData.name || '',
-            edipi: formData.edipi || '',
-            remarksLeft: formData.remarksLeft || '',
-            remarksRight: formData.remarksRight || ''
-          };
-          const pdfBytes = await generateNavmc11811(navmcData);
-          const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `NAVMC_118(11)_${formData.name?.replace(/\s+/g, '_') || 'Page11'}.pdf`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
-        } catch (error) {
-          console.error('Error generating Page 11 PDF:', error);
-          alert('Failed to generate Page 11 PDF. Please check the console for details.');
-        }
-      } else {
-        // Standard letter PDF generation
-        await downloadPDF(formData, vias, references, enclosures, copyTos, paragraphs, undefined, distList);
-      }
-    } else {
-       try {
-         // Merge Admin Subsections for MCOs/Orders
-         const paragraphsToRender = (formData.documentType === 'mco' || formData.documentType === 'order')
-            ? mergeAdminSubsections(paragraphs, formData.adminSubsections)
-            : paragraphs;
-
-         const blob = await generateDocxBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender, distList);
-         const url = window.URL.createObjectURL(blob);
-         const link = document.createElement('a');
-         link.href = url;
-         link.download = getExportFilename(formData, 'docx');
-         document.body.appendChild(link);
-         link.click();
-         document.body.removeChild(link);
-         window.URL.revokeObjectURL(url);
-       } catch (error) {
-         console.error('Error generating Docx:', error);
-         alert('Failed to generate Word document.');
-       }
-    }
-  };
-
-  // New Handlers for HeaderActions
-  const handleImport = (inputData: any) => {
-    try {
-        // Handle both flat structures (SavedLetter) and nested NLDP structures
-        const data = inputData.data ? inputData.data : inputData;
-        let formDataToMerge = data.formData || data;
-
-        // Map legacy/external fields to internal state
-        if (formDataToMerge.type && !formDataToMerge.documentType) {
-            formDataToMerge.documentType = formDataToMerge.type.toLowerCase();
-        }
-        if (formDataToMerge.subject && !formDataToMerge.subj) {
-            formDataToMerge.subj = formDataToMerge.subject;
-        }
-
-        // Ensure MOA Data structure is complete to prevent crashes
-        if (formDataToMerge.documentType === 'moa' || formDataToMerge.documentType === 'mou') {
-            const defaultMoaData = {
-                activityA: '',
-                activityB: '',
-                seniorSigner: { name: '', title: '', activity: '', date: '' },
-                juniorSigner: { name: '', title: '', activity: '', date: '' },
-                activityAHeader: {},
-                activityBHeader: {}
-            };
-            
-            formDataToMerge.moaData = {
-                ...defaultMoaData,
-                ...(formDataToMerge.moaData || {}),
-                seniorSigner: { ...defaultMoaData.seniorSigner, ...(formDataToMerge.moaData?.seniorSigner || {}) },
-                juniorSigner: { ...defaultMoaData.juniorSigner, ...(formDataToMerge.moaData?.juniorSigner || {}) },
-                activityAHeader: { ...(formDataToMerge.moaData?.activityAHeader || {}) },
-                activityBHeader: { ...(formDataToMerge.moaData?.activityBHeader || {}) }
-            };
-        }
-
-        setFormData(prev => ({
-            ...prev,
-            ...formDataToMerge,
-        }));
-        
-        if (data.paragraphs) setParagraphs(data.paragraphs);
-        if (data.vias) setVias(data.vias);
-        if (data.references) setReferences(data.references);
-        if (data.enclosures) setEnclosures(data.enclosures);
-        if (data.copyTos) setCopyTos(data.copyTos);
-        if (data.distList) setDistList(data.distList);
-
-        // Re-validate known fields
-        if (formDataToMerge.ssic) handleValidateSSIC(formDataToMerge.ssic);
-        if (formDataToMerge.subj) handleValidateSubject(formDataToMerge.subj);
-        if (formDataToMerge.from) handleValidateFromTo(formDataToMerge.from, 'from');
-        if (formDataToMerge.to) handleValidateFromTo(formDataToMerge.to, 'to');
-
-        // Force form remount
-        setFormKey(prev => prev + 1);
-
-        debugUserAction('Import Data', { source: 'File/Template' });
-    } catch (error) {
-        console.error('Import failed', error);
-        alert('Failed to import data structure.');
-    }
-  };
-
-  const handleLoadDraft = (id: string) => {
-      const letter = findLetterById(id, savedLetters);
-      if (letter) {
-          handleImport(letter);
-      }
-  };
-
-  const handleLoadTemplateUrl = async (url: string) => {
-      try {
-          // Prepend basePath to template URL for correct path resolution
-          const basePath = getBasePath();
-          const fullUrl = url.startsWith('/') ? `${basePath}${url}` : url;
-          const res = await fetch(fullUrl);
-          if (!res.ok) throw new Error(`Failed to load template: ${res.statusText}`);
-          const data = await res.json();
-          handleImport(data);
-          debugUserAction('Load Template', { url: fullUrl });
-      } catch (error) {
-          console.error('Template load failed', error);
-          alert('Failed to load template. Please try again.');
-      }
-  };
+  const handleAddSignature = useCallback(() => {
+    handleOpenSignaturePlacement(
+        formData,
+        vias,
+        references,
+        enclosures,
+        copyTos,
+        paragraphs,
+        distList
+    );
+  }, [handleOpenSignaturePlacement, formData, vias, references, enclosures, copyTos, paragraphs, distList]);
 
   const handleClearForm = () => {
       if (window.confirm('Are you sure you want to clear the form? All unsaved progress will be lost.')) {
@@ -1060,7 +559,6 @@ function NavalLetterGeneratorInner() {
             orgStation: '',
             name: '',
             edipi: '',
-            box11: '',
             // AMHS Specific
             amhsMessageType: 'GENADMIN',
             amhsClassification: 'UNCLASSIFIED',
@@ -1087,150 +585,10 @@ function NavalLetterGeneratorInner() {
       }
   };
 
-  const handleCopyAMHS = () => {
-    // Validate before copying
-    const validation = validateAMHSMessage(formData, formData.amhsReferences || []);
-    if (!validation.isValid) {
-      toast({
-        title: "Validation Failed",
-        description: validation.errors.join('. '),
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const message = generateFullMessage(formData, formData.amhsReferences || [], formData.amhsPocs || []);
-    navigator.clipboard.writeText(message);
-    toast({
-      title: "Copied to Clipboard",
-      description: "Message text is ready to paste into AMHS.",
-    });
-  };
-
-  const handleExportAMHS = () => {
-    // Validate before exporting
-    const validation = validateAMHSMessage(formData, formData.amhsReferences || []);
-    if (!validation.isValid) {
-      toast({
-        title: "Validation Failed",
-        description: validation.errors.join('. '),
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const message = generateFullMessage(formData, formData.amhsReferences || [], formData.amhsPocs || []);
-    const blob = new Blob([message], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const msgType = formData.amhsMessageType || 'MSG';
-    a.download = `SEMPERADMIN_${msgType}_${dateStr}.txt`;
-
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleExportNldp = () => {
-    console.log('Exporting NLDP. Has MOA Data:', !!formData.moaData); // Debug log
-    const exportData = {
-      metadata: {
-        packageId: `export_${Date.now()}`,
-        formatVersion: "1.0.0",
-        createdAt: new Date().toISOString(),
-        author: {
-          name: formData.from || "Unknown"
-        },
-        package: {
-          title: formData.subj || "Untitled Package",
-          description: "Exported from Naval Letter Formatter",
-          subject: formData.subj,
-          documentType: formData.documentType
-        }
-      },
-      data: {
-        formData,
-        vias,
-        references,
-        enclosures,
-        copyTos,
-        distList,
-        paragraphs
-      }
-    };
-
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Naval_Package_${formData.ssic || 'Draft'}.nldp`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-    debugUserAction('Export Data', { format: 'nldp' });
-  };
-
-  // Share Link Handler
-  const handleShareLink = async () => {
-    if (!formData.documentType) {
-      toast({
-        title: "No Document",
-        description: "Please select a document type first.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const state: ShareableState = {
-      formData,
-      paragraphs,
-      references,
-      enclosures,
-      vias,
-      copyTos,
-      distList,
-      version: 1
-    };
-
-    const { url, isLong, error } = generateShareableUrl(state);
-
-    if (error && !url) {
-      toast({
-        title: "Failed to Generate Link",
-        description: error,
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const success = await copyToClipboard(url);
-
-    if (success) {
-      toast({
-        title: "Link Copied!",
-        description: isLong
-          ? "Link copied. Note: This link is very long and may not work in all applications."
-          : "Share link copied to clipboard. Anyone with this link can view and edit the document.",
-      });
-    } else {
-      toast({
-        title: "Copy Failed",
-        description: "Could not copy to clipboard. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
   // Load shared state from URL on mount
   useEffect(() => {
     const sharedState = getStateFromUrl();
     if (sharedState) {
-      // Load the shared state into the form
       setFormData(sharedState.formData);
       if (sharedState.paragraphs) setParagraphs(sharedState.paragraphs);
       if (sharedState.references) setReferences(sharedState.references);
@@ -1238,17 +596,11 @@ function NavalLetterGeneratorInner() {
       if (sharedState.vias) setVias(sharedState.vias);
       if (sharedState.copyTos) setCopyTos(sharedState.copyTos);
       if (sharedState.distList) setDistList(sharedState.distList);
-
-      // Clear the share param from URL to keep it clean
       clearShareParam();
-
-      // Show a toast notification
       toast({
         title: "Document Loaded",
         description: "Shared document has been loaded. You can view and edit it.",
       });
-
-      // Force form remount to pick up new values
       setFormKey(prev => prev + 1);
     }
   }, []);
@@ -1275,6 +627,7 @@ function NavalLetterGeneratorInner() {
       onUpdatePreview={handleUpdatePreview}
       onCopyAMHS={handleCopyAMHS}
       onExportAMHS={handleExportAMHS}
+      onAddSignature={handleAddSignature}
       customRightPanel={
         formData.documentType === 'amhs' ? (
           <AMHSPreview
@@ -1314,7 +667,7 @@ function NavalLetterGeneratorInner() {
             <>
               {/* Header Settings (Hidden for AA Form, Page 11, and AMHS) */}
               {/* Header Settings (Hidden for AA Form, Page 11, AMHS, From-To Memo, MOA, MOU, and Staffing Papers) */}
-      {formData.documentType !== 'aa-form' && formData.documentType !== 'page11' && formData.documentType !== 'from-to-memo' && formData.documentType !== 'moa' && formData.documentType !== 'mou' && !['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType) && (
+      {formData.documentType !== 'aa-form' && formData.documentType !== 'page11' && formData.documentType !== 'from-to-memo' && formData.documentType !== 'moa' && formData.documentType !== 'mou' && !['position-paper', 'information-paper'].includes(formData.documentType) && (
         <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6 grid grid-cols-1 gap-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Body Font</label>
@@ -1336,7 +689,7 @@ function NavalLetterGeneratorInner() {
       )}
 
       {/* Unit Info / Letterhead - Hide for Page 11, From-To Memo, MFR, and Staffing Papers */ }
-      {formData.documentType !== 'page11' && formData.documentType !== 'from-to-memo' && formData.documentType !== 'mfr' && !['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType) && (
+      {formData.documentType !== 'page11' && formData.documentType !== 'from-to-memo' && formData.documentType !== 'mfr' && !['position-paper', 'information-paper'].includes(formData.documentType) && (
         <UnitInfoSection
           formData={formData}
           setFormData={setFormData}
@@ -1525,13 +878,13 @@ function NavalLetterGeneratorInner() {
       )}
 
       {/* Legacy Sections wrapped to fit layout */}
-      {/* Hide Via for MOA/MOU and Staffing Papers */}
-      {formData.documentType !== 'moa' && formData.documentType !== 'mou' && !['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType) && (
+      {/* Hide Via for MOA/MOU, Staffing Papers, and Business Letter */}
+      {formData.documentType !== 'moa' && formData.documentType !== 'mou' && formData.documentType !== 'business-letter' && !['position-paper', 'information-paper'].includes(formData.documentType) && (
         <ViaSection vias={vias} setVias={setVias} />
       )}
 
-      {/* Hide References for MOA/MOU and Staffing Papers */}
-      {formData.documentType !== 'moa' && formData.documentType !== 'mou' && !['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType) && (
+      {/* Hide References for MOA/MOU, Staffing Papers, and Business Letter */}
+      {formData.documentType !== 'moa' && formData.documentType !== 'mou' && formData.documentType !== 'business-letter' && !['position-paper', 'information-paper'].includes(formData.documentType) && (
         <ReferencesSection 
           references={references} 
           setReferences={setReferences} 
@@ -1541,12 +894,21 @@ function NavalLetterGeneratorInner() {
       )}
 
       {/* Hide Enclosures for MOA/MOU and Staffing Papers */}
-      {formData.documentType !== 'moa' && formData.documentType !== 'mou' && !['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType) && (
+      {formData.documentType !== 'moa' && formData.documentType !== 'mou' && !['position-paper', 'information-paper'].includes(formData.documentType) && (
         <EnclosuresSection 
           enclosures={enclosures} 
           setEnclosures={setEnclosures} 
           formData={formData}
           setFormData={setFormData}
+        />
+      )}
+
+      {formData.documentType === 'position-paper' && (
+        <DecisionGridSection
+          data={formData.decisionGrid || { recommenders: [], finalDecision: { role: 'CMC', options: ['Approved', 'Disapproved'] } }}
+          mode={formData.decisionMode || 'SINGLE'}
+          onDataChange={(data) => setFormData(prev => ({ ...prev, decisionGrid: data }))}
+          onModeChange={(mode) => setFormData(prev => ({ ...prev, decisionMode: mode }))}
         />
       )}
 
@@ -1579,7 +941,8 @@ function NavalLetterGeneratorInner() {
         />
       )}
 
-      {formData.documentType !== 'page11' && formData.documentType !== 'moa' && formData.documentType !== 'mou' && !['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType) && (
+      {/* Hide Closing Block for MOA/MOU, Staffing Papers, and Business Letter (it uses dynamic fields) */}
+      {formData.documentType !== 'page11' && formData.documentType !== 'moa' && formData.documentType !== 'mou' && formData.documentType !== 'business-letter' && !['position-paper', 'information-paper'].includes(formData.documentType) && (
         <ClosingBlockSection
           formData={formData}
           setFormData={setFormData}
@@ -1590,6 +953,11 @@ function NavalLetterGeneratorInner() {
         />
       )}
 
+      {/* Standalone Copy To Section for Business Letter */}
+      {formData.documentType === 'business-letter' && (
+        <CopyToSection copyTos={copyTos} setCopyTos={setCopyTos} />
+      )}
+
       {(formData.documentType === 'mco' || formData.documentType === 'bulletin') && (
         <DistributionSection 
           distribution={formData.distribution || { type: 'none' }}
@@ -1598,44 +966,26 @@ function NavalLetterGeneratorInner() {
       )}
 
 
-      {/* Digital Signature Section */}
-      <Card className="shadow-sm border-border mb-6 border-l-4 border-l-primary">
-        <CardHeader className="pb-3 bg-secondary text-secondary-foreground rounded-t-lg">
-          <CardTitle className="flex items-center text-lg font-semibold font-headline tracking-wide">
-            <FileSignature className="mr-2 h-5 w-5 text-primary-foreground" />
-            Digital Signature Field
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 pt-4">
-          <p className="text-sm text-muted-foreground">
-            Add a digital signature field to your PDF for CAC/PKI signing in Adobe Reader.
-          </p>
-          <button
-            type="button"
-            onClick={handleOpenSignaturePlacement}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            <FileSignature className="mr-2 h-4 w-4" />
-            Place Signature Field & Download PDF
-          </button>
-          <p className="text-xs text-muted-foreground italic">
-            This will generate a PDF preview where you can draw the signature box location.
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Signature Placement Modal */}
+    </>
+  )}
+    </>
+  )}
       <SignaturePlacementModal
         open={showSignatureModal}
         onClose={handleSignatureCancel}
-        onConfirm={handleSignatureConfirm}
+        onConfirm={(positions) => handleSignatureConfirm(
+            positions,
+            formData,
+            vias,
+            references,
+            enclosures,
+            copyTos,
+            paragraphs,
+            distList
+        )}
         pdfBlob={signaturePdfBlob}
         totalPages={signaturePdfPageCount}
       />
-    </>
-  )}
-    </>
-  )}
     </ModernAppShell>
   );
 }

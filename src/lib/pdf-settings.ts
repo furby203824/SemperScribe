@@ -49,8 +49,8 @@ export const PDF_INDENTS = {
   tabStop2: 52.3,
   
   // SSIC block - PUSHED RIGHT by ~1 inch
-  // Was 324pt (4.5" from content left), now 396pt (5.5" from content left)
-  ssicBlock: 396,
+  // Was 396pt (5.5"), reduced to 324pt (4.5") to prevent date wrapping
+  ssicBlock: 324,
   
   signature: 234,
   refHangingTimes: 54,

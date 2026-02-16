@@ -16,7 +16,8 @@ import {
   AlertTriangle,
   Bold,
   Italic,
-  Underline
+  Underline,
+  Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -133,7 +134,7 @@ export function ParagraphItem({
           <div className="flex items-center space-x-2 flex-wrap gap-y-2">
             <Badge 
               variant="outline" 
-              className="text-xs font-mono bg-secondary/10 text-secondary border-secondary/20 font-bold"
+              className="text-xs font-mono bg-secondary/10 text-primary border-primary/20 font-bold"
             >
               L{paragraph.level} • {citation}
             </Badge>
@@ -253,23 +254,35 @@ export function ParagraphItem({
             <Eraser className="h-3.5 w-3.5" />
           </Button>
 
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onRemove(paragraph.id)}
+            className="flex items-center space-x-1.5 h-8 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            title="Delete paragraph"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+
           <div className="flex-1"></div>
 
           <div className="flex items-center bg-muted/20 rounded-md p-1 gap-1 border border-border">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onAddParagraph('main', paragraph.id)}
-              className="h-7 px-2 text-xs font-medium hover:bg-background hover:shadow-sm hover:text-primary"
-              title="Add Main Paragraph (Next Number)"
-            >
-              <Plus className="h-3.5 w-3.5 mr-1" />
-              Main
-            </Button>
+            {!['information-paper', 'position-paper'].includes(documentType || '') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onAddParagraph('main', paragraph.id)}
+                className="h-7 px-2 text-xs font-medium hover:bg-background hover:shadow-sm hover:text-primary"
+                title="Add Main Paragraph (Next Number)"
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                Main
+              </Button>
+            )}
 
-            <div className="w-px h-4 bg-border mx-0.5"></div>
+            {!['information-paper', 'position-paper'].includes(documentType || '') && <div className="w-px h-4 bg-border mx-0.5"></div>}
 
-            {paragraph.level < 8 && (
+            {paragraph.level < (['information-paper', 'position-paper'].includes(documentType || '') ? 4 : 8) && (
               <Button
                 variant="ghost"
                 size="sm"

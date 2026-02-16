@@ -60,6 +60,7 @@ export default function DynamicFormsDemo() {
                 <DynamicForm 
                     key={selectedType} // Force re-render on type change
                     documentType={currentDocType} 
+                    defaultValues={getTemplateForType(selectedType).defaultData}
                     onSubmit={handleFormSubmit} 
                 />
             </div>

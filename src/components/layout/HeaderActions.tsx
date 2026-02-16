@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from './ThemeToggle';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,6 +66,8 @@ interface HeaderActionsProps {
   // AMHS Actions
   onCopyAMHS?: () => void;
   onExportAMHS?: () => void;
+  // Signature
+  onAddSignature?: () => void;
 }
 
 export function HeaderActions({
@@ -87,7 +90,8 @@ export function HeaderActions({
   onOpenPreviewModal,
   className,
   onCopyAMHS,
-  onExportAMHS
+  onExportAMHS,
+  onAddSignature
 }: HeaderActionsProps) {
   const { 
     globalTemplates, 
@@ -97,8 +101,8 @@ export function HeaderActions({
   } = useTemplates({ documentType, currentUnitCode, currentUnitName });
   
   // Helper to merge classes for buttons
-  const buttonClass = (baseClass: string) => cn(baseClass, className ? "text-primary-foreground hover:text-primary-foreground hover:bg-white/10" : "text-muted-foreground hover:text-foreground");
-  const iconClass = className ? "text-primary-foreground/80" : "text-muted-foreground";
+  const buttonClass = (baseClass: string) => cn(baseClass, className ? "text-secondary-foreground hover:text-primary hover:bg-white/10" : "text-muted-foreground hover:text-foreground");
+  const iconClass = className ? "text-secondary-foreground/80" : "text-muted-foreground";
 
   const [isTemplateOpen, setIsTemplateOpen] = React.useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -179,6 +183,8 @@ export function HeaderActions({
 
   return (
     <div className="flex items-center space-x-2">
+      <ThemeToggle />
+      
       {/* Templates Dialog */}
       <Dialog open={isTemplateOpen} onOpenChange={setIsTemplateOpen}>
         <DialogTrigger asChild>
@@ -302,6 +308,8 @@ export function HeaderActions({
         </DropdownMenuContent>
       </DropdownMenu>
 
+      <div className="h-4 w-px bg-border hidden md:block mx-2"></div>
+
       {/* Export/Generate Buttons */}
       <div className="flex items-center space-x-1 sm:space-x-2">
         {/* Mobile Preview Button - opens modal (shows below xl breakpoint) */}
@@ -313,7 +321,7 @@ export function HeaderActions({
             className={cn(
               "xl:hidden flex",
               className
-                ? "bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-white/10 hover:text-primary-foreground"
+                ? "bg-transparent text-secondary-foreground border-secondary-foreground/30 hover:bg-white/10 hover:text-primary"
                 : "text-muted-foreground hover:text-foreground"
             )}
             title="Show Preview"
@@ -348,12 +356,12 @@ export function HeaderActions({
               className={cn(
                 "hidden sm:flex",
                 className
-                  ? "bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-white/10 hover:text-primary-foreground"
+                  ? "bg-transparent text-secondary-foreground border-secondary-foreground/30 hover:bg-white/10 hover:text-primary"
                   : ""
               )}
               onClick={onCopyAMHS}
             >
-              <FileText className={cn("mr-2 w-4 h-4", className ? "text-primary-foreground" : "text-primary")} />
+              <FileText className={cn("mr-2 w-4 h-4", className ? "text-secondary-foreground" : "text-primary")} />
               Copy
             </Button>
             <Button
@@ -367,32 +375,37 @@ export function HeaderActions({
           </>
         ) : (
           <>
-            {documentType !== 'page11' && (
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "hidden sm:flex",
-                  className
-                    ? "bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-white/10 hover:text-primary-foreground"
-                    : ""
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  className="text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm shadow-primary/20 border border-primary-foreground/10"
+                  disabled={isGenerating}
+                >
+                  <Download className="mr-2 w-4 h-4" />
+                  {isGenerating ? 'Generating...' : 'Export'}
+                  <ChevronDown className="ml-2 w-4 h-4 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 bg-card border-border text-card-foreground">
+                <DropdownMenuItem onClick={onGeneratePdf} className="cursor-pointer focus:bg-accent focus:text-accent-foreground">
+                  <Download className="w-4 h-4 mr-2" />
+                  PDF Document (.pdf)
+                </DropdownMenuItem>
+                {onAddSignature && (
+                  <DropdownMenuItem onClick={onAddSignature} className="cursor-pointer focus:bg-accent focus:text-accent-foreground">
+                    <FileText className="w-4 h-4 mr-2" />
+                    PDF with Signature Fields
+                  </DropdownMenuItem>
                 )}
-                onClick={onExportDocx}
-                disabled={isGenerating}
-              >
-                <FileText className={cn("mr-2 w-4 h-4", className ? "text-primary-foreground" : "text-primary")} />
-                Export .docx
-              </Button>
-            )}
-            <Button
-              size="sm"
-              className="text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm shadow-primary/20 border border-primary-foreground/10"
-              onClick={onGeneratePdf}
-              disabled={isGenerating}
-            >
-              <Download className="mr-2 w-4 h-4" />
-              {isGenerating ? 'Generating...' : 'PDF'}
-            </Button>
+                {documentType !== 'page11' && (
+                  <DropdownMenuItem onClick={onExportDocx} className="cursor-pointer focus:bg-accent focus:text-accent-foreground">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Word Document (.docx)
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         )}
       </div>

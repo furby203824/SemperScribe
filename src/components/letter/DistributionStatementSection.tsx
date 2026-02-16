@@ -19,8 +19,8 @@ export function DistributionStatementSection({
   distribution,
   onUpdateDistribution
 }: DistributionStatementSectionProps) {
-  const statementCode = (distribution?.statementCode || '') as DistributionStatementCode;
-  const statement = statementCode && statementCode !== '' ? DISTRIBUTION_STATEMENTS[statementCode as StatementKey] : null;
+  const statementCode = distribution?.statementCode || '';
+  const statement = statementCode ? DISTRIBUTION_STATEMENTS[statementCode as StatementKey] : null;
 
   const updateField = (field: keyof DistributionData, value: any) => {
     onUpdateDistribution({ ...distribution, [field]: value });
@@ -39,9 +39,10 @@ export function DistributionStatementSection({
     });
   };
 
-  const needsReason = statement?.fillInFields?.includes('reason');
-  const needsDate = statement?.fillInFields?.includes('dateOfDetermination');
-  const needsAuthority = statement?.fillInFields?.includes('originatingCommand');
+  const fillInFields = (statement as any)?.fillInFields as string[] | undefined;
+  const needsReason = fillInFields?.includes('reason');
+  const needsDate = fillInFields?.includes('dateOfDetermination');
+  const needsAuthority = fillInFields?.includes('originatingCommand');
 
   // Build the formatted statement text with fill-ins
   const getFormattedStatement = () => {
@@ -69,7 +70,7 @@ export function DistributionStatementSection({
     if (!statement) return true;
     if (!statement.requiresFillIns) return true;
 
-    const fields = statement.fillInFields || [];
+    const fields = (statement as any).fillInFields as string[] || [];
     if (fields.includes('reason') && !distribution.statementReason) return false;
     if (fields.includes('dateOfDetermination') && !distribution.statementDate) return false;
     if (fields.includes('originatingCommand') && !distribution.statementAuthority) return false;

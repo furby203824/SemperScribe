@@ -5,6 +5,59 @@
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /**
+ * Formats a date string to Business Letter format (Month D, YYYY)
+ * e.g., "January 5, 2015"
+ */
+export function formatBusinessDate(dateString: string): string {
+  if (!dateString) return '';
+
+  const FULL_MONTHS = [
+    'January', 'February', 'March', 'April', 'May', 'June', 
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  let date: Date | null = null;
+
+  // Handle "today" or "now"
+  if (dateString.toLowerCase() === 'today' || dateString.toLowerCase() === 'now') {
+    date = new Date();
+  } else {
+    // Try to parse standard Naval format "5 Jan 15" or "5 Jan 2015"
+    const navalMatch = dateString.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{2,4})$/);
+    if (navalMatch) {
+      const day = parseInt(navalMatch[1]);
+      const monthStr = navalMatch[2];
+      const yearStr = navalMatch[3];
+      
+      const monthIndex = MONTHS.findIndex(m => m.toLowerCase() === monthStr.toLowerCase());
+      const year = yearStr.length === 2 ? 2000 + parseInt(yearStr) : parseInt(yearStr);
+      
+      if (monthIndex !== -1) {
+        date = new Date(year, monthIndex, day);
+      }
+    } else if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+       // Handle YYYY-MM-DD explicitly as local time to avoid timezone shifts
+       const [y, m, d] = dateString.split('-').map(Number);
+       date = new Date(y, m - 1, d);
+    }
+    
+    // Fallback to standard Date parsing
+    if (!date) {
+      const parsed = new Date(dateString);
+      if (!isNaN(parsed.getTime())) {
+        date = parsed;
+      }
+    }
+  }
+
+  if (date) {
+    return `${FULL_MONTHS[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  }
+
+  return dateString; // Return original if parsing fails
+}
+
+/**
  * Converts various date formats to naval format (DD MMM YY)
  * Supports: Naval format, ISO dates, MM/DD/YYYY, YYYYMMDD, "today", "now"
  *

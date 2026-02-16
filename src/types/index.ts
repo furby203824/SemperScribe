@@ -43,7 +43,7 @@ export interface AdminSubsections {
 }
 
 export interface FormData {
-  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs' | 'multiple-address' | 'mfr' | 'from-to-memo' | 'letterhead-memo' | 'moa' | 'mou' | 'point-paper' | 'talking-paper' | 'briefing-paper' | 'position-paper' | 'trip-report' | '';
+  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs' | 'multiple-address' | 'mfr' | 'from-to-memo' | 'letterhead-memo' | 'moa' | 'mou' | 'position-paper' | 'information-paper' | 'business-letter' | '';
   endorsementLevel: EndorsementLevel;
   basicLetterReference: string;
   basicLetterSsic?: string;
@@ -73,6 +73,7 @@ export interface FormData {
   actionNo?: string;
   orgStation?: string; // Can default to line1 + line2 + line3 if not set
   // MCO/Bulletin specific fields
+  orderPrefix?: string;  // Directive prefix (e.g., "MCO", "BnO", "DivO")
   directiveTitle?: string;  // Full directive title (e.g., "MARINE CORPS ORDER 5210.11F")
   cancellationDate?: string;
   cancellationType?: 'contingent' | 'fixed';
@@ -103,6 +104,31 @@ export interface FormData {
   drafterRank?: string;
   drafterOfficeCode?: string;
   drafterPhone?: string;
+  drafterService?: string;
+  drafterAgency?: string;
+  approverName?: string;
+  approverRank?: string;
+  approverOfficeCode?: string;
+  approverPhone?: string;
+
+  // Decision Grid
+  decisionMode?: 'SINGLE' | 'MULTIPLE_CHOICE' | 'MULTIPLE_RECS';
+  decisionGrid?: {
+    recommenders: Array<{
+      id: string;
+      role: string; // e.g., "Dir Ops"
+      options: string[]; // e.g., ["Approve", "Disapprove"] or ["COA 1", "COA 2"]
+    }>;
+    finalDecision: {
+      role: string; // e.g., "CMC"
+      options: string[]; // e.g., ["Approved", "Disapproved"]
+    };
+    coas?: string[]; // For MULTIPLE_CHOICE
+    recommendationItems?: Array<{ // For MULTIPLE_RECS
+      id: string;
+      text: string;
+    }>;
+  };
 
   // MOA/MOU specific fields
   moaData?: {
@@ -134,6 +160,21 @@ export interface FormData {
       date?: string;
     };
   };
+
+  // Business Letter specific fields
+  recipientName?: string;
+  recipientTitle?: string;
+  businessName?: string;
+  recipientAddress?: string;
+  attentionLine?: string;
+  salutation?: string;
+  complimentaryClose?: string;
+  signerRank?: string;
+  signerTitle?: string;
+  // Business Letter Toggles
+  isWindowEnvelope?: boolean;
+  isShortLetter?: boolean;
+  isVipMode?: boolean;
 }
 
 export interface SavedLetter extends FormData {
@@ -160,4 +201,17 @@ export interface ValidationState {
   subj: { isValid: boolean; message: string; };
   from: { isValid: boolean; message: string; };
   to: { isValid: boolean; message: string; };
+}
+
+export interface SignaturePosition {
+  id: string;
+  page: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  // Metadata
+  signerName?: string;
+  reason?: string;
+  contactInfo?: string;
 }

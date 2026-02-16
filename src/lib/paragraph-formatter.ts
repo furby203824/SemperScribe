@@ -126,10 +126,49 @@ export function createFormattedParagraph(
   color: string = "000000",
   isDirective: boolean = false,
   shouldBoldTitle: boolean = true,
-  shouldUppercaseTitle: boolean = true
+  shouldUppercaseTitle: boolean = true,
+  isBusinessLetter: boolean = false,
+  isShortLetter: boolean = false
 ): Paragraph {
     const { content, level } = paragraph;
     const { citation } = generateCitation(paragraph, index, allParagraphs);
+    
+    // Helper to process title
+    const processTitle = (title: string) => {
+        return shouldUppercaseTitle ? title.toUpperCase() : title;
+    };
+    
+    // BUSINESS LETTER MODE
+    if (isBusinessLetter) {
+       // Level 1: No citation, 0.5" first line indent (or 1" for Short Letter)
+       if (level === 1) {
+           const children: TextRun[] = [];
+           if (paragraph.title) {
+                const suffix = content ? '.' : '';
+                children.push(new TextRun({ 
+                    text: processTitle(paragraph.title) + suffix, 
+                    font: font, 
+                    size: 24, 
+                    bold: shouldBoldTitle, 
+                    color 
+                }));
+                if (content) children.push(new TextRun({ text: '\u00A0\u00A0', font: font, size: 24, color }));
+           }
+           children.push(...parseContentToRuns(content, font, 24, color));
+           
+           // Use 0.25" (360 twips) for standard Business Letter indent to match "8 spaces" policy
+           const indentSize = isShortLetter ? 1440 : 360; 
+           
+           return new Paragraph({
+               children,
+               alignment: AlignmentType.LEFT,
+               indent: { firstLine: indentSize }, 
+               spacing: isShortLetter ? { line: 480 } : undefined // Double space for short letter
+           });
+       }
+       
+       // Level 2+: Standard Naval Letter logic
+    }
     
     // Directive (Block Style) logic:
     // Level 1: Citation at 0", Text at 1.0" (1440 twips)
@@ -139,6 +178,12 @@ export function createFormattedParagraph(
     // Naval Letter logic (SECNAV M-5216.5):
     // Defined in NAVAL_TAB_STOPS (cascading indent)
     const spec = NAVAL_TAB_STOPS[level as keyof typeof NAVAL_TAB_STOPS];
+    
+    // Calculate hanging indent to ensure wrapped text aligns with the start of the first line text
+    const indentConfig = {
+        left: spec.text,
+        hanging: spec.text - spec.citation
+    };
     
     const isCourier = font === "Courier New";
 
@@ -168,11 +213,6 @@ export function createFormattedParagraph(
         citationRuns = [new TextRun({ text: citation, font: font, size: 24, color })];
     }
     
-    // Helper to process title
-    const processTitle = (title: string) => {
-        return shouldUppercaseTitle ? title.toUpperCase() : title;
-    };
-    
     // For Courier New, use non-breaking spaces instead of tabs
     if (isCourier) {
         // Calculate leading spaces based on level using non-breaking spaces
@@ -189,16 +229,31 @@ export function createFormattedParagraph(
         ];
 
         if (paragraph.title) {
-            // Only add period if content exists (standard naval letter)
-            const suffix = content ? '.' : '';
-            children.push(new TextRun({ text: processTitle(paragraph.title) + suffix, font: font, size: 24, bold: shouldBoldTitle, color }));
-            if (content) children.push(new TextRun({ text: '\u00A0\u00A0', font: font, size: 24, color }));
-        }
+        // Only add period if content exists (standard naval letter)
+        const suffix = content ? '.' : '';
+        // Removed bold: shouldBoldTitle from children.push
+        // Removed underline: type: UnderlineType.SINGLE from TextRun if present (it wasn't explicitly here, but we ensure clean style)
+        // User requested removal of underlining from main paragraphs.
+        // Standard naval letter usually underlines titles (e.g. Purpose.) but user wants it gone.
+        // We will assume `shouldBoldTitle` handles bolding (if any), but we ensure NO underline.
+        
+        children.push(new TextRun({ 
+            text: processTitle(paragraph.title) + suffix, 
+            font: font, 
+            size: 24, 
+            bold: shouldBoldTitle, 
+            color,
+            underline: undefined // Explicitly undefined to ensure no underline
+        }));
+        if (content) children.push(new TextRun({ text: '\u00A0\u00A0', font: font, size: 24, color }));
+    }
         children.push(...parseContentToRuns(content, font, 24, color));
 
         return new Paragraph({
             children,
             alignment: AlignmentType.LEFT,
+            // Courier might need manual hanging indent if desired, but spaces approach is fragile with wrapping.
+            // For now, leaving Courier as is (flush left wrap) unless requested, as it uses spaces for visual indent.
         });
     }
     
@@ -219,11 +274,19 @@ export function createFormattedParagraph(
         }
 
         if (paragraph.title) {
-            // Only add period if content exists (standard naval letter)
-            const suffix = content ? '.' : '';
-            children.push(new TextRun({ text: processTitle(paragraph.title) + suffix, font: font, size: 24, bold: shouldBoldTitle, color }));
-            if (content) children.push(new TextRun({ text: '\u00A0\u00A0', font: font, size: 24, color }));
-        }
+        // Only add period if content exists (standard naval letter)
+        const suffix = content ? '.' : '';
+        
+        children.push(new TextRun({ 
+            text: processTitle(paragraph.title) + suffix, 
+            font: font, 
+            size: 24, 
+            bold: shouldBoldTitle, 
+            color,
+            underline: undefined
+        }));
+        if (content) children.push(new TextRun({ text: '\u00A0\u00A0', font: font, size: 24, color }));
+    }
         children.push(...parseContentToRuns(content, font, 24, color));
 
         return new Paragraph({
@@ -256,20 +319,21 @@ export function createFormattedParagraph(
             tabStops: [
                 { type: TabStopType.LEFT, position: spec.text },
             ],
-            alignment: AlignmentType.JUSTIFIED,
-            // Legacy: No hanging indent for body paragraphs
+            alignment: AlignmentType.LEFT,
+            indent: indentConfig, // Added hanging indent
         });
     }
 
     // Levels 2-8
     const children = [
-        new TextRun({ text: '\t', font: font, size: 24, color }), // First tab to indent citation
+        // REMOVED leading tab because indent: { left: ..., hanging: ... } already places the cursor at the citation start position.
+        // Adding a tab here would push the citation to the NEXT tab stop (the text position), which is incorrect.
         ...citationRuns,
-        new TextRun({ text: '\t', font: font, size: 24, color }), // Second tab to start text
+        new TextRun({ text: '\t', font: font, size: 24, color }), // Tab to start text
     ];
 
     if (paragraph.title) {
-        children.push(new TextRun({ text: paragraph.title.toUpperCase() + '.', font: font, size: 24, color }));
+        children.push(new TextRun({ text: processTitle(paragraph.title) + '.', font: font, size: 24, bold: shouldBoldTitle, color }));
         if (content) children.push(new TextRun({ text: '\u00A0\u00A0', font: font, size: 24, color }));
     }
     children.push(...parseContentToRuns(content, font, 24, color));
@@ -280,7 +344,7 @@ export function createFormattedParagraph(
             { type: TabStopType.LEFT, position: spec.citation },
             { type: TabStopType.LEFT, position: spec.text },
         ],
-        alignment: AlignmentType.JUSTIFIED,
-        // Legacy: No hanging indent for body paragraphs
+        alignment: AlignmentType.LEFT,
+        indent: indentConfig, // Added hanging indent
     });
 }

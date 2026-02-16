@@ -67,7 +67,6 @@ export const BasicLetterSchema = z.object({
   to: z.string().min(1, "To line is required"),
   subj: z.string().min(1, "Subject is required").transform(val => val.toUpperCase()),
   documentType: z.literal('basic'),
-  policyMode: z.boolean().optional(),
 });
 
 export const BasicLetterDefinition: DocumentTypeDefinition = {
@@ -104,13 +103,6 @@ export const BasicLetterDefinition: DocumentTypeDefinition = {
           placeholder: 'DD Mmm YY',
           required: true,
           className: 'md:col-span-1'
-        },
-        {
-          name: 'policyMode',
-          label: 'Policy/Instruction Mode',
-          type: 'checkbox',
-          description: 'Pre-fill with standard policy paragraphs',
-          className: 'md:col-span-1 flex items-center mt-8'
         },
         {
           name: 'from',
@@ -686,18 +678,45 @@ export const MOUDefinition: DocumentTypeDefinition = {
   schema: MOUSchema,
 };
 
-// 13. Staffing Papers (Point, Talking, Briefing, Position, Trip Report)
+// 13. Staffing Papers (Position, Information Paper)
 export const StaffingPaperSchema = z.object({
-  documentType: z.enum(['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report']),
+  documentType: z.enum(['position-paper', 'information-paper']),
   subj: z.string().min(1, "Subject is required").transform(val => val.toUpperCase()),
   date: z.string().min(1, "Date is required"),
   drafterName: z.string().min(1, "Drafter Name is required"),
   drafterRank: z.string().min(1, "Drafter Rank is required"),
   drafterOfficeCode: z.string().min(1, "Office Code is required"),
   drafterPhone: z.string().min(1, "Phone Extension is required"),
+  drafterService: z.string().optional(),
+  drafterAgency: z.string().optional(),
+  classification: z.string().optional(),
 });
 
 const StaffingPaperFields: FieldDefinition[] = [
+  // Decision Grid Fields (Position/Decision Paper)
+  {
+    name: 'decisionGrid',
+    label: 'Decision Grid',
+    type: 'decision-grid' as ControlType,
+    required: false,
+    className: 'col-span-full',
+    description: 'Routing and decision options for Position/Decision Papers'
+  },
+  {
+    name: 'classification',
+    label: 'Classification',
+    type: 'select',
+    options: [
+      { label: 'UNCLASSIFIED', value: 'UNCLASSIFIED' },
+      { label: 'CUI', value: 'CUI' },
+      { label: 'CONFIDENTIAL', value: 'CONFIDENTIAL' },
+      { label: 'SECRET', value: 'SECRET' },
+      { label: 'TOP SECRET', value: 'TOP SECRET' },
+    ],
+    defaultValue: 'UNCLASSIFIED',
+    className: 'md:col-span-1',
+    description: 'Required for Information Paper'
+  },
   {
     name: 'subj',
     label: 'Subject',
@@ -733,8 +752,26 @@ const StaffingPaperFooterFields: FieldDefinition[] = [
     className: 'md:col-span-1'
   },
   {
+    name: 'drafterService',
+    label: 'Service/Branch',
+    type: 'text',
+    placeholder: 'USMC',
+    className: 'md:col-span-1',
+    description: 'Required for Information Paper',
+    required: true
+  },
+  {
+    name: 'drafterAgency',
+    label: 'Agency',
+    type: 'text',
+    placeholder: 'HQMC',
+    className: 'md:col-span-1',
+    description: 'Required for Information Paper',
+    required: true
+  },
+  {
     name: 'drafterOfficeCode',
-    label: 'Office Code',
+    label: 'Office Code/Section',
     type: 'text',
     placeholder: 'G-1',
     required: true,
@@ -747,48 +784,45 @@ const StaffingPaperFooterFields: FieldDefinition[] = [
     placeholder: '555-1234',
     required: true,
     className: 'md:col-span-1'
+  },
+  // Approver Fields (Position Paper)
+  {
+    name: 'approverName',
+    label: 'Approver Name',
+    type: 'text',
+    placeholder: 'Col I. M. Boss',
+    className: 'md:col-span-1',
+    description: 'Required for Position/Decision Paper'
+  },
+  {
+    name: 'approverRank',
+    label: 'Approver Rank',
+    type: 'text',
+    placeholder: 'Col',
+    className: 'md:col-span-1',
+    description: 'Required for Position/Decision Paper'
+  },
+  {
+    name: 'approverOfficeCode',
+    label: 'Approver Office',
+    type: 'text',
+    placeholder: 'G-3',
+    className: 'md:col-span-1',
+    description: 'Required for Position/Decision Paper'
+  },
+  {
+    name: 'approverPhone',
+    label: 'Approver Phone',
+    type: 'text',
+    placeholder: '555-5678',
+    className: 'md:col-span-1',
+    description: 'Required for Position/Decision Paper'
   }
 ];
 
-export const PointPaperDefinition: DocumentTypeDefinition = {
-  id: 'point-paper',
-  name: 'Point Paper',
-  description: 'Concise, bulleted paper on a single issue (1-Page Limit).',
-  icon: '⚡',
-  schema: StaffingPaperSchema,
-  sections: [
-    { id: 'header', title: 'Paper Details', fields: StaffingPaperFields },
-    { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
-  ]
-};
-
-export const TalkingPaperDefinition: DocumentTypeDefinition = {
-  id: 'talking-paper',
-  name: 'Talking Paper',
-  description: 'Narrative outline for speaking engagements.',
-  icon: '🗣️',
-  schema: StaffingPaperSchema,
-  sections: [
-    { id: 'header', title: 'Paper Details', fields: StaffingPaperFields },
-    { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
-  ]
-};
-
-export const BriefingPaperDefinition: DocumentTypeDefinition = {
-  id: 'briefing-paper',
-  name: 'Briefing Paper',
-  description: 'Detailed information paper.',
-  icon: '📊',
-  schema: StaffingPaperSchema,
-  sections: [
-    { id: 'header', title: 'Paper Details', fields: StaffingPaperFields },
-    { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
-  ]
-};
-
 export const PositionPaperDefinition: DocumentTypeDefinition = {
   id: 'position-paper',
-  name: 'Position Paper',
+  name: 'Position/Decision Paper',
   description: 'Advocates a specific position or solution.',
   icon: '📍',
   schema: StaffingPaperSchema,
@@ -798,15 +832,213 @@ export const PositionPaperDefinition: DocumentTypeDefinition = {
   ]
 };
 
-export const TripReportDefinition: DocumentTypeDefinition = {
-  id: 'trip-report',
-  name: 'Trip Report',
-  description: 'Report on official travel.',
-  icon: '✈️',
+export const InformationPaperDefinition: DocumentTypeDefinition = {
+  id: 'information-paper',
+  name: 'Information Paper',
+  description: 'Provides factual information in concise terms.',
+  icon: 'ℹ️',
   schema: StaffingPaperSchema,
   sections: [
-    { id: 'header', title: 'Report Details', fields: StaffingPaperFields },
+    { id: 'header', title: 'Paper Details', fields: StaffingPaperFields },
     { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
+  ]
+};
+
+// 14. Business Letter
+export const BusinessLetterSchema = z.object({
+  documentType: z.literal('business-letter'),
+  ssic: z.string().min(4, "SSIC must be at least 4 digits").max(5),
+  originatorCode: z.string().min(1, "Originator Code is required"),
+  date: z.string().min(1, "Date is required"),
+  recipientName: z.string().min(1, "Recipient Name is required"),
+  recipientTitle: z.string().optional(),
+  businessName: z.string().optional(),
+  recipientAddress: z.string().min(1, "Recipient Address is required"),
+  attentionLine: z.string().optional(),
+  salutation: z.string().min(1, "Salutation is required").transform(val => {
+    const trimmed = val.trim();
+    if (trimmed && !trimmed.endsWith(':')) {
+      return `${trimmed}:`;
+    }
+    return trimmed;
+  }),
+  subj: z.string().optional(), // Optional, unlike basic letter
+  complimentaryClose: z.string().default("Sincerely,"),
+  sig: z.string().min(1, "Signer Name is required"),
+  signerRank: z.string().optional(),
+  signerTitle: z.string().optional(),
+  isWindowEnvelope: z.boolean().optional(),
+  isShortLetter: z.boolean().optional(),
+  isVipMode: z.boolean().optional(),
+});
+
+export const BusinessLetterDefinition: DocumentTypeDefinition = {
+  id: 'business-letter',
+  name: 'Business Letter',
+  description: 'Correspondence with non-DoD entities or personal approach.',
+  icon: '💼',
+  schema: BusinessLetterSchema,
+  sections: [
+    {
+      id: 'header',
+      title: 'Identification',
+      fields: [
+        {
+          name: 'ssic',
+          label: 'SSIC',
+          type: 'combobox',
+          placeholder: 'Search SSIC...',
+          required: true,
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'originatorCode',
+          label: 'Originator Code',
+          type: 'text',
+          placeholder: 'e.g., G-1',
+          required: true,
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'date',
+          label: 'Date',
+          type: 'date',
+          placeholder: 'DD Mmm YY',
+          required: true,
+          className: 'md:col-span-1'
+        }
+      ]
+    },
+    {
+      id: 'formatting',
+      title: 'Formatting Options',
+      fields: [
+        {
+          name: 'isWindowEnvelope',
+          label: 'Window Envelope',
+          type: 'checkbox',
+          description: 'Aligns address block for #10 window envelopes',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'isShortLetter',
+          label: 'Short Letter (<8 lines)',
+          type: 'checkbox',
+          description: 'Applies double spacing and wider margins',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'isVipMode',
+          label: 'VIP Mode',
+          type: 'checkbox',
+          description: 'Changes close to "Very respectfully,"',
+          className: 'md:col-span-1'
+        }
+      ]
+    },
+    {
+      id: 'recipient',
+      title: 'Inside Address',
+      fields: [
+        {
+          name: 'recipientName',
+          label: 'Recipient Name',
+          type: 'text',
+          placeholder: 'Mr. John Doe',
+          required: true,
+          className: 'col-span-full'
+        },
+        {
+          name: 'recipientTitle',
+          label: 'Title',
+          type: 'text',
+          placeholder: 'Vice President',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'businessName',
+          label: 'Business Name',
+          type: 'text',
+          placeholder: 'Acme Corp',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'recipientAddress',
+          label: 'Address',
+          type: 'textarea',
+          placeholder: '123 Main St\nCity, State Zip',
+          required: true,
+          className: 'col-span-full',
+          rows: 3
+        }
+      ]
+    },
+    {
+      id: 'details',
+      title: 'Letter Details',
+      fields: [
+        {
+          name: 'attentionLine',
+          label: 'Attention Line (Optional)',
+          type: 'text',
+          placeholder: 'Attention: Human Resources',
+          className: 'col-span-full'
+        },
+        {
+          name: 'salutation',
+          label: 'Salutation',
+          type: 'text',
+          placeholder: 'Dear Mr. Doe:',
+          required: true,
+          className: 'col-span-full'
+        },
+        {
+          name: 'subj',
+          label: 'Subject Line (Optional)',
+          type: 'text',
+          placeholder: 'SUBJECT LINE (ALL CAPS)',
+          className: 'col-span-full'
+        },
+        {
+          name: 'complimentaryClose',
+          label: 'Complimentary Close',
+          type: 'text',
+          defaultValue: 'Sincerely,',
+          required: true,
+          className: 'md:col-span-1'
+        }
+      ]
+    },
+    {
+      id: 'signature',
+      title: 'Signature Block',
+      fields: [
+        {
+          name: 'sig',
+          label: 'Signer Name',
+          type: 'text',
+          placeholder: 'I. M. MARINE',
+          required: true,
+          className: 'md:col-span-1',
+          description: 'ALL CAPS'
+        },
+        {
+          name: 'signerRank',
+          label: 'Military Grade',
+          type: 'text',
+          placeholder: 'Colonel',
+          className: 'md:col-span-1',
+          description: 'Spelled out (e.g. Colonel)'
+        },
+        {
+          name: 'signerTitle',
+          label: 'Functional Title',
+          type: 'text',
+          placeholder: 'Director, Personnel',
+          className: 'col-span-full'
+        }
+      ]
+    }
   ]
 };
 
@@ -826,8 +1058,7 @@ export const DOCUMENT_TYPES: Record<string, DocumentTypeDefinition> = {
   moa: MOADefinition,
   mou: MOUDefinition,
 
-  'talking-paper': TalkingPaperDefinition,
-  'briefing-paper': BriefingPaperDefinition,
   'position-paper': PositionPaperDefinition,
-  'trip-report': TripReportDefinition
+  'information-paper': InformationPaperDefinition,
+  'business-letter': BusinessLetterDefinition,
 };

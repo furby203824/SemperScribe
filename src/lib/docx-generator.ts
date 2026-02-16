@@ -17,7 +17,8 @@ import {
   TableRow,
   TableCell,
   WidthType,
-  BorderStyle
+  BorderStyle,
+  VerticalAlign
 } from "docx";
 import { FormData, ParagraphData } from "@/types";
 import { getDoDSealBufferSync } from "./dod-seal";
@@ -31,8 +32,8 @@ import {
   getEnclSpacing, 
   getCopyToSpacing 
 } from "./naval-format-utils";
-import { createFormattedParagraph } from "./paragraph-formatter";
-import { parseAndFormatDate } from "./date-utils";
+import { createFormattedParagraph, generateCitation } from "./paragraph-formatter";
+import { parseAndFormatDate, formatBusinessDate } from "./date-utils";
 import { DISTRIBUTION_STATEMENTS } from "@/lib/constants";
 import { DOC_SETTINGS, TAB_STOPS, INDENTS } from "./doc-settings";
 
@@ -73,10 +74,12 @@ export async function generateDocxBlob(
   const headerColor = getHeaderColor(formData.accentColor);
   const sealBuffer = await getDoDSealBufferSync(formData.headerType as 'USMC' | 'DON');
   const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin';
-  const isStaffingPaper = ['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType);
+  const isStaffingPaper = ['position-paper', 'information-paper'].includes(formData.documentType);
+  const isPositionPaper = formData.documentType === 'position-paper';
   const isFromToMemo = formData.documentType === 'from-to-memo';
   const isMfr = formData.documentType === 'mfr';
   const isMoaOrMou = formData.documentType === 'moa' || formData.documentType === 'mou';
+  const isBusinessLetter = formData.documentType === 'business-letter';
   
   const moaData = formData.moaData || {
     activityA: '',
@@ -135,11 +138,15 @@ export async function generateDocxBlob(
 
   // --- SSIC Block ---
   const ssicParagraphs: (Paragraph | Table)[] = [];
+  
+  const formattedDate = isBusinessLetter 
+    ? formatBusinessDate(formData.date || '') 
+    : parseAndFormatDate(formData.date || '');
 
   if (isFromToMemo || isMfr) {
        // From-To Memo & MFR: Date Flush Right, Top of page (simulated 1 inch margin)
        ssicParagraphs.push(new Paragraph({
-          children: [new TextRun({ text: formData.date || 'Date Placeholder', font, size: FONT_SIZE_BODY })],
+          children: [new TextRun({ text: formattedDate || 'Date Placeholder', font, size: FONT_SIZE_BODY })],
           alignment: AlignmentType.RIGHT,
           spacing: { before: 1440, after: 0 } // 1 inch top spacing
        }));
@@ -160,16 +167,18 @@ export async function generateDocxBlob(
       }
 
       if (formData.originatorCode) ssicBlock.push(formData.originatorCode);
-      ssicBlock.push(formData.date || 'Date Placeholder');
+      ssicBlock.push(formattedDate || 'Date Placeholder');
 
       // Standard Stacked SSIC Block (same for all document types)
-      const ssicPars = ssicBlock.map(line => new Paragraph({
-        children: [new TextRun({ text: line, font, size: FONT_SIZE_BODY })],
-        alignment: AlignmentType.LEFT,
-        indent: { left: 7920 }, // 5.5 inches
-        spacing: { after: 0 }
-      }));
-      ssicParagraphs.push(...ssicPars);
+      // Uses standard 4.5" indent (6480 twips) per doc-settings.ts
+      ssicBlock.forEach(line => {
+          ssicParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: line, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.LEFT,
+              indent: { left: INDENTS.date }, // 6480 twips (4.5")
+              spacing: { after: 0 }
+          }));
+      });
   }
 
   // --- MOA/MOU Header ---
@@ -314,12 +323,13 @@ export async function generateDocxBlob(
   const staffingHeaderParagraphs: Paragraph[] = [];
   if (isStaffingPaper) {
       const title = formData.documentType.split('-').map(w => w.toUpperCase()).join(' ');
+      const isPositionPaper = formData.documentType === 'position-paper';
       
       staffingHeaderParagraphs.push(new Paragraph({
           children: [new TextRun({ 
               text: title, 
               font, 
-              bold: true, 
+              bold: !isPositionPaper,
               size: FONT_SIZE_BODY,
               underline: { type: UnderlineType.SINGLE }
           })],
@@ -329,16 +339,145 @@ export async function generateDocxBlob(
       
       // Removed "ON" paragraph to match MCO 5216.20A and PDF preview
       
-      staffingHeaderParagraphs.push(new Paragraph({
-          children: [new TextRun({ 
-            text: `Subj: ${formData.subj ? formData.subj.toUpperCase() : ''}`, 
-            font, 
-            size: FONT_SIZE_BODY,
-            bold: true 
-          })],
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 480 } // Double space after header
-      }));
+      // Removed Duplicate Bold Subject Line
+      // Standard Subject is handled below via logic or manually added if needed.
+      // However, for staffing papers, we usually want "Subj: ..." (regular).
+      // If we remove the bold one, we should ensure the regular one is present.
+      // The code below adds "Subj:" for !isStaffingPaper. 
+      // We need to add a non-bold "Subj:" for Staffing Paper if it's not handled elsewhere.
+      
+      // If it's a Position Paper, we typically don't center "Subj:".
+      // Position Paper Format:
+      // TITLE (Underlined)
+      // Subj: TITLE (Regular, Left Aligned or Block)
+      // Wait, MCO 5216.20B Figure 13-3 shows "Subj:" left aligned (tabbed) if it's part of the standard block?
+      // Actually, looking at the user image, "Subj:" is left-aligned.
+      // My previous code was CENTER aligning it.
+      
+      if (isPositionPaper) {
+         staffingHeaderParagraphs.push(new Paragraph({
+            children: [
+                new TextRun({ text: "Subj: ", font, size: FONT_SIZE_BODY }),
+                new TextRun({ text: (formData.subj || '').toUpperCase(), font, size: FONT_SIZE_BODY })
+            ],
+            // Use standard subject indentation (usually hanging or tabbed)
+            // But for now, simple left alignment to match "1. Purpose"
+            indent: { left: 0 }, 
+            alignment: AlignmentType.LEFT,
+            spacing: { after: 480 } 
+         }));
+      } else {
+         // Information Paper Subject (Centered)
+         staffingHeaderParagraphs.push(new Paragraph({
+             children: [new TextRun({ 
+                text: `Subj: ${formData.subj ? formData.subj.toUpperCase() : ''}`, 
+                font, 
+                size: FONT_SIZE_BODY,
+                bold: false 
+             })],
+             alignment: AlignmentType.CENTER,
+             spacing: { after: 480 } 
+         }));
+      }
+  }
+
+  // --- Business Letter Header (Inside Address, Salutation) ---
+  const businessHeaderParagraphs: Paragraph[] = [];
+  if (isBusinessLetter) {
+      // 1. Inside Address (Flush Left, after SSIC/Date)
+      // Spacing for Window Envelope (approx 2" from top vs 1" standard)
+      // We add extra spacing before the address block if window envelope.
+      if (formData.isWindowEnvelope) {
+          businessHeaderParagraphs.push(new Paragraph({
+              text: "",
+              spacing: { before: 1600, after: 0 } // ~1.1 inches extra spacing
+          }));
+      } else {
+           // Standard spacing
+           businessHeaderParagraphs.push(createEmptyLine(font)); 
+      }
+      
+      if (formData.recipientName) {
+          businessHeaderParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: formData.recipientName, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.LEFT,
+              spacing: { after: 0 }
+          }));
+      }
+
+      if (formData.recipientTitle) {
+          businessHeaderParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: formData.recipientTitle, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.LEFT,
+              spacing: { after: 0 }
+          }));
+      }
+
+      if (formData.businessName) {
+          businessHeaderParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: formData.businessName, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.LEFT,
+              spacing: { after: 0 }
+          }));
+      }
+      
+      if (formData.recipientAddress) {
+          const addressLines = formData.recipientAddress.split('\n');
+          addressLines.forEach(line => {
+              businessHeaderParagraphs.push(new Paragraph({
+                  children: [new TextRun({ text: line, font, size: FONT_SIZE_BODY })],
+                  alignment: AlignmentType.LEFT,
+                  spacing: { after: 0 }
+          }));
+          });
+      }
+
+      // Attention Line
+      if (formData.attentionLine) {
+           businessHeaderParagraphs.push(createEmptyLine(font));
+           businessHeaderParagraphs.push(new Paragraph({
+               children: [new TextRun({ text: `Attention: ${formData.attentionLine}`, font, size: FONT_SIZE_BODY })],
+               alignment: AlignmentType.LEFT,
+               spacing: { after: 0 }
+           }));
+      }
+      
+      // 2. Salutation (Flush Left, after Inside Address)
+      // Add space after Address
+      businessHeaderParagraphs.push(createEmptyLine(font));
+      
+      if (formData.salutation) {
+          businessHeaderParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: formData.salutation, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.LEFT,
+              spacing: { after: 0 }
+          }));
+      }
+
+      // 3. Subject Line (Optional for Business Letters, appears after Salutation)
+      if (formData.subj) {
+          businessHeaderParagraphs.push(createEmptyLine(font));
+          // Use smaller indent/tab for Business Letters (approx 0.86 inch / 1240 twips)
+          const subjIndent = 1240; 
+          businessHeaderParagraphs.push(new Paragraph({
+              children: [
+                  new TextRun({ text: "SUBJECT:\t", font, size: FONT_SIZE_BODY }),
+                  new TextRun({ text: formData.subj.toUpperCase(), font, size: FONT_SIZE_BODY })
+              ],
+              alignment: AlignmentType.LEFT,
+              tabStops: [
+                  { type: TabStopType.LEFT, position: subjIndent } 
+              ],
+              indent: {
+                  left: subjIndent,   
+                  hanging: subjIndent 
+              },
+              spacing: { after: 0 }
+          }));
+      }
+      
+      // Add space after Salutation/Subject before body
+      businessHeaderParagraphs.push(createEmptyLine(font));
   }
 
   // --- Endorsement Identification Line (between date and From) ---
@@ -384,7 +523,7 @@ export async function generateDocxBlob(
       alignment: AlignmentType.LEFT,
       spacing: { after: 240 } // Double space after title
     }));
-  } else if (!isMoaOrMou && !isStaffingPaper) {
+  } else if (!isMoaOrMou && !isStaffingPaper && !isBusinessLetter) {
     // Standard Letter / Directive: From/To/Via
 
     // Letterhead Memorandum Title
@@ -528,7 +667,7 @@ export async function generateDocxBlob(
   }
 
   // --- Subject ---
-  if (!isMoaOrMou && !isStaffingPaper) {
+  if (!isMoaOrMou && !isStaffingPaper && !isBusinessLetter) {
     addressParagraphs.push(createEmptyLine(font));
     
     const subjLabel = getSubjSpacing(formData.bodyFont);
@@ -598,45 +737,146 @@ export async function generateDocxBlob(
   const enclParagraphs: Paragraph[] = [];
   const encls = enclosures.filter(e => e.trim());
   if (encls.length > 0 && !isStaffingPaper) {
-    const startNum = parseInt(formData.startingEnclosureNumber || '1', 10);
-    
-    encls.forEach((encl, index) => {
-        const num = startNum + index;
-        const enclLabel = getEnclSpacing(num, index, formData.bodyFont);
+    if (isBusinessLetter) {
+        // Business Letter Enclosures (Flush Left)
+        const label = encls.length > 1 ? "Enclosures" : "Enclosure";
+        enclParagraphs.push(new Paragraph({
+            children: [new TextRun({ text: label, font, size: FONT_SIZE_BODY })],
+            alignment: AlignmentType.LEFT,
+            spacing: { after: 0 }
+        }));
         
-        let enclIndent;
-        if (isDirective) {
-            enclIndent = addressIndent;
-        } else if (formData.bodyFont === 'courier') {
-            enclIndent = { left: 1584, hanging: 1584 };
-        } else {
-            enclIndent = { left: 1080, hanging: 1080 };
-        }
+        encls.forEach(encl => {
+            enclParagraphs.push(new Paragraph({
+                children: [new TextRun({ text: encl, font, size: FONT_SIZE_BODY })],
+                alignment: AlignmentType.LEFT,
+                spacing: { after: 0 }
+            }));
+        });
+        enclParagraphs.push(createEmptyLine(font));
+    } else {
+        // Standard Naval Enclosures
+        const startNum = parseInt(formData.startingEnclosureNumber || '1', 10);
+        
+        encls.forEach((encl, index) => {
+            const num = startNum + index;
+            const enclLabel = getEnclSpacing(num, index, formData.bodyFont);
+            
+            let enclIndent;
+            if (isDirective) {
+                enclIndent = addressIndent;
+            } else if (formData.bodyFont === 'courier') {
+                enclIndent = { left: 1584, hanging: 1584 };
+            } else {
+                enclIndent = { left: 1080, hanging: 1080 };
+            }
 
-      enclParagraphs.push(new Paragraph({
-        children: [
-          new TextRun({ text: enclLabel, font, size: FONT_SIZE_BODY }),
-          new TextRun({ text: encl, font, size: FONT_SIZE_BODY }),
-        ],
-        tabStops: [{ type: TabStopType.LEFT, position: tabPosition }],
-        indent: enclIndent,
-      }));
-    });
-    enclParagraphs.push(createEmptyLine(font));
+            enclParagraphs.push(new Paragraph({
+                children: [
+                new TextRun({ text: enclLabel, font, size: FONT_SIZE_BODY }),
+                new TextRun({ text: encl, font, size: FONT_SIZE_BODY }),
+                ],
+                tabStops: [{ type: TabStopType.LEFT, position: tabPosition }],
+                indent: enclIndent,
+            }));
+        });
+        enclParagraphs.push(createEmptyLine(font));
+    }
   }
 
   // --- Body Paragraphs ---
-  const bodyParagraphs: Paragraph[] = [];
+  const bodyParagraphs: (Paragraph | Table)[] = [];
   const paragraphsWithContent = paragraphs.filter(p => p.content.trim() || p.title);
 
   paragraphsWithContent.forEach((p, index) => {
+    // Custom handling for Position Paper Multiple Recs - Paragraph 4
+    if (isPositionPaper && 
+        formData.decisionMode === 'MULTIPLE_RECS' && 
+        (index === 3 || (p.title && p.title.toLowerCase().includes('recommendation')))) {
+
+        // 1. Header: 4. RECOMMENDATION.
+        const { citation } = generateCitation(p, index, paragraphsWithContent);
+        bodyParagraphs.push(new Paragraph({
+             children: [
+                 new TextRun({ text: citation + "\t", font, size: FONT_SIZE_BODY }),
+                 new TextRun({ text: (p.title || 'RECOMMENDATION').toUpperCase() + ".", font, size: FONT_SIZE_BODY, bold: true })
+             ],
+             tabStops: [{ type: TabStopType.LEFT, position: 720 }],
+             spacing: { after: 120 }
+        }));
+
+        // 2. Iterate Recommendation Items
+        formData.decisionGrid?.recommendationItems?.forEach((item, itemIdx) => {
+             // a. Text
+             const itemLetter = String.fromCharCode(97 + itemIdx);
+             bodyParagraphs.push(new Paragraph({
+                 children: [
+                     new TextRun({ text: itemLetter + ".\t", font, size: FONT_SIZE_BODY }),
+                     new TextRun({ text: item.text, font, size: FONT_SIZE_BODY })
+                 ],
+                 indent: { left: 1080, hanging: 360 }, 
+                 tabStops: [{ type: TabStopType.LEFT, position: 1440 }],
+                 spacing: { after: 120 }
+             }));
+
+             // 3. Grid Table (Embedded)
+             const tableRows: TableRow[] = [];
+             
+             // Recommenders
+             formData.decisionGrid?.recommenders.forEach(rec => {
+                 tableRows.push(new TableRow({
+                     children: [
+                         new TableCell({
+                             children: [new Paragraph({ children: [new TextRun({ text: rec.role + ":", font, size: FONT_SIZE_BODY })] })],
+                             width: { size: 30, type: WidthType.PERCENTAGE },
+                             borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
+                         }),
+                         new TableCell({
+                             children: [new Paragraph({ children: [new TextRun({ text: "[ ] Approve    [ ] Disapprove", font, size: FONT_SIZE_BODY })] })],
+                             width: { size: 70, type: WidthType.PERCENTAGE },
+                             borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
+                         })
+                     ]
+                 }));
+             });
+
+             // Final Decision
+             if (formData.decisionGrid?.finalDecision) {
+                tableRows.push(new TableRow({
+                    children: [
+                        new TableCell({
+                            children: [new Paragraph({ children: [new TextRun({ text: formData.decisionGrid.finalDecision.role + ":", font, size: FONT_SIZE_BODY, bold: true })] })],
+                            width: { size: 30, type: WidthType.PERCENTAGE },
+                            borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
+                        }),
+                        new TableCell({
+                            children: [new Paragraph({ children: [new TextRun({ text: "[ ] Approved    [ ] Disapproved", font, size: FONT_SIZE_BODY })] })],
+                            width: { size: 70, type: WidthType.PERCENTAGE },
+                            borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
+                        })
+                    ]
+                }));
+             }
+
+             bodyParagraphs.push(new Table({
+                 rows: tableRows,
+                 width: { size: 80, type: WidthType.PERCENTAGE },
+                 indent: { size: 1440, type: WidthType.DXA }, 
+                 borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" }, insideHorizontal: { style: BorderStyle.NONE, size: 0, color: "auto" }, insideVertical: { style: BorderStyle.NONE, size: 0, color: "auto" } }
+             }));
+             bodyParagraphs.push(createEmptyLine(font));
+        });
+
+        return; // Skip standard processing for this paragraph
+    }
+
     // Use the shared formatter logic which correctly handles:
     // 1. Citation generation (1., a., (1), etc.)
     // 2. Tab stops and indentation per SECNAV M-5216.5
     // 3. Bold/Italic parsing
     const shouldBoldTitle = !['moa', 'mou'].includes(formData.documentType);
     const shouldUppercaseTitle = !['moa', 'mou'].includes(formData.documentType);
-    bodyParagraphs.push(createFormattedParagraph(p, index, paragraphsWithContent, font, "000000", isDirective, shouldBoldTitle, shouldUppercaseTitle));
+    bodyParagraphs.push(createFormattedParagraph(p, index, paragraphsWithContent, font, "000000", isDirective, shouldBoldTitle, shouldUppercaseTitle, isBusinessLetter, formData.isShortLetter));
     
     // Add spacing after paragraph
     bodyParagraphs.push(new Paragraph({
@@ -644,6 +884,129 @@ export async function generateDocxBlob(
         spacing: { after: 0, before: 0 }, // Minimal spacing, rely on the empty line height
     }));
   });
+
+  // Position Paper Decision Grid (Single & Multiple Choice) - Bottom
+  if (isPositionPaper && formData.decisionGrid && formData.decisionMode !== 'MULTIPLE_RECS') {
+      bodyParagraphs.push(createEmptyLine(font));
+      
+      if (formData.decisionMode === 'MULTIPLE_CHOICE') {
+          // Mode B: Stacked COAs (Vertical)
+          formData.decisionGrid.recommenders.forEach(rec => {
+              const coaRows = rec.options.map(opt => 
+                  new Paragraph({
+                      children: [
+                          new TextRun({ text: opt, font, size: FONT_SIZE_BODY }),
+                          new TextRun({ text: "\t", font, size: FONT_SIZE_BODY }),
+                          new TextRun({ text: "_______", font, size: FONT_SIZE_BODY }) // Underscore for signature
+                      ],
+                      tabStops: [{ type: TabStopType.LEFT, position: 1440 }],
+                      spacing: { after: 120 }
+                  })
+              );
+
+              const row = new TableRow({
+                  children: [
+                      new TableCell({
+                          children: [new Paragraph({ children: [new TextRun({ text: rec.role + " recommends:", font, size: FONT_SIZE_BODY })] })],
+                          width: { size: 40, type: WidthType.PERCENTAGE },
+                          verticalAlign: VerticalAlign.TOP,
+                          borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
+                      }),
+                      new TableCell({
+                          children: coaRows,
+                          width: { size: 60, type: WidthType.PERCENTAGE },
+                          borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
+                      })
+                  ]
+              });
+              
+              bodyParagraphs.push(new Table({
+                  rows: [row],
+                  width: { size: 90, type: WidthType.PERCENTAGE },
+                  indent: { size: 720, type: WidthType.DXA },
+                  borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" }, insideHorizontal: { style: BorderStyle.NONE, size: 0, color: "auto" }, insideVertical: { style: BorderStyle.NONE, size: 0, color: "auto" } }
+              }));
+              bodyParagraphs.push(createEmptyLine(font));
+          });
+
+          // Final Decision
+          if (formData.decisionGrid.finalDecision) {
+              const final = formData.decisionGrid.finalDecision;
+              // Force COA options for CMC in Multiple Choice mode to match recommenders if available
+              const finalOptions = (formData.decisionMode === 'MULTIPLE_CHOICE' && formData.decisionGrid.recommenders.length > 0)
+                 ? formData.decisionGrid.recommenders[0].options
+                 : final.options;
+
+              const coaRows = finalOptions.map(opt => 
+                  new Paragraph({
+                      children: [
+                          new TextRun({ text: opt, font, size: FONT_SIZE_BODY }),
+                          new TextRun({ text: "\t", font, size: FONT_SIZE_BODY }),
+                          new TextRun({ text: "_______", font, size: FONT_SIZE_BODY })
+                      ],
+                      tabStops: [{ type: TabStopType.LEFT, position: 1440 }],
+                      spacing: { after: 120 }
+                  })
+              );
+
+              const row = new TableRow({
+                  children: [
+                      new TableCell({
+                          children: [new Paragraph({ children: [new TextRun({ text: final.role + " decision:", font, size: FONT_SIZE_BODY, bold: true })] })],
+                          width: { size: 40, type: WidthType.PERCENTAGE },
+                          verticalAlign: VerticalAlign.TOP,
+                          borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
+                      }),
+                      new TableCell({
+                          children: coaRows,
+                          width: { size: 60, type: WidthType.PERCENTAGE },
+                          borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
+                      })
+                  ]
+              });
+
+              bodyParagraphs.push(new Table({
+                  rows: [row],
+                  width: { size: 90, type: WidthType.PERCENTAGE },
+                  indent: { size: 720, type: WidthType.DXA },
+                  borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" }, insideHorizontal: { style: BorderStyle.NONE, size: 0, color: "auto" }, insideVertical: { style: BorderStyle.NONE, size: 0, color: "auto" } }
+              }));
+          }
+
+      } else {
+          // Mode A: Single Recommendation (Standard Horizontal)
+          // Recommenders
+          formData.decisionGrid.recommenders.forEach(rec => {
+              const optionsText = rec.options.map(opt => `[ ] ${opt}`).join("    ");
+              
+              bodyParagraphs.push(new Paragraph({
+                  children: [
+                      new TextRun({ text: rec.role + " recommends:\t", font, size: FONT_SIZE_BODY }),
+                      new TextRun({ text: optionsText, font, size: FONT_SIZE_BODY })
+                  ],
+                  tabStops: [{ type: TabStopType.LEFT, position: 2880 }],
+                  spacing: { after: 120 },
+                  indent: { left: 720 }
+              }));
+          });
+
+          // Final Decision
+          if (formData.decisionGrid.finalDecision) {
+              const finalOptsText = formData.decisionGrid.finalDecision.options.map(opt => `[ ] ${opt}`).join("    ");
+              bodyParagraphs.push(new Paragraph({
+                  children: [
+                      new TextRun({ text: formData.decisionGrid.finalDecision.role + " decision:\t", font, size: FONT_SIZE_BODY }),
+                      new TextRun({ text: finalOptsText, font, size: FONT_SIZE_BODY })
+                  ],
+                  tabStops: [{ type: TabStopType.LEFT, position: 2880 }],
+                  spacing: { before: 240, after: 120 },
+                  indent: { left: 720 }
+              }));
+          }
+      }
+      
+      bodyParagraphs.push(createEmptyLine(font));
+  }
 
   // --- Reports Required (Directives) ---
   const reportsParagraphs: Paragraph[] = [];
@@ -668,6 +1031,79 @@ export async function generateDocxBlob(
             spacing: { after: 120 }
         }));
     });
+  }
+
+  // --- Decision Grid (Position Paper) ---
+  const decisionGridParagraphs: Paragraph[] = [];
+  if (formData.documentType === 'position-paper' && formData.decisionGrid) {
+      // Add spacer
+      decisionGridParagraphs.push(createEmptyLine(font));
+
+      // Recommenders
+      formData.decisionGrid.recommenders.forEach(rec => {
+          // Role line
+          decisionGridParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: `${rec.role} recommends:`, font, size: FONT_SIZE_BODY })],
+              spacing: { after: 120 }
+          }));
+
+          // Options line
+          const optionRuns: TextRun[] = [];
+          rec.options.forEach((opt, index) => {
+              if (index > 0) {
+                  optionRuns.push(new TextRun({ text: "\t", font, size: FONT_SIZE_BODY }));
+              }
+              optionRuns.push(new TextRun({ text: opt, font, size: FONT_SIZE_BODY }));
+              optionRuns.push(new TextRun({ text: " ", font, size: FONT_SIZE_BODY }));
+              optionRuns.push(new TextRun({ 
+                  text: "______", 
+                  font, 
+                  size: FONT_SIZE_BODY,
+                  // Using underscore text instead of underline style for better visual match with PDF lines
+              }));
+          });
+
+          decisionGridParagraphs.push(new Paragraph({
+              children: optionRuns,
+              tabStops: [
+                  { type: TabStopType.LEFT, position: 2880 }, // 2 inches
+                  { type: TabStopType.LEFT, position: 5760 }, // 4 inches
+                  { type: TabStopType.LEFT, position: 8640 }  // 6 inches
+              ],
+              spacing: { after: 240 }
+          }));
+      });
+
+      // Final Decision
+      const final = formData.decisionGrid.finalDecision;
+      decisionGridParagraphs.push(new Paragraph({
+          children: [new TextRun({ text: `${final.role} decision:`, font, size: FONT_SIZE_BODY })],
+          spacing: { after: 120, before: 240 }
+      }));
+
+      const finalOptionRuns: TextRun[] = [];
+      final.options.forEach((opt, index) => {
+          if (index > 0) {
+              finalOptionRuns.push(new TextRun({ text: "\t", font, size: FONT_SIZE_BODY }));
+          }
+          finalOptionRuns.push(new TextRun({ text: opt, font, size: FONT_SIZE_BODY }));
+          finalOptionRuns.push(new TextRun({ text: " ", font, size: FONT_SIZE_BODY }));
+          finalOptionRuns.push(new TextRun({ 
+              text: "______", 
+              font, 
+              size: FONT_SIZE_BODY,
+          }));
+      });
+
+      decisionGridParagraphs.push(new Paragraph({
+          children: finalOptionRuns,
+          tabStops: [
+              { type: TabStopType.LEFT, position: 2880 },
+              { type: TabStopType.LEFT, position: 5760 },
+              { type: TabStopType.LEFT, position: 8640 }
+          ],
+          spacing: { after: 240 }
+      }));
   }
 
   // --- Signature ---
@@ -761,6 +1197,51 @@ export async function generateDocxBlob(
           ]
       });
       signatureParagraphs.push(table);
+  } else if (isBusinessLetter) {
+      // Complimentary Close
+      let close = formData.complimentaryClose;
+      if (!close) {
+          close = formData.isVipMode ? "Very respectfully" : "Sincerely";
+      }
+
+      signatureParagraphs.push(new Paragraph({
+          children: [new TextRun({ text: close + ",", font, size: FONT_SIZE_BODY })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 0 }
+      }));
+
+      // Space for signature (4 lines)
+      signatureParagraphs.push(createEmptyLine(font));
+      signatureParagraphs.push(createEmptyLine(font));
+      signatureParagraphs.push(createEmptyLine(font));
+      signatureParagraphs.push(createEmptyLine(font));
+
+      // Signer Name
+      if (formData.sig) {
+          signatureParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: formData.sig.toUpperCase(), font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 0 }
+          }));
+      }
+      
+      // Signer Rank
+      if (formData.signerRank) {
+          signatureParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: formData.signerRank, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 0 }
+          }));
+      }
+
+      // Signer Title
+      if (formData.signerTitle) {
+          signatureParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: formData.signerTitle, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 0 }
+          }));
+      }
   } else if (formData.sig && !isStaffingPaper) {
     signatureParagraphs.push(createEmptyLine(font));
     signatureParagraphs.push(createEmptyLine(font));
@@ -849,7 +1330,7 @@ export async function generateDocxBlob(
                   if (formData.bodyFont === 'courier') {
                       distributionParagraphs.push(new Paragraph({
                           children: [
-                              new TextRun({ text: '       ' + recipient, font, size: FONT_SIZE_BODY }),
+                              new TextRun({ text: recipient, font, size: FONT_SIZE_BODY }),
                           ],
                           alignment: AlignmentType.LEFT,
                           spacing: { after: 0 }
@@ -860,7 +1341,6 @@ export async function generateDocxBlob(
                               new TextRun({ text: recipient, font, size: FONT_SIZE_BODY }),
                           ],
                           alignment: AlignmentType.LEFT,
-                          indent: { left: 720 },
                           spacing: { after: 0 }
                       }));
                   }
@@ -882,24 +1362,13 @@ export async function generateDocxBlob(
           }));
           
           manualDistWithContent.forEach(dist => {
-               if (formData.bodyFont === 'courier') {
-                  distributionParagraphs.push(new Paragraph({
-                      children: [
-                          new TextRun({ text: '       ' + dist, font, size: FONT_SIZE_BODY }),
-                      ],
-                      alignment: AlignmentType.LEFT,
-                      spacing: { after: 0 }
-                  }));
-              } else {
-                  distributionParagraphs.push(new Paragraph({
-                      children: [
-                          new TextRun({ text: dist, font, size: FONT_SIZE_BODY }),
-                      ],
-                      alignment: AlignmentType.LEFT,
-                      indent: { left: 720 },
-                      spacing: { after: 0 }
-                  }));
-              }
+              distributionParagraphs.push(new Paragraph({
+                  children: [
+                      new TextRun({ text: dist, font, size: FONT_SIZE_BODY }),
+                  ],
+                  alignment: AlignmentType.LEFT,
+                  spacing: { after: 0 }
+              }));
           });
       }
 
@@ -916,24 +1385,13 @@ export async function generateDocxBlob(
           }));
           
           copiesWithContent.forEach(copy => {
-              if (formData.bodyFont === 'courier') {
-                  distributionParagraphs.push(new Paragraph({
-                      children: [
-                          new TextRun({ text: '       ' + copy, font, size: FONT_SIZE_BODY }),
-                      ],
-                      alignment: AlignmentType.LEFT,
-                      spacing: { after: 0 }
-                  }));
-              } else {
-                  distributionParagraphs.push(new Paragraph({
-                      children: [
-                          new TextRun({ text: copy, font, size: FONT_SIZE_BODY }),
-                      ],
-                      alignment: AlignmentType.LEFT,
-                      indent: { left: 720 },
-                      spacing: { after: 0 }
-                  }));
-              }
+              distributionParagraphs.push(new Paragraph({
+                  children: [
+                      new TextRun({ text: copy, font, size: FONT_SIZE_BODY }),
+                  ],
+                  alignment: AlignmentType.LEFT,
+                  spacing: { after: 0 }
+              }));
           });
       }
 
@@ -947,19 +1405,83 @@ export async function generateDocxBlob(
 
   if (isStaffingPaper) {
       const footerLines: Paragraph[] = [];
-      const drafterInfo = [
-          `${formData.drafterName || ''} ${formData.drafterRank || ''}`,
-          `${formData.drafterOfficeCode || ''} ${formData.drafterPhone ? '/ ' + formData.drafterPhone : ''}`,
-          formData.date || ''
-      ];
+      const isPositionPaper = formData.documentType === 'position-paper';
+      const isInformationPaper = formData.documentType === 'information-paper';
 
-      drafterInfo.forEach(line => {
+      if (isPositionPaper) {
+        // Position Paper Footer: Prepared By & Approved By (Left Aligned), Classification (Center)
+        
+        // Prepared By
+        footerLines.push(new Paragraph({
+            children: [
+                new TextRun({ text: "Prepared by: ", font, size: FONT_SIZE_BODY, bold: true }),
+                new TextRun({ 
+                    text: `${formData.drafterRank || ''} ${formData.drafterName || ''}, ${formData.drafterOfficeCode || ''}, ${formData.drafterPhone || ''}`, 
+                    font, 
+                    size: FONT_SIZE_BODY 
+                })
+            ],
+            alignment: AlignmentType.LEFT,
+            spacing: { after: 120 }
+        }));
+
+        // Approved By
+        footerLines.push(new Paragraph({
+            children: [
+                new TextRun({ text: "Approved by: ", font, size: FONT_SIZE_BODY, bold: true }),
+                new TextRun({ 
+                    text: `${formData.approverRank || ''} ${formData.approverName || ''}, ${formData.approverOfficeCode || ''}, ${formData.approverPhone || ''}`, 
+                    font, 
+                    size: FONT_SIZE_BODY 
+                })
+            ],
+            alignment: AlignmentType.LEFT,
+            spacing: { after: 240 }
+        }));
+
+        // Classification (Center Bottom)
+        footerLines.push(new Paragraph({
+            children: [new TextRun({ text: formData.classification || 'UNCLASSIFIED', font, size: FONT_SIZE_BODY, bold: true })],
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 240 }
+        }));
+
+      } else if (isInformationPaper) {
+          // Information Paper Footer: Prepared By (Left) with Service/Agency
+          
           footerLines.push(new Paragraph({
-              children: [new TextRun({ text: line, font, size: FONT_SIZE_BODY })],
-              alignment: AlignmentType.RIGHT,
-              spacing: { after: 0 }
-          }));
-      });
+            children: [
+                new TextRun({ text: "Prepared by: ", font, size: FONT_SIZE_BODY, bold: true }),
+                new TextRun({ 
+                    text: `${formData.drafterName || ''}, ${formData.drafterRank || ''}, ${formData.drafterService || 'USMC'}`, 
+                    font, 
+                    size: FONT_SIZE_BODY 
+                })
+            ],
+            alignment: AlignmentType.LEFT,
+            spacing: { after: 0 }
+        }));
+
+        footerLines.push(new Paragraph({
+            children: [
+                new TextRun({ 
+                    text: `             ${formData.drafterAgency ? formData.drafterAgency + ', ' : ''}${formData.drafterOfficeCode || ''}, ${formData.drafterPhone || ''}`, 
+                    font, 
+                    size: FONT_SIZE_BODY 
+                })
+            ],
+            alignment: AlignmentType.LEFT,
+            spacing: { after: 240 }
+        }));
+
+         // Classification (Center Bottom)
+         footerLines.push(new Paragraph({
+            children: [new TextRun({ text: formData.classification || 'UNCLASSIFIED', font, size: FONT_SIZE_BODY, bold: true })],
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 240 }
+        }));
+
+      }
       
       staffingFooter = new Footer({
           children: footerLines
@@ -1004,50 +1526,80 @@ export async function generateDocxBlob(
 
   // --- Header for Subsequent Pages (Subject Line) ---
   const subsequentHeaderParagraphs: Paragraph[] = [];
-  const headerSubjLines = splitSubject(formData.subj.toUpperCase(), 57);
-  const headerSubjPrefix = getSubjSpacing(formData.bodyFont);
   
-  if (headerSubjLines.length === 0) {
-      if (formData.bodyFont === 'courier') {
-          subsequentHeaderParagraphs.push(new Paragraph({
-              children: [new TextRun({ text: headerSubjPrefix, font, size: FONT_SIZE_BODY })],
-              alignment: AlignmentType.LEFT
-          }));
-      } else {
-          subsequentHeaderParagraphs.push(new Paragraph({
-              children: [new TextRun({ text: headerSubjPrefix, font, size: FONT_SIZE_BODY })],
-              tabStops: [{ type: TabStopType.LEFT, position: 720 }]
+  if (isBusinessLetter) {
+      // Business Letter Continuation Header: SSIC, Originator, Date
+      // Aligned Left (Standard) or Flush Right?
+      // M-5216.5 Figure 11-3 shows it at top left.
+      if (formData.ssic) {
+          subsequentHeaderParagraphs.push(new Paragraph({ 
+              children: [new TextRun({ text: formData.ssic, font, size: FONT_SIZE_BODY })],
+              spacing: { after: 0 }
           }));
       }
-  } else {
-      if (formData.bodyFont === 'courier') {
-          subsequentHeaderParagraphs.push(new Paragraph({
-              children: [new TextRun({ text: headerSubjPrefix + headerSubjLines[0], font, size: FONT_SIZE_BODY })],
-              alignment: AlignmentType.LEFT
+      if (formData.originatorCode) {
+          subsequentHeaderParagraphs.push(new Paragraph({ 
+              children: [new TextRun({ text: formData.originatorCode, font, size: FONT_SIZE_BODY })],
+              spacing: { after: 0 }
           }));
-          for (let i = 1; i < headerSubjLines.length; i++) {
+      }
+      // Date should be the formatted date, using existing variable or formatting logic
+      const dateText = isBusinessLetter 
+        ? formatBusinessDate(formData.date || '') 
+        : parseAndFormatDate(formData.date || 'Date Placeholder');
+
+      subsequentHeaderParagraphs.push(new Paragraph({ 
+          children: [new TextRun({ text: dateText, font, size: FONT_SIZE_BODY })],
+          spacing: { after: 0 }
+      }));
+      
+      subsequentHeaderParagraphs.push(createEmptyLine(font));
+  } else {
+      const headerSubjLines = splitSubject((formData.subj || '').toUpperCase(), 57);
+      const headerSubjPrefix = getSubjSpacing(formData.bodyFont);
+      
+      if (headerSubjLines.length === 0) {
+          if (formData.bodyFont === 'courier') {
               subsequentHeaderParagraphs.push(new Paragraph({
-                  children: [new TextRun({ text: '       ' + headerSubjLines[i], font, size: FONT_SIZE_BODY })],
+                  children: [new TextRun({ text: headerSubjPrefix, font, size: FONT_SIZE_BODY })],
                   alignment: AlignmentType.LEFT
               }));
-          }
-      } else {
-          subsequentHeaderParagraphs.push(new Paragraph({
-              children: [
-                  new TextRun({ text: headerSubjPrefix, font, size: FONT_SIZE_BODY }),
-                  new TextRun({ text: headerSubjLines[0], font, size: FONT_SIZE_BODY })
-              ],
-              tabStops: [{ type: TabStopType.LEFT, position: 720 }]
-          }));
-          for (let i = 1; i < headerSubjLines.length; i++) {
+          } else {
               subsequentHeaderParagraphs.push(new Paragraph({
-                  children: [new TextRun({ text: "\t" + headerSubjLines[i], font, size: FONT_SIZE_BODY })],
+                  children: [new TextRun({ text: headerSubjPrefix, font, size: FONT_SIZE_BODY })],
                   tabStops: [{ type: TabStopType.LEFT, position: 720 }]
               }));
           }
+      } else {
+          if (formData.bodyFont === 'courier') {
+              subsequentHeaderParagraphs.push(new Paragraph({
+                  children: [new TextRun({ text: headerSubjPrefix + headerSubjLines[0], font, size: FONT_SIZE_BODY })],
+                  alignment: AlignmentType.LEFT
+              }));
+              for (let i = 1; i < headerSubjLines.length; i++) {
+                  subsequentHeaderParagraphs.push(new Paragraph({
+                      children: [new TextRun({ text: '       ' + headerSubjLines[i], font, size: FONT_SIZE_BODY })],
+                      alignment: AlignmentType.LEFT
+                  }));
+              }
+          } else {
+              subsequentHeaderParagraphs.push(new Paragraph({
+                  children: [
+                      new TextRun({ text: headerSubjPrefix, font, size: FONT_SIZE_BODY }),
+                      new TextRun({ text: headerSubjLines[0], font, size: FONT_SIZE_BODY })
+                  ],
+                  tabStops: [{ type: TabStopType.LEFT, position: 720 }]
+              }));
+              for (let i = 1; i < headerSubjLines.length; i++) {
+                  subsequentHeaderParagraphs.push(new Paragraph({
+                      children: [new TextRun({ text: "\t" + headerSubjLines[i], font, size: FONT_SIZE_BODY })],
+                      tabStops: [{ type: TabStopType.LEFT, position: 720 }]
+                  }));
+              }
+          }
       }
+      subsequentHeaderParagraphs.push(createEmptyLine(font));
   }
-  subsequentHeaderParagraphs.push(createEmptyLine(font));
 
   const defaultHeader = new Header({
       children: subsequentHeaderParagraphs
@@ -1078,21 +1630,21 @@ export async function generateDocxBlob(
   // --- Assemble Document ---
   const doc = new Document({
     sections: [{
-      properties: {
-        page: {
-          margin: {
-            top: MARGIN_TOP,
-            right: MARGIN_RIGHT,
-            bottom: MARGIN_BOTTOM,
-            left: MARGIN_LEFT,
+        properties: {
+          page: {
+            margin: {
+              top: MARGIN_TOP,
+              right: formData.isShortLetter ? 2880 : MARGIN_RIGHT,
+              bottom: MARGIN_BOTTOM,
+              left: formData.isShortLetter ? 2880 : MARGIN_LEFT,
+            },
+            pageNumbers: {
+              start: startPage,
+              formatType: "decimal",
+            },
           },
-          pageNumbers: {
-            start: startPage,
-            formatType: "decimal",
-          },
+          titlePage: true, // Distinct first page header
         },
-        titlePage: true, // Distinct first page header
-      },
       headers: {
         first: firstPageHeader,
         default: defaultHeader,
@@ -1104,6 +1656,7 @@ export async function generateDocxBlob(
       children: [
         ...letterheadParagraphs,
         ...ssicParagraphs,
+        ...businessHeaderParagraphs,
         ...(isMoaOrMou ? [] : [createEmptyLine(font)]),
         ...moaHeaderParagraphs,
         ...staffingHeaderParagraphs,
@@ -1114,6 +1667,7 @@ export async function generateDocxBlob(
         ...enclParagraphs,
         ...bodyParagraphs,
         ...reportsParagraphs,
+        ...decisionGridParagraphs,
         ...signatureParagraphs,
         ...distributionParagraphs,
       ],

@@ -69,7 +69,7 @@ export async function addSignatureToBlob(
 ): Promise<Blob> {
   const pdfBytes = await blob.arrayBuffer();
   const signedPdfBytes = await addSignatureFieldAtPosition(pdfBytes, position);
-  return new Blob([signedPdfBytes], { type: 'application/pdf' });
+  return new Blob([new Uint8Array(signedPdfBytes)], { type: 'application/pdf' });
 }
 
 /**
@@ -81,7 +81,7 @@ export async function addMultipleSignaturesToBlob(
 ): Promise<Blob> {
   const pdfBytes = await blob.arrayBuffer();
   const signedPdfBytes = await addMultipleSignatureFields(pdfBytes, positions);
-  return new Blob([signedPdfBytes], { type: 'application/pdf' });
+  return new Blob([new Uint8Array(signedPdfBytes)], { type: 'application/pdf' });
 }
 
 /**
@@ -134,7 +134,7 @@ export async function generatePDFBlob(
       });
     }
 
-    return new Blob([signedPdfBytes], { type: 'application/pdf' });
+    return new Blob([new Uint8Array(signedPdfBytes)], { type: 'application/pdf' });
   } catch (error) {
     // If signature field addition fails, return the original PDF
     console.error('PDF Signature Field Error:', error);

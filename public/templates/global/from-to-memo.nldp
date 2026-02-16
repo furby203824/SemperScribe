@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "packageId": "nldp_1770758957960_from-to-memo",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-02-10T21:29:17.960Z",
+    "author": {
+      "name": "System Template",
+      "unit": "HQMC"
+    },
+    "package": {
+      "title": "From-To Memorandum",
+      "description": "Informal internal correspondence.",
+      "subject": "FROM-TO MEMO SUBJECT",
+      "documentType": "from-to-memo",
+      "tags": [
+        "template",
+        "standard"
+      ]
+    },
+    "checksums": {
+      "dataHash": "",
+      "crc32": ""
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "from-to-memo",
+      "date": "10 Feb 26",
+      "from": "Rank Name",
+      "to": "Recipient",
+      "subj": "FROM-TO MEMO SUBJECT",
+      "ssic": "",
+      "originatorCode": "",
+      "sig": "",
+      "line1": "",
+      "line2": "",
+      "line3": "",
+      "endorsementLevel": "",
+      "basicLetterReference": "",
+      "referenceWho": "",
+      "referenceType": "",
+      "referenceDate": "",
+      "startingReferenceLevel": "",
+      "startingEnclosureNumber": "",
+      "startingPageNumber": 1,
+      "previousPackagePageCount": 0,
+      "headerType": "USMC",
+      "bodyFont": "times",
+      "delegationText": "",
+      "accentColor": "black"
+    },
+    "vias": [],
+    "references": [],
+    "enclosures": [],
+    "copyTos": [],
+    "paragraphs": [
+      {
+        "id": 1,
+        "level": 0,
+        "content": "1. Just a quick note."
+      },
+      {
+        "id": 2,
+        "level": 0,
+        "content": "2. Another point."
+      },
+      {
+        "id": 3,
+        "level": 1,
+        "content": "a. Sub-point."
+      }
+    ]
+  }
+}

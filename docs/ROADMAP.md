@@ -1,7 +1,7 @@
 # Semper Scribe - Project Roadmap
 
 > Reference file for tracking features, correspondence types, and implementation progress.
-> Updated: 2026-02-03
+> Updated: 2026-02-08 (Reflecting MCO 5216.20B)
 
 ---
 
@@ -31,15 +31,15 @@ Internal or semi-formal correspondence. Formatting varies significantly.
 
 ### Group 3: Staffing Papers (USMC Specific)
 
-Briefing documents using specific headers and bullet logic (Main Bullet, Dash, Indented Text).
+Updated per MCO 5216.20B. Briefing documents used for staffing actions and decisions.
 
 | Type | Status | Reference | Notes |
 |------|--------|-----------|-------|
-| Point Paper | TODO | MCO 5216.20A | Single page. Rigid bullet structure. Present key issues quickly |
-| Talking Paper | TODO | MCO 5216.20A | Narrative outline (script-like). Guide a discussion |
-| Briefing Paper | TODO | MCO 5216.20A | Detailed version of Talking Paper. Background and discussion |
-| Position Paper | TODO | MCO 5216.20A | Articulates official stance on a specific issue |
-| Trip Report | TODO | MCO 5216.20A | Reports results of official travel |
+| Information Paper | DONE | MCO 5216.20B, Sec 10 | New Standard. Replaces Point/Talking papers. Uses "tick and bullet" format. 1-2 pages max. |
+| Position/Decision Paper | DONE | MCO 5216.20B, Sec 10 | Unified format. Includes BLUF, Discussion, and mandatory Decision Grid (Approve/Disapprove). |
+| Coordination Page | TODO | MCO 5216.20B, Fig 13-8 | Mandatory staffing table for routing packages. Tracks concurrence/non-concurrence. |
+| CMC Green Letter | TODO | MCO 5216.20B, Sec 10 | Personal comms between CMC and General Officers. (Lower priority). |
+| CMC White Letter | TODO | MCO 5216.20B, Sec 10 | Personal comms between CMC and Commanders. (Lower priority). |
 
 ### Group 4: External & Executive
 
@@ -69,7 +69,7 @@ Three master templates to cover the majority of formatting logic:
 | Template | Covers | Status |
 |----------|--------|--------|
 | Template A (Standard) | Standard Letters, Endorsements, Letterhead Memos | DONE |
-| Template B (Papers) | Point, Talking, Briefing Papers (bullet indentation logic) | TODO |
+| Template B (Papers) | Information Papers, Position/Decision Papers (updated bullet logic) | TODO |
 | Template C (Civilian) | Business Letters, Executive Correspondence (center/right alignment, salutations) | TODO |
 
 ---
@@ -140,20 +140,19 @@ Three master templates to cover the majority of formatting logic:
 - [x] Memorandum for the Record (MFR) format
 - [x] "From-To" Memorandum format
 - [x] Letterhead Memorandum format
-- [ ] Point Paper format (rigid bullet structure)
+- [x] Information Paper
 
 ### Medium Priority
-- [ ] Talking Paper format
-- [ ] Briefing Paper format
+- [x] Position/Decision Paper
 - [ ] Business Letter format (civilian style)
-- [ ] Position Paper format
+- [ ] Coordination Page
 
 ### Lower Priority
 - [ ] Executive Correspondence format
 - [ ] MOA/MOU format (multi-party signature blocks)
-- [ ] Trip Report format
 - [ ] Template B engine (bullet indentation logic for papers)
 - [ ] Template C engine (civilian letter formatting)
+- [ ] CMC Green/White Letters
 
 ### Feature Enhancements
 - [ ] Spell check with military terminology awareness
@@ -171,7 +170,7 @@ Three master templates to cover the majority of formatting logic:
 | Reference | Title | Covers |
 |-----------|-------|--------|
 | SECNAV M-5216.5 | Department of the Navy Correspondence Manual | Ch 2: Standard Letters; Ch 3: Endorsements; Ch 4: Business/Executive Letters; Ch 5: Memorandums |
-| MCO 5216.20A | Marine Corps Correspondence Manual | Decision Memos, Point/Talking/Briefing/Position Papers, Trip Reports |
+| MCO 5216.20B | Marine Corps Correspondence Manual | Information Papers, Position/Decision Papers, Coordination Pages |
 | MCO 5215.1K | Marine Corps Directives Management | Marine Corps Orders (MCO), Bulletins (MCBul), distribution statements |
 | MCO P1070.12K | Marine Corps Individual Records Administration Manual | Page 11 (NAVMC 118-11) administrative remarks |
 | NAVMC 10274 | Administrative Action Form | AA Form field definitions and usage |

@@ -7,13 +7,13 @@ import React from 'react';
 import { FormData, EndorsementLevel, ParagraphData } from '@/types';
 import { StructuredReferenceInput } from './StructuredReferenceInput';
 import { debugFormChange } from '@/lib/console-utils';
-import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getPointPaperParagraphs, getTalkingPaperParagraphs, getBriefingPaperParagraphs, getPositionPaperParagraphs, getTripReportParagraphs } from '@/lib/naval-format-utils';
+import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getPositionPaperParagraphs, getInformationPaperParagraphs } from '@/lib/naval-format-utils';
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { FileText, FileSignature, ClipboardList, ScrollText, AlertCircle, Building2, Type, FileCheck, MessageSquare, Users, Notebook, Handshake, Lightbulb, Mic, BookOpen, Flag, Plane } from 'lucide-react';
+import { FileText, FileSignature, ClipboardList, ScrollText, AlertCircle, Building2, Type, FileCheck, MessageSquare, Users, Notebook, Handshake, Lightbulb, Mic, BookOpen, Flag, Plane, Briefcase } from 'lucide-react';
 
 interface DocumentTypeSectionProps {
   formData: FormData;
@@ -330,34 +330,17 @@ export function DocumentTypeSection({
             Staffing Papers (USMC Specific)
           </h3>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-
-
             <DocumentTypeCard
-              type="talking-paper"
-              icon={<Mic className="w-10 h-10" />}
-              title="Talking Paper"
-              description="Narrative outline (script-like). Guide a discussion."
-              note="→ For guided discussion"
-              isActive={formData.documentType === 'talking-paper'}
+              type="information-paper"
+              icon={<Lightbulb className="w-10 h-10" />}
+              title="Information Paper"
+              description="Provides factual information in concise terms."
+              note="→ For concise facts"
+              isActive={formData.documentType === 'information-paper'}
               onClick={() => {
-                setFormData(prev => ({ ...prev, documentType: 'talking-paper' }));
-                if (setParagraphs && formData.documentType !== 'talking-paper') {
-                  setParagraphs(getTalkingPaperParagraphs());
-                }
-              }}
-            />
-
-            <DocumentTypeCard
-              type="briefing-paper"
-              icon={<BookOpen className="w-10 h-10" />}
-              title="Briefing Paper"
-              description="Detailed version of Talking Paper. Background and discussion."
-              note="→ For detailed briefs"
-              isActive={formData.documentType === 'briefing-paper'}
-              onClick={() => {
-                setFormData(prev => ({ ...prev, documentType: 'briefing-paper' }));
-                if (setParagraphs && formData.documentType !== 'briefing-paper') {
-                   setParagraphs(getBriefingPaperParagraphs());
+                setFormData(prev => ({ ...prev, documentType: 'information-paper' }));
+                if (setParagraphs && formData.documentType !== 'information-paper') {
+                  setParagraphs(getInformationPaperParagraphs());
                 }
               }}
             />
@@ -365,8 +348,8 @@ export function DocumentTypeSection({
             <DocumentTypeCard
               type="position-paper"
               icon={<Flag className="w-10 h-10" />}
-              title="Position Paper"
-              description="Articulates official stance on a specific issue."
+              title="Position/Decision Paper"
+              description="Articulates official stance on a specific issue with decision block."
               note="→ For official stance"
               isActive={formData.documentType === 'position-paper'}
               onClick={() => {
@@ -376,20 +359,23 @@ export function DocumentTypeSection({
                 }
               }}
             />
+          </div>
+        </div>
 
-             <DocumentTypeCard
-              type="trip-report"
-              icon={<Plane className="w-10 h-10" />}
-              title="Trip Report"
-              description="Reports results of official travel."
-              note="→ For travel reports"
-              isActive={formData.documentType === 'trip-report'}
-              onClick={() => {
-                setFormData(prev => ({ ...prev, documentType: 'trip-report' }));
-                if (setParagraphs && formData.documentType !== 'trip-report') {
-                  setParagraphs(getTripReportParagraphs());
-                }
-              }}
+        {/* External & Executive Section */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-muted-foreground uppercase tracking-wider text-sm border-b pb-2">
+            External & Executive
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <DocumentTypeCard
+              type="business-letter"
+              icon={<Briefcase className="w-10 h-10" />}
+              title="Business Letter"
+              description="Formal correspondence with non-DoD entities, agencies, or private individuals."
+              note="→ For civilian/external use"
+              isActive={formData.documentType === 'business-letter'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'business-letter' }))}
             />
           </div>
         </div>

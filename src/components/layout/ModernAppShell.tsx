@@ -34,6 +34,7 @@ interface ModernAppShellProps {
   onShareLink?: () => void;
   // For mobile preview modal
   formData?: FormData;
+  onAddSignature?: () => void;
 }
 
 export function ModernAppShell({
@@ -60,6 +61,7 @@ export function ModernAppShell({
   onExportAMHS,
   onShareLink,
   formData,
+  onAddSignature,
 }: ModernAppShellProps) {
   const [showPreview, setShowPreview] = React.useState(true);
   const [showPreviewModal, setShowPreviewModal] = React.useState(false);
@@ -88,7 +90,7 @@ export function ModernAppShell({
             </div>
             
             <div className="flex flex-col">
-              <h1 className="text-primary-foreground font-bold text-lg leading-tight tracking-tight font-headline">Semper Scribe</h1>
+              <h1 className="text-primary font-bold text-lg leading-tight tracking-tight font-headline">Semper Scribe</h1>
             </div>
           </div>
 
@@ -106,7 +108,7 @@ export function ModernAppShell({
             )}
           </div>
         </div>
-        
+
         <HeaderActions
             className="text-primary-foreground"
             documentType={documentType}
@@ -128,6 +130,7 @@ export function ModernAppShell({
             onOpenPreviewModal={documentType ? () => setShowPreviewModal(true) : undefined}
             onCopyAMHS={onCopyAMHS}
             onExportAMHS={onExportAMHS}
+            onAddSignature={onAddSignature}
           />
       </header>
 
@@ -156,6 +159,7 @@ export function ModernAppShell({
               previewUrl={previewUrl}
               isLoading={isGeneratingPreview}
               onUpdatePreview={onUpdatePreview}
+              documentType={documentType}
             />
           )
         )}

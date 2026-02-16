@@ -3,14 +3,17 @@ import { FileText, Download, Printer, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
+import { PageCountIndicator } from './PageCountIndicator';
+
 interface LivePreviewProps {
   className?: string;
   previewUrl?: string; // If we have a blob URL
   isLoading?: boolean;
   onUpdatePreview?: () => void;
+  documentType?: string;
 }
 
-export function LivePreview({ className, previewUrl, isLoading, onUpdatePreview }: LivePreviewProps) {
+export function LivePreview({ className, previewUrl, isLoading, onUpdatePreview, documentType = 'standard' }: LivePreviewProps) {
   return (
     <aside className={cn("w-[45%] max-w-[900px] min-w-[500px] bg-muted/20 border-l border-border hidden xl:flex flex-col h-full", className)}>
       <div className="h-12 bg-card border-b border-border flex items-center justify-between px-4 shrink-0">
@@ -38,6 +41,7 @@ export function LivePreview({ className, previewUrl, isLoading, onUpdatePreview 
       </div>
       
       <div className="flex-1 overflow-hidden relative bg-muted/40">
+        <PageCountIndicator url={previewUrl || null} documentType={documentType} />
         {isLoading ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">

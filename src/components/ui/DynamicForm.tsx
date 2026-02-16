@@ -27,9 +27,36 @@ interface DynamicFormProps {
 }
 
 export function DynamicForm({ documentType, onSubmit, defaultValues }: DynamicFormProps) {
+  // Calculate allowed top-level keys based on document definitions
+  const allowedTopLevelKeys = React.useMemo(() => {
+    const keys = new Set<string>(['documentType']);
+    documentType.sections.forEach(section => {
+      section.fields.forEach(field => {
+         const topLevel = field.name.split('.')[0];
+         keys.add(topLevel);
+      });
+    });
+    return keys;
+  }, [documentType]);
+
+  // Sanitize default values to only include fields relevant to this form
+  const sanitizedDefaultValues = React.useMemo(() => {
+      if (!defaultValues) return { documentType: documentType.id };
+      
+      const sanitized: any = {};
+      Object.keys(defaultValues).forEach(key => {
+          if (allowedTopLevelKeys.has(key)) {
+              sanitized[key] = defaultValues[key];
+          }
+      });
+      // Ensure documentType is set
+      sanitized.documentType = documentType.id;
+      return sanitized;
+  }, [defaultValues, allowedTopLevelKeys, documentType.id]);
+
   const form = useForm({
     resolver: zodResolver(documentType.schema),
-    defaultValues: defaultValues || { documentType: documentType.id },
+    defaultValues: sanitizedDefaultValues,
     mode: 'onChange',
   });
 
@@ -40,7 +67,14 @@ export function DynamicForm({ documentType, onSubmit, defaultValues }: DynamicFo
        if (onSubmit) {
          clearTimeout(timeoutId);
          timeoutId = setTimeout(() => {
-           onSubmit(value);
+           // Double-check filtering (though sanitizedDefaultValues should handle it)
+           const filteredValue: any = {};
+           Object.keys(value).forEach(key => {
+               if (allowedTopLevelKeys.has(key)) {
+                   filteredValue[key] = value[key];
+               }
+           });
+           onSubmit(filteredValue);
          }, 500);
        }
     });
@@ -66,13 +100,13 @@ export function DynamicForm({ documentType, onSubmit, defaultValues }: DynamicFo
             <FormLabel>{field.label} {field.required && <span className="text-destructive">*</span>}</FormLabel>
             <FormControl>
               {field.type === 'text' || field.type === 'combobox' ? (
-                <Input placeholder={field.placeholder} {...formField} />
+                <Input placeholder={field.placeholder} {...formField} value={formField.value ?? ''} />
               ) : field.type === 'date' ? (
-                <Input type="text" placeholder={field.placeholder || 'DD MMM YY'} {...formField} />
+                <Input type="text" placeholder={field.placeholder || 'DD MMM YY'} {...formField} value={formField.value ?? ''} />
               ) : field.type === 'textarea' ? (
-                <Textarea placeholder={field.placeholder} rows={field.rows} {...formField} />
+                <Textarea placeholder={field.placeholder} rows={field.rows} {...formField} value={formField.value ?? ''} />
               ) : field.type === 'number' ? (
-                 <Input type="number" placeholder={field.placeholder} {...formField} />
+                 <Input type="number" placeholder={field.placeholder} {...formField} value={formField.value ?? ''} />
               ) : field.type === 'select' ? (
                 <Select onValueChange={formField.onChange} defaultValue={formField.value}>
                   <FormControl>

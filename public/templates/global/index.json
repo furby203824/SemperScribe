@@ -1,17 +1,94 @@
 [
   {
     "id": "usmc-basic-letter",
-    "title": "USMC Basic Letter",
-    "description": "Standard Marine Corps basic letter layout",
+    "title": "Standard Naval Letter",
+    "description": "The standard format for correspondence within the Department of the Navy.",
     "documentType": "basic",
     "url": "/templates/global/usmc-basic-letter.nldp"
   },
   {
-    "id": "cddm-appointment",
-    "title": "APPOINTMENT AS COMMAND DESIGNATED DIRECTIVES MANAGER (CDDM)",
-    "description": "Appointment letter for Command Designated Directives Manager",
-    "documentType": "basic",
-    "url": "/templates/global/cddm-appointment.nldp"
+    "id": "business-letter",
+    "title": "Business Letter",
+    "description": "Correspondence with non-DoD entities, agencies, or individuals.",
+    "documentType": "business-letter",
+    "url": "/templates/global/business-letter.nldp"
+  },
+  {
+    "id": "endorsement",
+    "title": "New-Page Endorsement",
+    "description": "Used to forward a basic letter with comments, recommendations, or new information.",
+    "documentType": "endorsement",
+    "url": "/templates/global/endorsement.nldp"
+  },
+  {
+    "id": "memorandum-for-record",
+    "title": "Memorandum for the Record",
+    "description": "Internal document used to record events, decisions, or conversations.",
+    "documentType": "mfr",
+    "url": "/templates/global/memorandum-for-record.nldp"
+  },
+  {
+    "id": "aa-form",
+    "title": "NAVMC 10274 (AA Form)",
+    "description": "Administrative Action Form used for personnel requests.",
+    "documentType": "aa-form",
+    "url": "/templates/global/aa-form.nldp"
+  },
+  {
+    "id": "position-paper",
+    "title": "Position/Decision Paper",
+    "description": "Used to advocate for a specific position or decision.",
+    "documentType": "position-paper",
+    "url": "/templates/global/position-paper.nldp"
+  },
+  {
+    "id": "information-paper",
+    "title": "Information Paper",
+    "description": "Provides factual information in concise terms.",
+    "documentType": "information-paper",
+    "url": "/templates/global/information-paper.nldp"
+  },
+  {
+    "id": "from-to-memo",
+    "title": "From-To Memorandum",
+    "description": "Informal internal correspondence.",
+    "documentType": "from-to-memo",
+    "url": "/templates/global/from-to-memo.nldp"
+  },
+  {
+    "id": "letterhead-memo",
+    "title": "Letterhead Memorandum",
+    "description": "Formal memorandum on command letterhead.",
+    "documentType": "letterhead-memo",
+    "url": "/templates/global/letterhead-memo.nldp"
+  },
+  {
+    "id": "memorandum-of-agreement",
+    "title": "Memorandum of Agreement",
+    "description": "Agreement between parties (Conditional).",
+    "documentType": "moa",
+    "url": "/templates/global/memorandum-of-agreement.nldp"
+  },
+  {
+    "id": "memorandum-of-understanding",
+    "title": "Memorandum of Understanding",
+    "description": "General understanding between parties (Non-binding).",
+    "documentType": "mou",
+    "url": "/templates/global/memorandum-of-understanding.nldp"
+  },
+  {
+    "id": "marine-corps-order",
+    "title": "Marine Corps Order",
+    "description": "Permanent directive establishing policy.",
+    "documentType": "mco",
+    "url": "/templates/global/marine-corps-order.nldp"
+  },
+  {
+    "id": "marine-corps-bulletin",
+    "title": "Marine Corps Bulletin",
+    "description": "Directive of duration less than 12 months.",
+    "documentType": "bulletin",
+    "url": "/templates/global/marine-corps-bulletin.nldp"
   },
   {
     "id": "page11-promotion-not-rec",
@@ -26,12 +103,5 @@
     "description": "Standard entry for when a Marine is recommended for promotion.",
     "documentType": "page11",
     "url": "/templates/global/Promotion Recommended.nldp"
-  },
-  {
-    "id": "moa-template",
-    "title": "Memorandum of Agreement Template",
-    "description": "Standard MOA template with participating activities and signatories.",
-    "documentType": "moa",
-    "url": "/templates/global/moa-template.nldp"
   }
 ]

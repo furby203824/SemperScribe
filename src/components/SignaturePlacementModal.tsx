@@ -11,7 +11,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Move, Download, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { ChevronLeft, ChevronRight, Move, Download, Trash2, Maximize2, X, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
+import { SignaturePosition } from "@/types";
 
 // Dynamically import react-pdf to avoid SSR issues
 const Document = dynamic(() => import("react-pdf").then((mod) => mod.Document), { ssr: false });
@@ -27,14 +33,7 @@ if (typeof window !== "undefined") {
 // PDF page dimensions in points (8.5" x 11" at 72 DPI)
 const PDF_WIDTH = 612;
 const PDF_HEIGHT = 792;
-
-export interface SignaturePosition {
-  page: number;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
+const MIN_BOX_SIZE = 20;
 
 interface SignaturePlacementModalProps {
   open: boolean;
@@ -44,6 +43,9 @@ interface SignaturePlacementModalProps {
   totalPages: number;
 }
 
+type InteractionMode = "none" | "drawing" | "moving" | "resizing";
+type ResizeHandle = "nw" | "ne" | "sw" | "se";
+
 export function SignaturePlacementModal({
   open,
   onClose,
@@ -52,15 +54,20 @@ export function SignaturePlacementModal({
   totalPages,
 }: SignaturePlacementModalProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
-  const [currentRect, setCurrentRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [signatureBoxes, setSignatureBoxes] = useState<SignaturePosition[]>([]);
+  const [selectedBoxId, setSelectedBoxId] = useState<string | null>(null);
+  
+  // Interaction State
+  const [interactionMode, setInteractionMode] = useState<InteractionMode>("none");
+  const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
+  const [activeBoxId, setActiveBoxId] = useState<string | null>(null); // For move/resize
+  const [activeHandle, setActiveHandle] = useState<ResizeHandle | null>(null);
+  const [tempRect, setTempRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pageSize, setPageSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
+  
   // Create object URL from blob
   useEffect(() => {
     if (pdfBlob) {
@@ -73,10 +80,10 @@ export function SignaturePlacementModal({
   // Reset state when modal opens
   useEffect(() => {
     if (open) {
-      setCurrentPage(totalPages); // Start on last page (where signature usually is)
-      setCurrentRect(null);
+      setCurrentPage(totalPages > 0 ? totalPages : 1); 
       setSignatureBoxes([]);
-      setIsDrawing(false);
+      setSelectedBoxId(null);
+      setInteractionMode("none");
     }
   }, [open, totalPages]);
 
@@ -85,82 +92,7 @@ export function SignaturePlacementModal({
     setPageSize({ width, height });
   }, []);
 
-  // Get boxes for current page
-  const currentPageBoxes = signatureBoxes.filter(box => box.page === currentPage);
-
-  // Draw the rectangle overlay
-  const drawOverlay = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || pageSize.width === 0) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    // Match canvas size to page size
-    canvas.width = pageSize.width;
-    canvas.height = pageSize.height;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Scale factors
-    const scaleX = pageSize.width / PDF_WIDTH;
-    const scaleY = pageSize.height / PDF_HEIGHT;
-
-    // Draw all saved boxes for current page
-    currentPageBoxes.forEach((box, index) => {
-      const scaledX = box.x * scaleX;
-      const scaledY = (PDF_HEIGHT - box.y - box.height) * scaleY;
-      const scaledWidth = box.width * scaleX;
-      const scaledHeight = box.height * scaleY;
-
-      // Draw semi-transparent fill
-      ctx.fillStyle = "rgba(59, 130, 246, 0.2)";
-      ctx.fillRect(scaledX, scaledY, scaledWidth, scaledHeight);
-
-      // Draw border
-      ctx.strokeStyle = "#3b82f6";
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 5]);
-      ctx.strokeRect(scaledX, scaledY, scaledWidth, scaledHeight);
-
-      // Draw label
-      ctx.fillStyle = "#3b82f6";
-      ctx.font = "bold 12px sans-serif";
-      ctx.textAlign = "center";
-      ctx.setLineDash([]);
-      ctx.fillText(`SIGN ${index + 1}`, scaledX + scaledWidth / 2, scaledY + scaledHeight / 2 + 4);
-    });
-
-    // Draw current rectangle being drawn
-    if (currentRect) {
-      const scaledX = currentRect.x * scaleX;
-      const scaledY = (PDF_HEIGHT - currentRect.y - currentRect.height) * scaleY;
-      const scaledWidth = currentRect.width * scaleX;
-      const scaledHeight = currentRect.height * scaleY;
-
-      ctx.fillStyle = "rgba(34, 197, 94, 0.2)";
-      ctx.fillRect(scaledX, scaledY, scaledWidth, scaledHeight);
-
-      ctx.strokeStyle = "#22c55e";
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 5]);
-      ctx.strokeRect(scaledX, scaledY, scaledWidth, scaledHeight);
-
-      ctx.fillStyle = "#22c55e";
-      ctx.font = "bold 12px sans-serif";
-      ctx.textAlign = "center";
-      ctx.setLineDash([]);
-      ctx.fillText("NEW", scaledX + scaledWidth / 2, scaledY + scaledHeight / 2 + 4);
-    }
-  }, [currentRect, currentPageBoxes, pageSize]);
-
-  // Redraw overlay when rect or size changes
-  useEffect(() => {
-    drawOverlay();
-  }, [drawOverlay]);
-
-  // Convert screen coordinates to PDF coordinates
+  // Coordinate Conversion
   const screenToPdfCoords = useCallback((screenX: number, screenY: number) => {
     const container = containerRef.current;
     if (!container || pageSize.width === 0) return { x: 0, y: 0 };
@@ -169,223 +101,366 @@ export function SignaturePlacementModal({
     if (!pageElement) return { x: 0, y: 0 };
 
     const pageRect = pageElement.getBoundingClientRect();
-
     const relX = screenX - pageRect.left;
     const relY = screenY - pageRect.top;
 
     const scaleX = PDF_WIDTH / pageRect.width;
     const scaleY = PDF_HEIGHT / pageRect.height;
 
+    // PDF coords: (0,0) is bottom-left
     const pdfX = relX * scaleX;
     const pdfY = PDF_HEIGHT - (relY * scaleY);
 
     return { x: pdfX, y: pdfY };
   }, [pageSize]);
 
+  // Helper: Convert PDF coords to Style (CSS % or px relative to container)
+  const getBoxStyle = (box: { x: number; y: number; width: number; height: number }) => {
+    if (pageSize.width === 0) return {};
+    
+    // Scale factor from PDF points to Screen pixels
+    const scaleX = pageSize.width / PDF_WIDTH;
+    const scaleY = pageSize.height / PDF_HEIGHT;
+
+    return {
+      left: box.x * scaleX,
+      bottom: box.y * scaleY, // PDF y is from bottom
+      width: box.width * scaleX,
+      height: box.height * scaleY,
+      position: 'absolute' as const,
+    };
+  };
+
+  // Interaction Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
+    // If clicking on a form input or button, ignore
+    if ((e.target as HTMLElement).closest('.interaction-ignore')) return;
+
     const coords = screenToPdfCoords(e.clientX, e.clientY);
-    if (coords.x === 0 && coords.y === 0) return;
+    
+    // Check if clicking on an existing box (if not already handled by box's onMouseDown)
+    // Actually, box interaction should be handled on the box element itself to prevent propagation issues
+    // But if we click empty space, we start drawing
     setStartPoint(coords);
-    setIsDrawing(true);
-    setCurrentRect(null);
+    setInteractionMode("drawing");
+    setSelectedBoxId(null); // Deselect when clicking background
+  };
+
+  const handleBoxMouseDown = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); // Prevent background click
+    setSelectedBoxId(id);
+    setActiveBoxId(id);
+    setInteractionMode("moving");
+    
+    const coords = screenToPdfCoords(e.clientX, e.clientY);
+    setStartPoint(coords);
+  };
+
+  const handleResizeMouseDown = (e: React.MouseEvent, id: string, handle: ResizeHandle) => {
+    e.stopPropagation();
+    setSelectedBoxId(id);
+    setActiveBoxId(id);
+    setActiveHandle(handle);
+    setInteractionMode("resizing");
+    
+    const coords = screenToPdfCoords(e.clientX, e.clientY);
+    setStartPoint(coords);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDrawing || !startPoint) return;
+    if (interactionMode === "none" || !startPoint) return;
 
-    const coords = screenToPdfCoords(e.clientX, e.clientY);
+    const currentCoords = screenToPdfCoords(e.clientX, e.clientY);
 
-    const x = Math.min(startPoint.x, coords.x);
-    const y = Math.min(startPoint.y, coords.y);
-    const width = Math.abs(coords.x - startPoint.x);
-    const height = Math.abs(coords.y - startPoint.y);
+    if (interactionMode === "drawing") {
+      const x = Math.min(startPoint.x, currentCoords.x);
+      const width = Math.abs(currentCoords.x - startPoint.x);
+      // For Y, in PDF coords (0 at bottom), logic is a bit different
+      // StartY and CurrentY are both from bottom.
+      // If StartY > CurrentY, we are dragging DOWN visually.
+      // The box bottom is min(StartY, CurrentY)
+      const y = Math.min(startPoint.y, currentCoords.y);
+      const height = Math.abs(currentCoords.y - startPoint.y);
 
-    setCurrentRect({ x, y, width, height });
+      setTempRect({ x, y, width, height });
+    } else if (interactionMode === "moving" && activeBoxId) {
+      const dx = currentCoords.x - startPoint.x;
+      const dy = currentCoords.y - startPoint.y; // Y is up
+
+      setSignatureBoxes(prev => prev.map(box => {
+        if (box.id === activeBoxId) {
+          return {
+            ...box,
+            x: box.x + dx,
+            y: box.y + dy,
+          };
+        }
+        return box;
+      }));
+      setStartPoint(currentCoords); // Reset start point for relative move
+    } else if (interactionMode === "resizing" && activeBoxId && activeHandle) {
+       const dx = currentCoords.x - startPoint.x;
+       const dy = currentCoords.y - startPoint.y;
+
+       setSignatureBoxes(prev => prev.map(box => {
+         if (box.id !== activeBoxId) return box;
+         
+         let { x, y, width, height } = box;
+         
+         // Logic depends on handle.
+         // Remember: Y is from BOTTOM. 
+         // Top edge is y + height. Bottom edge is y.
+         // Left edge is x. Right edge is x + width.
+         
+         if (activeHandle.includes('e')) { // East (Right)
+            width += dx;
+         }
+         if (activeHandle.includes('w')) { // West (Left)
+            const newWidth = width - dx;
+            if (newWidth > MIN_BOX_SIZE) {
+                x += dx;
+                width = newWidth;
+            }
+         }
+         if (activeHandle.includes('n')) { // North (Top)
+            height += dy;
+         }
+         if (activeHandle.includes('s')) { // South (Bottom)
+            const newHeight = height - dy;
+            if (newHeight > MIN_BOX_SIZE) {
+                y += dy;
+                height = newHeight;
+            }
+         }
+
+         // Constraints
+         if (width < MIN_BOX_SIZE) width = MIN_BOX_SIZE;
+         if (height < MIN_BOX_SIZE) height = MIN_BOX_SIZE;
+         
+         return { ...box, x, y, width, height };
+       }));
+       setStartPoint(currentCoords);
+    }
   };
 
   const handleMouseUp = () => {
-    // If we have a valid rectangle, add it to the list
-    if (currentRect && currentRect.width > 10 && currentRect.height > 10) {
-      setSignatureBoxes(prev => [...prev, {
-        page: currentPage,
-        x: currentRect.x,
-        y: currentRect.y,
-        width: currentRect.width,
-        height: currentRect.height,
-      }]);
+    if (interactionMode === "drawing" && tempRect) {
+      if (tempRect.width > MIN_BOX_SIZE && tempRect.height > MIN_BOX_SIZE) {
+        const newId = crypto.randomUUID();
+        const newBox: SignaturePosition = {
+          id: newId,
+          page: currentPage,
+          ...tempRect
+        };
+        setSignatureBoxes(prev => [...prev, newBox]);
+        setSelectedBoxId(newId);
+      }
     }
-    setIsDrawing(false);
+
+    setInteractionMode("none");
     setStartPoint(null);
-    setCurrentRect(null);
+    setTempRect(null);
+    setActiveBoxId(null);
+    setActiveHandle(null);
   };
 
-  const handleRemoveBox = (index: number) => {
-    // Find the actual index in signatureBoxes array
-    const boxesToRemove = signatureBoxes.filter(box => box.page === currentPage);
-    const boxToRemove = boxesToRemove[index];
-    setSignatureBoxes(prev => prev.filter(box => box !== boxToRemove));
+  // Box Management
+  const updateBoxMetadata = (id: string, field: keyof SignaturePosition, value: string) => {
+    setSignatureBoxes(prev => prev.map(box => 
+      box.id === id ? { ...box, [field]: value } : box
+    ));
   };
 
-  const handleClearCurrentPage = () => {
-    setSignatureBoxes(prev => prev.filter(box => box.page !== currentPage));
+  const removeBox = (id: string) => {
+    setSignatureBoxes(prev => prev.filter(box => box.id !== id));
+    if (selectedBoxId === id) setSelectedBoxId(null);
   };
 
-  const handleConfirm = () => {
-    if (signatureBoxes.length > 0) {
-      onConfirm(signatureBoxes);
-    }
-  };
-
-  const goToPrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-      setCurrentRect(null);
-    }
-  };
-
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-      setCurrentRect(null);
-    }
-  };
-
-  // Count total boxes across all pages
-  const totalBoxes = signatureBoxes.length;
+  const selectedBox = signatureBoxes.find(b => b.id === selectedBoxId);
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
-        <DialogHeader>
-          <DialogTitle>Place Signature Fields</DialogTitle>
-          <DialogDescription>
-            Draw rectangles where you want signature fields. You can add multiple signature boxes on any page.
-          </DialogDescription>
-        </DialogHeader>
-
-        {/* Page navigation and box count */}
-        <div className="flex items-center justify-between py-2">
+      <DialogContent className="max-w-[95vw] w-full h-[95vh] flex flex-col p-0 gap-0 overflow-hidden">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b bg-background z-10">
+          <div>
+            <DialogTitle>Configure Signature Fields</DialogTitle>
+            <DialogDescription>
+              Draw, move, and resize signature boxes. Add metadata for each signer.
+            </DialogDescription>
+          </div>
           <div className="flex items-center gap-2">
-            {totalPages > 1 && (
-              <>
-                <Button
-                  variant="outline"
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={() => onConfirm(signatureBoxes)} disabled={signatureBoxes.length === 0}>
+              Save & Export PDF
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-1 overflow-hidden">
+          {/* Sidebar for Metadata */}
+          <div className="w-80 border-r bg-muted/10 flex flex-col overflow-y-auto interaction-ignore">
+            <div className="p-4 border-b">
+              <h3 className="font-semibold mb-1">Properties</h3>
+              <p className="text-xs text-muted-foreground">Select a signature box to edit its details.</p>
+            </div>
+
+            {selectedBox ? (
+              <div className="p-4 space-y-4">
+                <div className="space-y-2">
+                  <Label>Signer Name</Label>
+                  <Input 
+                    value={selectedBox.signerName || ''} 
+                    onChange={(e) => updateBoxMetadata(selectedBox.id, 'signerName', e.target.value)}
+                    placeholder="e.g. John Doe"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Reason</Label>
+                  <Input 
+                    value={selectedBox.reason || ''} 
+                    onChange={(e) => updateBoxMetadata(selectedBox.id, 'reason', e.target.value)}
+                    placeholder="e.g. I am approving this document"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Contact Info</Label>
+                  <Textarea 
+                    value={selectedBox.contactInfo || ''} 
+                    onChange={(e) => updateBoxMetadata(selectedBox.id, 'contactInfo', e.target.value)}
+                    placeholder="Email or Phone"
+                    className="resize-none h-20"
+                  />
+                </div>
+                <div className="pt-4 border-t">
+                  <Button variant="destructive" size="sm" className="w-full" onClick={() => removeBox(selectedBox.id)}>
+                    <Trash2 className="w-4 h-4 mr-2" /> Delete Field
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-8 text-center text-muted-foreground flex flex-col items-center justify-center h-64">
+                <Move className="w-12 h-12 mb-4 opacity-20" />
+                <p>No field selected</p>
+                <p className="text-xs mt-2">Click on a signature box to edit</p>
+              </div>
+            )}
+
+            <div className="mt-auto p-4 border-t">
+               <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-900">
+                <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <AlertTitle className="text-blue-800 dark:text-blue-300 text-xs">Instructions</AlertTitle>
+                <AlertDescription className="text-blue-700 dark:text-blue-400 text-xs mt-1">
+                  1. Click & Drag to draw a new box.<br/>
+                  2. Click a box to select it.<br/>
+                  3. Drag box to move, drag corners to resize.
+                </AlertDescription>
+              </Alert>
+            </div>
+          </div>
+
+          {/* Main Canvas Area */}
+          <div className="flex-1 bg-slate-100 dark:bg-slate-900 overflow-hidden flex flex-col relative">
+            
+            {/* Toolbar */}
+            <div className="h-12 border-b bg-background flex items-center justify-center gap-4 z-10 shadow-sm interaction-ignore">
+               <Button
+                  variant="ghost"
                   size="sm"
-                  onClick={goToPrevPage}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm">
+                <span className="text-sm font-medium w-32 text-center">
                   Page {currentPage} of {totalPages}
                 </span>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  onClick={goToNextPage}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
-              </>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              {totalBoxes} signature field{totalBoxes !== 1 ? 's' : ''} total
-              {currentPageBoxes.length > 0 && ` (${currentPageBoxes.length} on this page)`}
-            </span>
-            {currentPageBoxes.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleClearCurrentPage}
-                className="text-destructive hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Clear Page
-              </Button>
-            )}
+            </div>
+
+            {/* PDF Render Area */}
+            <div 
+              className="flex-1 overflow-auto flex justify-center p-8 cursor-crosshair relative"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
+              <div ref={containerRef} className="relative shadow-lg select-none" style={{ width: 'fit-content', height: 'fit-content' }}>
+                {pdfUrl && (
+                  <Document file={pdfUrl} loading={<div className="w-[612px] h-[792px] bg-white animate-pulse" />}>
+                    <Page 
+                      pageNumber={currentPage} 
+                      width={PDF_WIDTH} // Fixed width for consistency
+                      renderTextLayer={false}
+                      renderAnnotationLayer={false}
+                      onLoadSuccess={onPageLoadSuccess}
+                    />
+                  </Document>
+                )}
+
+                {/* Overlays */}
+                {/* Temp Drawing Rect */}
+                {tempRect && (
+                  <div 
+                    className="absolute border-2 border-green-500 bg-green-500/20 z-50 pointer-events-none"
+                    style={getBoxStyle(tempRect)}
+                  />
+                )}
+
+                {/* Existing Boxes */}
+                {signatureBoxes.filter(b => b.page === currentPage).map((box) => (
+                  <div
+                    key={box.id}
+                    className={cn(
+                      "absolute border-2 cursor-move group transition-colors",
+                      selectedBoxId === box.id 
+                        ? "border-blue-600 bg-blue-500/20 z-40" 
+                        : "border-blue-400 bg-blue-400/10 z-30 hover:border-blue-500"
+                    )}
+                    style={getBoxStyle(box)}
+                    onMouseDown={(e) => handleBoxMouseDown(e, box.id)}
+                  >
+                    {/* Label */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs font-bold text-blue-700 pointer-events-none whitespace-nowrap overflow-hidden text-ellipsis max-w-full px-1">
+                      {box.signerName ? box.signerName : "Signature"}
+                    </div>
+
+                    {/* Resize Handles (Only when selected) */}
+                    {selectedBoxId === box.id && (
+                      <>
+                        <div 
+                          className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border border-blue-600 cursor-nw-resize"
+                          onMouseDown={(e) => handleResizeMouseDown(e, box.id, 'nw')}
+                        />
+                        <div 
+                          className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border border-blue-600 cursor-ne-resize"
+                          onMouseDown={(e) => handleResizeMouseDown(e, box.id, 'ne')}
+                        />
+                        <div 
+                          className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border border-blue-600 cursor-sw-resize"
+                          onMouseDown={(e) => handleResizeMouseDown(e, box.id, 'sw')}
+                        />
+                        <div 
+                          className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border border-blue-600 cursor-se-resize"
+                          onMouseDown={(e) => handleResizeMouseDown(e, box.id, 'se')}
+                        />
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* PDF preview with overlay */}
-        <div className="flex-1 flex items-center justify-center bg-muted/30 rounded-lg p-4 overflow-auto border border-border max-h-[60vh]">
-          <div
-            ref={containerRef}
-            className="relative cursor-crosshair shadow-lg"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-          >
-            {pdfUrl && (
-              <Document
-                file={pdfUrl}
-                loading={<div className="p-8 text-muted-foreground">Loading PDF...</div>}
-                error={<div className="p-8 text-destructive">Failed to load PDF</div>}
-              >
-                <Page
-                  pageNumber={currentPage}
-                  width={550}
-                  onLoadSuccess={onPageLoadSuccess}
-                  renderTextLayer={false}
-                  renderAnnotationLayer={false}
-                />
-              </Document>
-            )}
-
-            {/* Drawing overlay canvas */}
-            <canvas
-              ref={canvasRef}
-              className="absolute top-0 left-0 pointer-events-none"
-              style={{ width: pageSize.width, height: pageSize.height }}
-            />
-
-            {/* Instructions overlay when no boxes drawn on this page */}
-            {currentPageBoxes.length === 0 && !currentRect && !isDrawing && pageSize.width > 0 && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="bg-card/95 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 border border-border">
-                  <Move className="h-5 w-5 text-primary" />
-                  <span className="text-sm text-card-foreground">Click and drag to draw signature areas</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* List of boxes on current page */}
-        {currentPageBoxes.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-2">
-            {currentPageBoxes.map((_, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded text-sm"
-              >
-                <span>Signature {index + 1}</span>
-                <button
-                  onClick={() => handleRemoveBox(index)}
-                  className="hover:bg-primary/20 rounded p-0.5"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleConfirm}
-            disabled={signatureBoxes.length === 0}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Save & Download PDF ({totalBoxes} field{totalBoxes !== 1 ? 's' : ''})
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

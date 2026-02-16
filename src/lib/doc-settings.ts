@@ -5,7 +5,7 @@ export const DOC_SETTINGS = {
   font: "Times New Roman",
   fontSize: 24, // 12pt
   pageMargins: {
-    top: 0,      // 1" top
+    top: 1440,      // 1" top
     bottom: 1440,   // 1" bottom
     left: 1440,     // 1" left
     right: 1440,    // 1" right

@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "packageId": "nldp_1770758957963_mou",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-02-10T21:29:17.963Z",
+    "author": {
+      "name": "System Template",
+      "unit": "HQMC"
+    },
+    "package": {
+      "title": "Memorandum of Understanding",
+      "description": "General understanding between parties (Non-binding).",
+      "subject": "MEMORANDUM OF UNDERSTANDING BETWEEN ACTIVITY A AND ACTIVITY B",
+      "documentType": "mou",
+      "tags": [
+        "template",
+        "standard"
+      ]
+    },
+    "checksums": {
+      "dataHash": "",
+      "crc32": ""
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "mou",
+      "subj": "MEMORANDUM OF UNDERSTANDING BETWEEN ACTIVITY A AND ACTIVITY B",
+      "date": "10 Feb 26",
+      "moaData": {
+        "activityA": "Senior Activity",
+        "activityB": "Junior Activity",
+        "seniorSigner": {
+          "name": "Name",
+          "title": "Title",
+          "activity": "Activity A"
+        },
+        "juniorSigner": {
+          "name": "Name",
+          "title": "Title",
+          "activity": "Activity B"
+        }
+      },
+      "ssic": "",
+      "originatorCode": "",
+      "from": "",
+      "to": "",
+      "sig": "",
+      "line1": "",
+      "line2": "",
+      "line3": "",
+      "endorsementLevel": "",
+      "basicLetterReference": "",
+      "referenceWho": "",
+      "referenceType": "",
+      "referenceDate": "",
+      "startingReferenceLevel": "",
+      "startingEnclosureNumber": "",
+      "startingPageNumber": 1,
+      "previousPackagePageCount": 0,
+      "headerType": "USMC",
+      "bodyFont": "times",
+      "delegationText": "",
+      "accentColor": "black"
+    },
+    "vias": [],
+    "references": [],
+    "enclosures": [],
+    "copyTos": [],
+    "paragraphs": [
+      {
+        "id": 1,
+        "level": 0,
+        "content": "1. Purpose."
+      },
+      {
+        "id": 2,
+        "level": 0,
+        "content": "2. Problem."
+      },
+      {
+        "id": 3,
+        "level": 0,
+        "content": "3. Scope."
+      },
+      {
+        "id": 4,
+        "level": 0,
+        "content": "4. Understanding."
+      }
+    ]
+  }
+}

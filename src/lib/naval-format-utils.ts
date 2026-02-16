@@ -199,6 +199,15 @@ export function getMOAParagraphs(type: 'moa' | 'mou' = 'moa'): ParagraphData[] {
 }
 
 /**
+ * Standard Business Letter Paragraphs
+ */
+export function getBusinessLetterParagraphs(): ParagraphData[] {
+  return [
+    { id: 1, level: 1, content: '', title: '' },
+  ];
+}
+
+/**
  * Generates a standardized filename for exports
  */
 export function getExportFilename(formData: FormData, extension: 'pdf' | 'docx' | 'txt'): string {
@@ -208,7 +217,7 @@ export function getExportFilename(formData: FormData, extension: 'pdf' | 'docx' 
 
   // Order / Directive
   if (formData.documentType === 'mco') {
-    const prefix = sanitize(formData.orderPrefix) || 'MCO';
+    const prefix = sanitize(formData.orderPrefix ?? '') || 'MCO';
     return `${prefix} ${ssic} - ${subject}.${extension}`;
   }
 
@@ -231,7 +240,7 @@ export function getExportFilename(formData: FormData, extension: 'pdf' | 'docx' 
 
   // Page 11
   if (formData.documentType === 'page11') {
-    const name = sanitize(formData.name) || 'Marine';
+    const name = sanitize(formData.name ?? '') || 'Marine';
     return `NAVMC 118(11) - ${name}.${extension}`;
   }
 
@@ -247,7 +256,7 @@ export function getExportFilename(formData: FormData, extension: 'pdf' | 'docx' 
   }
 
   // Staffing Papers
-  if (['point-paper', 'talking-paper', 'briefing-paper', 'position-paper', 'trip-report'].includes(formData.documentType)) {
+  if (['position-paper', 'information-paper'].includes(formData.documentType)) {
     const type = formData.documentType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     return `${type} - ${subject}.${extension}`;
   }
@@ -316,44 +325,70 @@ export function mergeAdminSubsections(
   return newParagraphs;
 }
 
-export function getPointPaperParagraphs(): ParagraphData[] {
-  return [
-    { id: 1, level: 0, content: 'Use this section to briefly state the history or context of the issue.', title: 'Background', isMandatory: true },
-    { id: 2, level: 0, content: 'State the current problem or topic requiring attention.', title: 'Issue', isMandatory: true },
-    { id: 3, level: 0, content: 'State the desired outcome or the main takeaway for the reader.', title: 'Recommendation', isMandatory: true },
-  ];
-}
-
-export function getTalkingPaperParagraphs(): ParagraphData[] {
-  return [
-    { id: 1, level: 0, content: '', title: 'Background', isMandatory: true },
-    { id: 2, level: 0, content: '', title: 'Discussion', isMandatory: true },
-  ];
-}
-
-export function getBriefingPaperParagraphs(): ParagraphData[] {
-  return [
-    { id: 1, level: 0, content: '', title: 'Background', isMandatory: true },
-    { id: 2, level: 0, content: '', title: 'Discussion', isMandatory: true },
-    { id: 3, level: 0, content: '', title: 'Conclusion', isMandatory: true },
-  ];
-}
-
 export function getPositionPaperParagraphs(): ParagraphData[] {
   return [
-    { id: 1, level: 0, content: '', title: 'Issue', isMandatory: true },
-    { id: 2, level: 0, content: '', title: 'Position', isMandatory: true },
-    { id: 3, level: 0, content: '', title: 'Discussion', isMandatory: true },
-    { id: 4, level: 0, content: '', title: 'Recommendation', isMandatory: true },
+    { 
+      id: 1, 
+      level: 1, 
+      content: 'Bottom Line Up Front (BLUF): briefly state who the paper is for and why. For example: "Obtain CMC decision/establish Marine Corps position on subject."', 
+      title: 'Purpose', 
+      isMandatory: true 
+    },
+    { 
+      id: 2, 
+      level: 1, 
+      content: 'Briefly summarize main points to be made.', 
+      title: 'Major Points', 
+      isMandatory: true 
+    },
+    { 
+      id: 3, 
+      level: 2, 
+      content: 'State each point in one brief sentence.', 
+      title: '', 
+      isMandatory: true 
+    },
+    { 
+      id: 4, 
+      level: 2, 
+      content: 'Major points should stand alone and not require amplification by subordinate points.', 
+      title: '', 
+      isMandatory: true 
+    },
+    { 
+      id: 5, 
+      level: 1, 
+      content: '', 
+      title: 'Discussion', 
+      isMandatory: true 
+    },
+    { 
+      id: 6, 
+      level: 2, 
+      content: 'Tailor discussion to needs and knowledge of the reader.', 
+      title: '', 
+      isMandatory: true 
+    },
+    { 
+      id: 7, 
+      level: 2, 
+      content: 'Write in short, clear, direct conversational style so the reader understands the key points and arrives at a logical conclusion.', 
+      title: '', 
+      isMandatory: true 
+    },
+    { 
+      id: 8, 
+      level: 1, 
+      content: 'The recommendation(s) must flow logically from the major points and discussion. State in direct and positive language.', 
+      title: 'Recommendation', 
+      isMandatory: true 
+    },
   ];
 }
 
-export function getTripReportParagraphs(): ParagraphData[] {
+export function getInformationPaperParagraphs(): ParagraphData[] {
   return [
-    { id: 1, level: 0, content: '', title: 'Purpose', isMandatory: true },
-    { id: 2, level: 0, content: '', title: 'Travelers', isMandatory: true },
-    { id: 3, level: 0, content: '', title: 'Itinerary', isMandatory: true },
-    { id: 4, level: 0, content: '', title: 'Discussion', isMandatory: true },
-    { id: 5, level: 0, content: '', title: 'Action Items', isMandatory: true },
+    { id: 1, level: 1, content: 'State the reason for the paper.', title: 'Purpose', isMandatory: true },
+    { id: 2, level: 1, content: 'Present the main points in a logical sequence.', title: 'Key Points', isMandatory: true },
   ];
 }

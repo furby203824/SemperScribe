@@ -52,6 +52,12 @@ export interface ManualSignaturePosition {
   width: number;
   /** Height in points */
   height: number;
+  /** Name of the signer (for display and tooltip) */
+  signerName?: string;
+  /** Reason for signing */
+  reason?: string;
+  /** Contact info for the signer */
+  contactInfo?: string;
 }
 
 /**
@@ -292,7 +298,7 @@ export async function addSignatureField(
 function createSignatureField(
   pdfDoc: PDFDocument,
   targetPage: PDFPage,
-  position: { x: number; y: number; width: number; height: number },
+  position: ManualSignaturePosition,
   fieldName: string = 'Signature1'
 ): PDFRef {
   const context = pdfDoc.context;
@@ -301,6 +307,7 @@ function createSignatureField(
   const sigFieldDict = context.obj({
     FT: PDFName.of('Sig'),           // Field Type: Signature
     T: PDFString.of(fieldName),      // Field name
+    TU: position.signerName ? PDFString.of(`Signer: ${position.signerName}`) : undefined, // Tooltip
     Ff: PDFNumber.of(0),             // Field flags
     Type: PDFName.of('Annot'),
     Subtype: PDFName.of('Widget'),
@@ -385,6 +392,23 @@ export async function addSignatureFieldAtPosition(
     opacity: 0.3,
   });
 
+  // Draw signer name if available
+  if (position.signerName) {
+    targetPage.drawText(position.signerName, {
+      x: position.x + 2,
+      y: position.y + position.height - 10, // Top-left of box
+      size: 8,
+      color: rgb(0.2, 0.2, 0.6),
+    });
+  } else {
+     targetPage.drawText('Sign Here', {
+      x: position.x + 2,
+      y: position.y + position.height - 10,
+      size: 8,
+      color: rgb(0.2, 0.2, 0.6),
+    });
+  }
+
   // Create the interactive PKI signature field
   createSignatureField(pdfDoc, targetPage, position, 'Signature1');
 
@@ -423,6 +447,16 @@ export async function addMultipleSignatureFields(
       color: rgb(0.95, 0.97, 1.0),
       opacity: 0.3,
     });
+
+    // Draw signer name if available
+    if (position.signerName) {
+      targetPage.drawText(position.signerName, {
+        x: position.x + 2,
+        y: position.y + position.height - 10,
+        size: 8,
+        color: rgb(0.2, 0.2, 0.6),
+      });
+    }
 
     // Create the interactive PKI signature field with unique name
     createSignatureField(pdfDoc, targetPage, position, `Signature${index + 1}`);
