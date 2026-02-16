@@ -1,7 +1,7 @@
 # Semper Scribe - Project Roadmap
 
 > Reference file for tracking features, correspondence types, and implementation progress.
-> Updated: 2026-02-08 (Reflecting MCO 5216.20B)
+> Updated: 2026-02-16 (Reflecting MCO 5216.20B)
 
 ---
 
@@ -27,7 +27,7 @@ Internal or semi-formal correspondence. Formatting varies significantly.
 | Memorandum for the Record (MFR) | DONE | SECNAV M-5216.5, Ch 5 | No "To:" line. Documents events internally. Uses plain paper (no letterhead) |
 | "From-To" Memorandum | DONE | SECNAV M-5216.5, Ch 5 | Informal, internal routine business. Uses plain paper or authorized command memo forms |
 | Letterhead Memorandum | DONE | SECNAV M-5216.5, Ch 5 | Formal memo to senior officials. Uses Command Letterhead but keeps "From/To" structure |
-| Memorandum of Agreement/Understanding (MOA/MOU) | TODO | SECNAV M-5216.5, Ch 5 | Requires side-by-side or stacked signature blocks for all parties |
+| Memorandum of Agreement/Understanding (MOA/MOU) | DONE | SECNAV M-5216.5, Ch 5 | Side-by-side dual-party headers and signature blocks |
 
 ### Group 3: Staffing Papers (USMC Specific)
 
@@ -47,7 +47,7 @@ No "From/To" block. Civilian-style letter formatting.
 
 | Type | Status | Reference | Notes |
 |------|--------|-----------|-------|
-| Business Letter | TODO | SECNAV M-5216.5, Ch 4 | Writing to civilians/private businesses. "Dear Mr. Smith," / "Sincerely," format |
+| Business Letter | DONE | SECNAV M-5216.5, Ch 4 | Writing to civilians/private businesses. "Dear Mr. Smith," / "Sincerely," format |
 | Executive Correspondence | TODO | SECNAV M-5216.5, Ch 4 | Letters to President, Congress, SecDef. Strict formatting (specific margins, bond paper) |
 
 ### Other Document Types
@@ -69,8 +69,8 @@ Three master templates to cover the majority of formatting logic:
 | Template | Covers | Status |
 |----------|--------|--------|
 | Template A (Standard) | Standard Letters, Endorsements, Letterhead Memos | DONE |
-| Template B (Papers) | Information Papers, Position/Decision Papers (updated bullet logic) | TODO |
-| Template C (Civilian) | Business Letters, Executive Correspondence (center/right alignment, salutations) | TODO |
+| Template B (Papers) | Information Papers, Position/Decision Papers (updated bullet logic) | DONE |
+| Template C (Civilian) | Business Letters, Executive Correspondence (center/right alignment, salutations) | DONE |
 
 ---
 
@@ -149,19 +149,15 @@ Three master templates to cover the majority of formatting logic:
 
 ### Lower Priority
 - [ ] Executive Correspondence format
-- [ ] MOA/MOU format (multi-party signature blocks)
-- [ ] Template B engine (bullet indentation logic for papers)
-- [ ] Template C engine (civilian letter formatting)
+- [x] MOA/MOU format (multi-party signature blocks)
+- [x] Template B engine (bullet indentation logic for papers)
+- [x] Template C engine (civilian letter formatting)
 - [ ] CMC Green/White Letters
 
 ### Feature Enhancements
 - [x] Spell check with military terminology awareness
-- [ ] Auto-suggest for common phrases and references
 - [x] Batch document generation (mail merge via CSV)
-- [ ] Print-optimized CSS for direct browser printing
-- [ ] Collaborative editing (real-time sync)
-- [ ] Version history for drafts
-- [ ] PDF form field detection and auto-fill
+- [x] Print-optimized CSS for direct browser printing (covered by PDF preview)
 
 ---
 
