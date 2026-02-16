@@ -560,6 +560,16 @@ function NavalLetterGeneratorInner() {
             </DynamicForm>
         </div>
 
+        {/* Decision Grid for Position/Decision Papers */}
+        {(formData.documentType === 'decision-paper' || formData.documentType === 'position-paper') && (
+          <DecisionGridSection
+            data={formData.decisionGrid || { recommenders: [], finalDecision: { role: 'CMC', options: ['Approved', 'Disapproved'] } }}
+            mode={formData.decisionMode || 'SINGLE'}
+            onDataChange={(data) => setFormData(prev => ({ ...prev, decisionGrid: data }))}
+            onModeChange={(mode) => setFormData(prev => ({ ...prev, decisionMode: mode }))}
+          />
+        )}
+
         {/* Endorsement-Specific Fields */}
         {formData.documentType === 'endorsement' && (
           <Card className="border-primary/20 shadow-md overflow-hidden mb-6">

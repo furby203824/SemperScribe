@@ -12,7 +12,8 @@ export type ControlType =
   | 'combobox'
   | 'autosuggest'
   | 'number'
-  | 'hidden'; // For fields that are present in data but not shown
+  | 'hidden' // For fields that are present in data but not shown
+  | 'decision-grid'; // Custom decision grid (rendered externally, not by DynamicForm)
 
 export interface FieldOption {
   label: string;
@@ -830,7 +831,7 @@ const StaffingPaperFields: FieldDefinition[] = [
   {
     name: 'decisionGrid',
     label: 'Decision Grid',
-    type: 'decision-grid' as ControlType,
+    type: 'decision-grid',
     required: false,
     className: 'col-span-full',
     description: 'Routing and decision options for Position/Decision Papers'
