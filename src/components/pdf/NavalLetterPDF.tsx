@@ -691,7 +691,7 @@ export function NavalLetterPDF({
              <View style={{ alignItems: 'flex-start' }}>
                 {formData.documentType === 'bulletin' && formData.cancellationDate && (
                   <Text style={styles.addressLine}>
-                    Canc: {formatCancellationDate(formData.cancellationDate)}
+                    {formData.cancellationType === 'contingent' ? 'Canc frp: ' : 'Canc: '}{formatCancellationDate(formData.cancellationDate)}
                   </Text>
                 )}
                 <Text style={styles.addressLine}>{formData.ssic || ''}</Text>

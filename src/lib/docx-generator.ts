@@ -155,12 +155,9 @@ export async function generateDocxBlob(
        }));
   } else if (!isMoaOrMou && !isStaffingPaper) {
       const ssicBlock = [];
-      if (formData.documentType === 'bulletin') {
-        if (formData.cancellationType === 'contingent' && formData.cancellationContingency) {
-           ssicBlock.push(`Canc: ${formData.cancellationContingency}`);
-        } else if (formData.cancellationDate) {
-           ssicBlock.push(`Canc: ${formatCancellationDate(formData.cancellationDate)}`);
-        }
+      if (formData.documentType === 'bulletin' && formData.cancellationDate) {
+        const cancPrefix = formData.cancellationType === 'contingent' ? 'Canc frp:' : 'Canc:';
+        ssicBlock.push(`${cancPrefix} ${formatCancellationDate(formData.cancellationDate)}`);
       }
       
       if (formData.documentType === 'mco' && formData.orderPrefix) {

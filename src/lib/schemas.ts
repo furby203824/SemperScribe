@@ -411,6 +411,26 @@ export const BulletinSchema = BasicLetterSchema.extend({
   directiveTitle: z.string().optional(),
   cancellationDate: z.string().min(1, "Cancellation Date is required"),
   cancellationType: z.enum(['fixed', 'contingent']).optional(),
+  // Shared directive fields (same as MCO)
+  reports: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    controlSymbol: z.string(),
+    paragraphRef: z.string(),
+    exempt: z.boolean().optional()
+  })).optional(),
+  distribution: z.object({
+    type: z.string().optional(),
+    pcn: z.string().optional(),
+    copyTo: z.array(z.object({
+        code: z.string(),
+        qty: z.number()
+    })).optional(),
+    statementCode: z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'X', '']).optional(),
+    statementReason: z.string().optional(),
+    statementDate: z.string().optional(),
+    statementAuthority: z.string().optional(),
+  }).optional(),
 });
 
 export const BulletinDefinition: DocumentTypeDefinition = {
