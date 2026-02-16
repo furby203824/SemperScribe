@@ -1,11 +1,9 @@
 
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Input, InputProps } from '@/components/ui/input';
 import { militaryDictionary, DictionaryEntry } from '@/lib/military-dictionary';
-import { Command, CommandInput, CommandList, CommandItem } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useDebounce } from '@/hooks/useDebounce';
 
 interface AutoSuggestInputProps extends Omit<InputProps, 'onChange'> {
@@ -15,11 +13,13 @@ interface AutoSuggestInputProps extends Omit<InputProps, 'onChange'> {
 
 export function AutoSuggestInput({ value, onChange, ...props }: AutoSuggestInputProps) {
   const [suggestions, setSuggestions] = useState<DictionaryEntry[]>([]);
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   const debouncedSearch = useDebounce((query: string) => {
     if (query.length < 2) {
       setSuggestions([]);
+      setOpen(false);
       return;
     }
     const lowerCaseQuery = query.toLowerCase();
@@ -28,8 +28,8 @@ export function AutoSuggestInput({ value, onChange, ...props }: AutoSuggestInput
         term.toLowerCase().includes(lowerCaseQuery) ||
         meaning.toLowerCase().includes(lowerCaseQuery)
     );
-    setSuggestions(filtered.slice(0, 10)); // Limit to top 10 suggestions
-    setIsPopoverOpen(filtered.length > 0);
+    setSuggestions(filtered.slice(0, 10));
+    setOpen(filtered.length > 0);
   }, 300);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,37 +41,41 @@ export function AutoSuggestInput({ value, onChange, ...props }: AutoSuggestInput
   const handleSelect = (suggestion: DictionaryEntry) => {
     onChange(suggestion.term);
     setSuggestions([]);
-    setIsPopoverOpen(false);
+    setOpen(false);
+    inputRef.current?.blur();
   };
 
   return (
-    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-      <PopoverTrigger asChild>
-        <Input
-          {...props}
-          value={value}
-          onChange={handleChange}
-          autoComplete="off"
-        />
-      </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <Command>
-          <CommandList>
-            {suggestions.map((suggestion) => (
-              <CommandItem
-                key={suggestion.term}
-                onSelect={() => handleSelect(suggestion)}
-                value={suggestion.term}
-              >
-                <div className="flex flex-col">
-                  <span className="font-semibold">{suggestion.term}</span>
-                  <span className="text-xs text-muted-foreground">{suggestion.meaning}</span>
-                </div>
-              </CommandItem>
-            ))}
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <div className="relative">
+      <Input
+        ref={inputRef}
+        {...props}
+        value={value}
+        onChange={handleChange}
+        onFocus={() => {
+          if (suggestions.length > 0) setOpen(true);
+        }}
+        onBlur={() => setTimeout(() => setOpen(false), 200)}
+        autoComplete="off"
+      />
+      {open && suggestions.length > 0 && (
+        <div className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto rounded-md border bg-popover text-popover-foreground shadow-md">
+          {suggestions.map((suggestion) => (
+            <button
+              key={suggestion.term}
+              type="button"
+              className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                handleSelect(suggestion);
+              }}
+            >
+              <span className="font-semibold">{suggestion.term}</span>
+              <span className="ml-2 text-xs text-muted-foreground">{suggestion.meaning}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

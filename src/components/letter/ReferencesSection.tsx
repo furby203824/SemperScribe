@@ -33,7 +33,7 @@ export function ReferencesSection({ references, setReferences, formData, setForm
   const updateItem = useCallback((index: number, value: string) => setReferences(references.map((item, i) => i === index ? value : item)), [references, setReferences]);
 
   const getReferenceLetter = (index: number, startingLevel: string): string => {
-    const startCharCode = startingLevel.charCodeAt(0);
+    const startCharCode = (startingLevel || 'a').charCodeAt(0);
     return String.fromCharCode(startCharCode + index);
   };
 
