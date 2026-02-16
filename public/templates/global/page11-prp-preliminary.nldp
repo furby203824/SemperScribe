@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "packageId": "page11_prp_preliminary",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-02-16T00:00:00.000Z",
+    "author": {
+      "name": "System Template"
+    },
+    "package": {
+      "title": "PRP Preliminary Screening",
+      "description": "Personnel Reliability Program preliminary screening per SECNAVINST 5510.35D",
+      "documentType": "page11"
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "page11",
+      "name": "",
+      "edipi": "",
+      "date": "",
+      "remarksLeft": "Entry:",
+      "remarksRight": "(Date). Preliminary PRP screening for personnel records, medical evaluation, and personnel interview IAW SECNAVINST 5510.35D completed. Appropriate investigation initiated. You are suitable for transfer for training.\n\n\n_____________________\nSignature of CO"
+    },
+    "vias": [],
+    "references": [],
+    "enclosures": [],
+    "copyTos": [],
+    "paragraphs": []
+  }
+}

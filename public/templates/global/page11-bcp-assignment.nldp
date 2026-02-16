@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "packageId": "page11_bcp_assignment",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-02-16T00:00:00.000Z",
+    "author": {
+      "name": "System Template"
+    },
+    "package": {
+      "title": "Body Composition Program Assignment",
+      "description": "Assignment to BCP per MCO 6110.3A",
+      "documentType": "page11"
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "page11",
+      "name": "",
+      "edipi": "",
+      "date": "",
+      "remarksLeft": "Entry:",
+      "remarksRight": "(Date). Assigned to the Body Composition Program (BCP) due to my weight of () lbs and body fat of ()% which exceeds the max allowable standard of (___)%. I have been counseled on the physical fitness and military appearance standards of MCO 6110.3A. I was advised that within 5 working days after acknowledgment of this entry, a written rebuttal can be submitted and this rebuttal will be filed on the document side of the OQR/SRB. I choose (to) (not to) make a statement.\n\n\n_____________________          _____________________\nSignature of Marine            Signature of CO"
+    },
+    "vias": [],
+    "references": [],
+    "enclosures": [],
+    "copyTos": [],
+    "paragraphs": []
+  }
+}

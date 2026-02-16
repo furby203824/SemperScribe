@@ -103,5 +103,89 @@
     "description": "Standard entry for when a Marine is recommended for promotion.",
     "documentType": "page11",
     "url": "/templates/global/Promotion Recommended.nldp"
+  },
+  {
+    "id": "page11-6105-warning",
+    "title": "Page 11 - 6105 Warning (Not Processing)",
+    "description": "Standard 6105 counseling entry for deficiencies (not currently being processed).",
+    "documentType": "page11",
+    "url": "/templates/global/page11-6105-warning.nldp"
+  },
+  {
+    "id": "page11-6105-processing",
+    "title": "Page 11 - 6105 Processing Entry",
+    "description": "6105 counseling entry when already being processed for judicial or adverse admin action.",
+    "documentType": "page11",
+    "url": "/templates/global/page11-6105-processing.nldp"
+  },
+  {
+    "id": "page11-drug-involvement",
+    "title": "Page 11 - Illegal Drug Involvement",
+    "description": "Mandatory entry for illegal drug use per MCO 5300.17A / MCO 1900.16 CH 2.",
+    "documentType": "page11",
+    "url": "/templates/global/page11-drug-involvement.nldp"
+  },
+  {
+    "id": "page11-alcohol-abuse",
+    "title": "Page 11 - Alcohol Abuse",
+    "description": "Entry for alcohol-related incident per MCO 5300.17A.",
+    "documentType": "page11",
+    "url": "/templates/global/page11-alcohol-abuse.nldp"
+  },
+  {
+    "id": "page11-bcp-assignment",
+    "title": "Page 11 - BCP Assignment",
+    "description": "Assignment to Body Composition Program per MCO 6110.3A.",
+    "documentType": "page11",
+    "url": "/templates/global/page11-bcp-assignment.nldp"
+  },
+  {
+    "id": "page11-retirement-request",
+    "title": "Page 11 - Voluntary Retirement (Officer)",
+    "description": "Officer retirement request per MCO 1900.16 CH 2.",
+    "documentType": "page11",
+    "url": "/templates/global/page11-retirement-request.nldp"
+  },
+  {
+    "id": "page11-resignation-request",
+    "title": "Page 11 - Resignation (Officer)",
+    "description": "Officer resignation request per MCO 1900.16 CH 2 para 5003.",
+    "documentType": "page11",
+    "url": "/templates/global/page11-resignation-request.nldp"
+  },
+  {
+    "id": "page11-vsi-ssb-separation",
+    "title": "Page 11 - VSI/SSB Separation",
+    "description": "Voluntary Separation Incentive or Special Separation Benefit acknowledgment.",
+    "documentType": "page11",
+    "url": "/templates/global/page11-vsi-ssb-separation.nldp"
+  },
+  {
+    "id": "page11-hostile-fire-waiver",
+    "title": "Page 11 - Hostile Fire Area Waiver (OCD)",
+    "description": "Overseas Control Date waiver for hostile fire assignment per MCO 1300.8 W/CH 1.",
+    "documentType": "page11",
+    "url": "/templates/global/page11-hostile-fire-waiver.nldp"
+  },
+  {
+    "id": "page11-sole-survivor-waiver",
+    "title": "Page 11 - Sole Surviving Son/Daughter Waiver",
+    "description": "Waiver of restrictive assignment rights per MCO 1300.8 W/CH 1.",
+    "documentType": "page11",
+    "url": "/templates/global/page11-sole-survivor-waiver.nldp"
+  },
+  {
+    "id": "page11-prp-preliminary",
+    "title": "Page 11 - PRP Preliminary Screening",
+    "description": "Personnel Reliability Program preliminary screening per SECNAVINST 5510.35D.",
+    "documentType": "page11",
+    "url": "/templates/global/page11-prp-preliminary.nldp"
+  },
+  {
+    "id": "page11-prp-decertification",
+    "title": "Page 11 - PRP Permanent Decertification",
+    "description": "Personnel Reliability Program permanent decertification per SECNAVINST 5510.35D.",
+    "documentType": "page11",
+    "url": "/templates/global/page11-prp-decertification.nldp"
   }
 ]
