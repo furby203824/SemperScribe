@@ -1,23 +1,28 @@
 
 'use client';
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 
 export function useDebounce<T extends (...args: any[]) => void>(
   callback: T,
   delay: number = 300
-): T {
+): (...args: Parameters<T>) => void {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const callbackRef = useRef(callback);
+
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
 
   return useCallback(
-    ((...args: any[]) => {
+    (...args: Parameters<T>) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
-        callback(...args);
+        callbackRef.current(...args);
       }, delay);
-    }) as T,
-    [callback, delay]
+    },
+    [delay]
   );
 }
