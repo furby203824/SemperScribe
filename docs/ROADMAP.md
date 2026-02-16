@@ -48,7 +48,7 @@ No "From/To" block. Civilian-style letter formatting.
 | Type | Status | Reference | Notes |
 |------|--------|-----------|-------|
 | Business Letter | DONE | SECNAV M-5216.5, Ch 4 | Writing to civilians/private businesses. "Dear Mr. Smith," / "Sincerely," format |
-| Executive Correspondence | TODO | SECNAV M-5216.5, Ch 4 | Letters to President, Congress, SecDef. Strict formatting (specific margins, bond paper) |
+| Executive Correspondence | DONE | SECNAV M-5216.5, Ch 12 | Letters to President, Congress, SecDef. Supports letter, standard memo, action memo, and info memo formats |
 
 ### Other Document Types
 
@@ -148,7 +148,7 @@ Three master templates to cover the majority of formatting logic:
 - [x] Business Letter format (civilian style)
 
 ### Lower Priority
-- [ ] Executive Correspondence format
+- [x] Executive Correspondence format
 - [x] MOA/MOU format (multi-party signature blocks)
 - [x] Template B engine (bullet indentation logic for papers)
 - [x] Template C engine (civilian letter formatting)
