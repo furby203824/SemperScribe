@@ -55,6 +55,7 @@ import { useImportExport } from '@/hooks/useImportExport';
 
 import { CopyToSection } from '@/components/letter/CopyToSection';
 import { BatchGenerateModal } from '@/components/BatchGenerateModal';
+import { ProofreadModal } from '@/components/ProofreadModal';
 
 // Inner component that uses useSearchParams (requires Suspense boundary)
 const initialState: FormData = {
@@ -142,6 +143,9 @@ function NavalLetterGeneratorInner() {
 
   // Batch Generate
   const [showBatchModal, setShowBatchModal] = useState(false);
+
+  // Proofread Checklist
+  const [showProofreadModal, setShowProofreadModal] = useState(false);
 
   // Load saved letters
   useEffect(() => {
@@ -741,6 +745,7 @@ function NavalLetterGeneratorInner() {
       onExportAMHS={handleExportAMHS}
       onAddSignature={handleAddSignature}
       onBatchGenerate={() => setShowBatchModal(true)}
+      onProofread={() => setShowProofreadModal(true)}
       customRightPanel={
         formData.documentType === 'amhs' ? (
           <AMHSPreview
@@ -778,6 +783,14 @@ function NavalLetterGeneratorInner() {
         enclosures={enclosures}
         copyTos={copyTos}
         distList={distList}
+      />
+      <ProofreadModal
+        open={showProofreadModal}
+        onOpenChange={setShowProofreadModal}
+        formData={formData}
+        paragraphs={paragraphs}
+        enclosures={enclosures}
+        references={references}
       />
     </ModernAppShell>
   );

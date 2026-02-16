@@ -14,7 +14,8 @@ import {
   EyeOff,
   Link2,
   Check,
-  FileSpreadsheet
+  FileSpreadsheet,
+  ClipboardCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -71,6 +72,8 @@ interface HeaderActionsProps {
   onAddSignature?: () => void;
   // Batch Generate
   onBatchGenerate?: () => void;
+  // Proofread
+  onProofread?: () => void;
 }
 
 export function HeaderActions({
@@ -95,7 +98,8 @@ export function HeaderActions({
   onCopyAMHS,
   onExportAMHS,
   onAddSignature,
-  onBatchGenerate
+  onBatchGenerate,
+  onProofread
 }: HeaderActionsProps) {
   const { 
     globalTemplates, 
@@ -379,6 +383,23 @@ export function HeaderActions({
           </>
         ) : (
           <>
+            {onProofread && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onProofread}
+                className={cn(
+                  "hidden sm:flex",
+                  className
+                    ? "bg-transparent text-secondary-foreground border-secondary-foreground/30 hover:bg-white/10 hover:text-primary"
+                    : ""
+                )}
+                title="Proofread Checklist (SECNAV M-5216.5)"
+              >
+                <ClipboardCheck className={cn("mr-2 w-4 h-4", className ? "text-secondary-foreground" : "text-primary")} />
+                Proofread
+              </Button>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
