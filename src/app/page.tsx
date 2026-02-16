@@ -147,13 +147,23 @@ function NavalLetterGeneratorInner() {
   // Proofread Checklist
   const [showProofreadModal, setShowProofreadModal] = useState(false);
 
+  // Save status tracking
+  const [isDirty, setIsDirty] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const mountedAt = useRef(Date.now());
+
   // Load saved letters
   useEffect(() => {
     const letters = loadSavedLetters();
     setSavedLetters(letters);
   }, []);
 
-
+  // Mark form as dirty when tracked state changes (skip first 2s for initialization)
+  useEffect(() => {
+    if (Date.now() - mountedAt.current > 2000 && formData.documentType) {
+      setIsDirty(true);
+    }
+  }, [formData, paragraphs, vias, references, enclosures, copyTos, distList]);
 
   // Auto-select unit from EDMS
   useEffect(() => {
@@ -652,6 +662,8 @@ function NavalLetterGeneratorInner() {
 
     const updatedLetters = saveLetterToStorage(newLetter, savedLetters);
     setSavedLetters(updatedLetters);
+    setIsDirty(false);
+    setLastSavedAt(new Date());
   };
 
   // Thin wrappers for hook-based document generation
@@ -689,6 +701,8 @@ function NavalLetterGeneratorInner() {
             to: { isValid: false, message: '' }
         });
         setFormKey(prev => prev + 1);
+        setIsDirty(false);
+        setLastSavedAt(null);
       }
   };
 
@@ -766,6 +780,8 @@ function NavalLetterGeneratorInner() {
       onAddSignature={handleAddSignature}
       onBatchGenerate={() => setShowBatchModal(true)}
       onProofread={() => setShowProofreadModal(true)}
+      isDirty={isDirty}
+      lastSavedAt={lastSavedAt}
       customRightPanel={
         formData.documentType === 'amhs' ? (
           <AMHSPreview
