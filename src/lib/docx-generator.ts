@@ -169,16 +169,41 @@ export async function generateDocxBlob(
       if (formData.originatorCode) ssicBlock.push(formData.originatorCode);
       ssicBlock.push(formattedDate || 'Date Placeholder');
 
-      // Standard Stacked SSIC Block (same for all document types)
-      // Uses standard 4.5" indent (6480 twips) per doc-settings.ts
-      ssicBlock.forEach(line => {
-          ssicParagraphs.push(new Paragraph({
-              children: [new TextRun({ text: line, font, size: FONT_SIZE_BODY })],
-              alignment: AlignmentType.LEFT,
-              indent: { left: INDENTS.date }, // 6480 twips (4.5")
-              spacing: { after: 0 }
-          }));
+      // SSIC Block: right-aligned table so the longest line's right edge
+      // touches the right margin, with all lines left-aligned within the block.
+      const ssicTable = new Table({
+          width: { size: 0, type: WidthType.AUTO },
+          alignment: AlignmentType.RIGHT,
+          borders: {
+              top: { style: BorderStyle.NONE, size: 0, color: "auto" },
+              bottom: { style: BorderStyle.NONE, size: 0, color: "auto" },
+              left: { style: BorderStyle.NONE, size: 0, color: "auto" },
+              right: { style: BorderStyle.NONE, size: 0, color: "auto" },
+              insideHorizontal: { style: BorderStyle.NONE, size: 0, color: "auto" },
+              insideVertical: { style: BorderStyle.NONE, size: 0, color: "auto" },
+          },
+          rows: [
+              new TableRow({
+                  children: [
+                      new TableCell({
+                          width: { size: 0, type: WidthType.AUTO },
+                          borders: {
+                              top: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                              bottom: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                              left: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                              right: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                          },
+                          children: ssicBlock.map(line => new Paragraph({
+                              children: [new TextRun({ text: line, font, size: FONT_SIZE_BODY })],
+                              alignment: AlignmentType.LEFT,
+                              spacing: { after: 0 }
+                          })),
+                      }),
+                  ],
+              }),
+          ],
       });
+      ssicParagraphs.push(ssicTable);
   }
 
   // --- MOA/MOU Header ---
