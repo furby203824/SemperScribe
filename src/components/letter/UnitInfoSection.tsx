@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 
 interface UnitInfoSectionProps {
-  formData: Pick<FormData, 'line1' | 'line2' | 'line3'>;
+    formData: Partial<FormData>;
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
   setCurrentUnitCode: (code: string | undefined) => void;
   setCurrentUnitName: (name: string | undefined) => void;

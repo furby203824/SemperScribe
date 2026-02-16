@@ -141,11 +141,11 @@ Three master templates to cover the majority of formatting logic:
 - [x] "From-To" Memorandum format
 - [x] Letterhead Memorandum format
 - [x] Information Paper
+- [ ] Coordination Page
 
 ### Medium Priority
 - [x] Position/Decision Paper
-- [ ] Business Letter format (civilian style)
-- [ ] Coordination Page
+- [x] Business Letter format (civilian style)
 
 ### Lower Priority
 - [ ] Executive Correspondence format

@@ -12,7 +12,7 @@ import { CopyToSection } from './CopyToSection';
 import { ManualDistributionSection } from './ManualDistributionSection';
 
 interface ClosingBlockSectionProps {
-  formData: Pick<FormData, 'sig' | 'delegationText' | 'documentType' | 'distribution'>;
+  formData: Partial<FormData>;
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
   copyTos: string[];
   setCopyTos: (copies: string[]) => void;

@@ -1,3 +1,5 @@
+import { LetterFormData } from '@/lib/schemas';
+
 /**
  * Shared type definitions for the Naval Letter Formatter application
  */
@@ -42,142 +44,9 @@ export interface AdminSubsections {
   reportsRequired: { show: boolean; content: string; order: number };
 }
 
-export interface FormData {
-  documentType: 'basic' | 'endorsement' | 'aa-form' | 'mco' | 'bulletin' | 'page11' | 'amhs' | 'multiple-address' | 'mfr' | 'from-to-memo' | 'letterhead-memo' | 'moa' | 'mou' | 'position-paper' | 'information-paper' | 'business-letter' | '';
-  endorsementLevel: EndorsementLevel;
-  basicLetterReference: string;
-  basicLetterSsic?: string;
-  referenceWho: string;
-  referenceType: string;
-  referenceDate: string;
-  startingReferenceLevel: string;
-  startingEnclosureNumber: string;
-  line1: string;
-  line2: string;
-  line3: string;
-  ssic: string;
-  originatorCode: string;
-  date: string;
-  from: string;
-  to: string;
-  subj: string;
-  sig: string;
-  delegationText: string;
-  startingPageNumber: number;
-  previousPackagePageCount: number;
-  headerType: 'USMC' | 'DON';
-  bodyFont: 'times' | 'courier';
-  accentColor?: 'black' | 'blue' | 'red';
-  classification?: string;
-  // AA Form specific fields
-  actionNo?: string;
-  orgStation?: string; // Can default to line1 + line2 + line3 if not set
-  // MCO/Bulletin specific fields
-  orderPrefix?: string;  // Directive prefix (e.g., "MCO", "BnO", "DivO")
-  directiveTitle?: string;  // Full directive title (e.g., "MARINE CORPS ORDER 5210.11F")
-  cancellationDate?: string;
-  cancellationType?: 'contingent' | 'fixed';
-  cancellationContingency?: string;
-  distribution?: DistributionData;
-  reports?: ReportData[];
-  adminSubsections?: AdminSubsections;
-  
-  // Page 11 specific fields
-  name?: string;
-  edipi?: string;
-  remarksLeft?: string;
-  remarksRight?: string;
 
-  // AMHS specific fields
-  amhsMessageType?: 'GENADMIN' | 'MARADMIN' | 'ALMAR';
-  amhsClassification?: 'UNCLASSIFIED' | 'CONFIDENTIAL' | 'SECRET' | 'TOP SECRET';
-  amhsPrecedence?: 'ROUTINE' | 'PRIORITY' | 'IMMEDIATE' | 'FLASH';
-  amhsDtg?: string;
-  amhsOfficeCode?: string;
-  amhsNarrative?: string;
-  amhsTextBody?: string;
-  amhsReferences?: AMHSReference[];
-  amhsPocs?: string[];
-  
-  // Staffing Paper specific fields
-  drafterName?: string;
-  drafterRank?: string;
-  drafterOfficeCode?: string;
-  drafterPhone?: string;
-  drafterService?: string;
-  drafterAgency?: string;
-  approverName?: string;
-  approverRank?: string;
-  approverOfficeCode?: string;
-  approverPhone?: string;
 
-  // Decision Grid
-  decisionMode?: 'SINGLE' | 'MULTIPLE_CHOICE' | 'MULTIPLE_RECS';
-  decisionGrid?: {
-    recommenders: Array<{
-      id: string;
-      role: string; // e.g., "Dir Ops"
-      options: string[]; // e.g., ["Approve", "Disapprove"] or ["COA 1", "COA 2"]
-    }>;
-    finalDecision: {
-      role: string; // e.g., "CMC"
-      options: string[]; // e.g., ["Approved", "Disapproved"]
-    };
-    coas?: string[]; // For MULTIPLE_CHOICE
-    recommendationItems?: Array<{ // For MULTIPLE_RECS
-      id: string;
-      text: string;
-    }>;
-  };
-
-  // MOA/MOU specific fields
-  moaData?: {
-    activityA: string; // Senior Activity (Right side)
-    activityB: string; // Junior Activity (Left side)
-    // Optional Header Details for side-by-side display
-    activityAHeader?: {
-        ssic?: string;
-        serial?: string;
-        date?: string;
-    };
-    activityBHeader?: {
-        ssic?: string;
-        serial?: string;
-        date?: string;
-    };
-    seniorSigner: {
-      name: string;
-      title: string;
-      activity: string;
-      activitySymbol?: string;
-      date?: string;
-    };
-    juniorSigner: {
-      name: string;
-      title: string;
-      activity: string;
-      activitySymbol?: string;
-      date?: string;
-    };
-  };
-
-  // Business Letter specific fields
-  recipientName?: string;
-  recipientTitle?: string;
-  businessName?: string;
-  recipientAddress?: string;
-  attentionLine?: string;
-  salutation?: string;
-  complimentaryClose?: string;
-  signerRank?: string;
-  signerTitle?: string;
-  // Business Letter Toggles
-  isWindowEnvelope?: boolean;
-  isShortLetter?: boolean;
-  isVipMode?: boolean;
-}
-
-export interface SavedLetter extends FormData {
+export type SavedLetter = LetterFormData & {
   id: string;
   savedAt: string;
   vias: string[];
@@ -186,7 +55,7 @@ export interface SavedLetter extends FormData {
   copyTos: string[];
   distList?: string[];
   paragraphs: ParagraphData[];
-}
+};
 
 export interface AMHSReference {
   id: string;

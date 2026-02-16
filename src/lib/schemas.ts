@@ -10,6 +10,7 @@ export type ControlType =
   | 'radio' 
   | 'checkbox' 
   | 'combobox'
+  | 'autosuggest'
   | 'number'
   | 'hidden'; // For fields that are present in data but not shown
 
@@ -67,6 +68,13 @@ export const BasicLetterSchema = z.object({
   to: z.string().min(1, "To line is required"),
   subj: z.string().min(1, "Subject is required").transform(val => val.toUpperCase()),
   documentType: z.literal('basic'),
+  line1: z.string(),
+  line2: z.string(),
+  line3: z.string(),
+  sig: z.string(),
+  delegationText: z.string().optional(),
+  bodyFont: z.string().optional(),
+  distribution: z.any().optional(),
 });
 
 export const BasicLetterDefinition: DocumentTypeDefinition = {
@@ -107,7 +115,7 @@ export const BasicLetterDefinition: DocumentTypeDefinition = {
         {
           name: 'from',
           label: 'From',
-          type: 'text',
+          type: 'autosuggest',
           placeholder: 'Commanding Officer...',
           required: true,
           className: 'col-span-full'
@@ -123,7 +131,7 @@ export const BasicLetterDefinition: DocumentTypeDefinition = {
         {
           name: 'subj',
           label: 'Subject',
-          type: 'text',
+          type: 'autosuggest',
           placeholder: 'SUBJECT LINE (ALL CAPS)',
           required: true,
           className: 'col-span-full'
@@ -161,11 +169,11 @@ export const MultipleAddressLetterDefinition: DocumentTypeDefinition = {
 export const EndorsementSchema = BasicLetterSchema.extend({
   documentType: z.literal('endorsement'),
   endorsementLevel: z.enum(['FIRST', 'SECOND', 'THIRD', 'FOURTH', 'FIFTH', 'SIXTH', 'SEVENTH', 'EIGHTH', 'NINTH', 'TENTH', '']),
-  basicLetterReference: z.string().optional(),
-  basicLetterSsic: z.string().optional(),
-  referenceWho: z.string().optional(),
-  referenceType: z.string().optional(),
-  referenceDate: z.string().optional(),
+  basicLetterReference: z.string(),
+  basicLetterSsic: z.string(),
+  referenceWho: z.string(),
+  referenceType: z.string(),
+  referenceDate: z.string(),
   startingReferenceLevel: z.string().optional(),
   startingEnclosureNumber: z.string().optional(),
   startingPageNumber: z.number().optional(),
@@ -185,9 +193,10 @@ export const EndorsementDefinition: DocumentTypeDefinition = {
   ]
 };
 
-// 3. AA Form (NAVMC 10274)
+// 4. AA Form (NAVMC 10274)
 export const AAFormSchema = z.object({
   documentType: z.literal('aa-form'),
+  ssic: z.string().optional(),
   actionNo: z.string().optional(),
   orgStation: z.string().optional(),
   from: z.string().min(1, "From is required"),
@@ -255,9 +264,21 @@ export const AAFormDefinition: DocumentTypeDefinition = {
 };
 
 
-// 4. Marine Corps Order (MCO)
+// 5. Marine Corps Order (MCO)
 export const MCOSchema = BasicLetterSchema.extend({
   documentType: z.literal('mco'),
+  reports: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    controlSymbol: z.string(),
+    paragraphRef: z.string(),
+    exempt: z.boolean().optional()
+  })).optional(),
+  adminSubsections: z.object({
+    recordsManagement: z.object({ show: z.boolean(), content: z.string(), order: z.number() }),
+    privacyAct: z.object({ show: z.boolean(), content: z.string(), order: z.number() }),
+    reportsRequired: z.object({ show: z.boolean(), content: z.string(), order: z.number() })
+  }).optional(),
   distribution: z.object({
     type: z.string().optional(),
     pcn: z.string().optional(),
@@ -300,7 +321,7 @@ export const MCODefinition: DocumentTypeDefinition = {
   ]
 };
 
-// 5. Marine Corps Bulletin (MCBul)
+// 6. Marine Corps Bulletin (MCBul)
 export const BulletinSchema = BasicLetterSchema.extend({
   documentType: z.literal('bulletin'),
   cancellationDate: z.string().min(1, "Cancellation Date is required"),
@@ -345,11 +366,12 @@ export const BulletinDefinition: DocumentTypeDefinition = {
   ]
 };
 
-// 6. Page 11 (NAVMC 118(11))
+// 7. Page 11 (NAVMC 118(11))
 export const Page11Schema = z.object({
   documentType: z.literal('page11'),
   name: z.string().min(1, "Name is required"),
   edipi: z.string().min(1, "DOD ID / EDIPI is required"),
+  date: z.string().optional(),
   remarksLeft: z.string().optional(),
   remarksRight: z.string().optional(),
 });
@@ -408,7 +430,7 @@ export const Page11Definition: DocumentTypeDefinition = {
   ]
 };
 
-// 7. AMHS Message
+// 8. AMHS Message
 export const AMHSSchema = z.object({
   documentType: z.literal('amhs'),
   amhsMessageType: z.enum(['GENADMIN', 'MARADMIN', 'ALMAR']),
@@ -419,6 +441,14 @@ export const AMHSSchema = z.object({
   originatorCode: z.string().min(1, "Originator (FROM) is required"), // Reusing originatorCode for "FROM" field
   subj: z.string().min(1, "Subject is required"),
   amhsPocs: z.array(z.string()).optional(),
+  amhsReferences: z.array(z.object({
+    id: z.string(),
+    letter: z.string(),
+    type: z.string(),
+    docId: z.string(),
+    title: z.string()
+  })).optional(),
+  date: z.string().optional()
 });
 
 export const AMHSDefinition: DocumentTypeDefinition = {
@@ -504,7 +534,7 @@ export const AMHSDefinition: DocumentTypeDefinition = {
   ]
 };
 
-// 8. Memorandum for the Record (MFR)
+// 9. Memorandum for the Record (MFR)
 export const MFRSchema = BasicLetterSchema.omit({ from: true, to: true, ssic: true, originatorCode: true }).extend({
   documentType: z.literal('mfr'),
   from: z.string().optional(),
@@ -533,7 +563,7 @@ export const MFRDefinition: DocumentTypeDefinition = {
   ]
 };
 
-// 9. From-To Memorandum
+// 10. From-To Memorandum
 export const FromToMemoSchema = BasicLetterSchema.extend({
   documentType: z.literal('from-to-memo'),
   ssic: z.string().optional(),
@@ -588,7 +618,7 @@ export const FromToMemoDefinition: DocumentTypeDefinition = {
   ]
 };
 
-// 10. Letterhead Memorandum
+// 11. Letterhead Memorandum
 export const LetterheadMemoSchema = BasicLetterSchema.extend({
   documentType: z.literal('letterhead-memo'),
 });
@@ -604,7 +634,45 @@ export const LetterheadMemoDefinition: DocumentTypeDefinition = {
   ]
 };
 
-// 11. Memorandum of Agreement (MOA)
+// 12. Coordination Page
+export const CoordinationPageSchema = z.object({
+  documentType: z.literal('coordination-page'),
+  subject: z.string().min(1, "Subject is required."),
+  summary: z.string().min(1, "Summary is required."),
+});
+
+export const CoordinationPageDefinition: DocumentTypeDefinition = {
+  id: 'coordination-page',
+  name: 'Coordination Page',
+  description: 'A document for coordinating actions and decisions.',
+  icon: '🔄',
+  schema: CoordinationPageSchema,
+  sections: [
+    {
+      id: 'main',
+      title: 'Coordination Details',
+      fields: [
+        {
+          name: 'subject',
+          label: 'Subject',
+          type: 'text',
+          required: true,
+          placeholder: 'Coordination for new project initiative'
+        },
+        {
+          name: 'summary',
+          label: 'Summary',
+          type: 'textarea',
+          required: true,
+          placeholder: 'A brief summary of the coordination required.',
+          rows: 5
+        },
+      ]
+    }
+  ]
+};
+
+// 13. Memorandum of Agreement (MOA)
 export const MOASchema = z.object({
   documentType: z.literal('moa'),
   date: z.string().optional(),
@@ -665,7 +733,7 @@ export const MOADefinition: DocumentTypeDefinition = {
   ]
 };
 
-// 12. Memorandum of Understanding (MOU)
+// 14. Memorandum of Understanding (MOU)
 export const MOUSchema = MOASchema.extend({
   documentType: z.literal('mou'),
 });
@@ -678,9 +746,9 @@ export const MOUDefinition: DocumentTypeDefinition = {
   schema: MOUSchema,
 };
 
-// 13. Staffing Papers (Position, Information Paper)
+// 15. Staffing Papers (Position, Information, Decision Paper)
 export const StaffingPaperSchema = z.object({
-  documentType: z.enum(['position-paper', 'information-paper']),
+  documentType: z.enum(['position-paper', 'information-paper', 'decision-paper']),
   subj: z.string().min(1, "Subject is required").transform(val => val.toUpperCase()),
   date: z.string().min(1, "Date is required"),
   drafterName: z.string().min(1, "Drafter Name is required"),
@@ -844,7 +912,19 @@ export const InformationPaperDefinition: DocumentTypeDefinition = {
   ]
 };
 
-// 14. Business Letter
+export const DecisionPaperDefinition: DocumentTypeDefinition = {
+  id: 'decision-paper',
+  name: 'Decision Paper',
+  description: 'Requests a decision from a senior official.',
+  icon: '❓',
+  schema: StaffingPaperSchema,
+  sections: [
+    { id: 'header', title: 'Paper Details', fields: StaffingPaperFields },
+    { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
+  ]
+};
+
+// 16. Business Letter
 export const BusinessLetterSchema = z.object({
   documentType: z.literal('business-letter'),
   ssic: z.string().min(4, "SSIC must be at least 4 digits").max(5),
@@ -1042,6 +1122,32 @@ export const BusinessLetterDefinition: DocumentTypeDefinition = {
   ]
 };
 
+// Create a union of all schemas for type inference
+export const DocumentSchema = z.union([
+  BasicLetterSchema,
+  MultipleAddressLetterSchema,
+  EndorsementSchema,
+  AAFormSchema,
+  MCOSchema,
+  BulletinSchema,
+  Page11Schema,
+  AMHSSchema,
+  MFRSchema,
+  FromToMemoSchema,
+  LetterheadMemoSchema,
+  CoordinationPageSchema,
+  MOASchema,
+  MOUSchema,
+  StaffingPaperSchema,
+  BusinessLetterSchema,
+]);
+
+// Infer the FormData type from the union schema
+export type LetterFormData = z.infer<typeof DocumentSchema>;
+
+// A generic document type that can be one of any of the specific document types
+export type GenericDocument = z.infer<typeof DocumentSchema>;
+
 // Registry of all document types
 export const DOCUMENT_TYPES: Record<string, DocumentTypeDefinition> = {
   basic: BasicLetterDefinition,
@@ -1057,8 +1163,9 @@ export const DOCUMENT_TYPES: Record<string, DocumentTypeDefinition> = {
   amhs: AMHSDefinition,
   moa: MOADefinition,
   mou: MOUDefinition,
-
-  'position-paper': PositionPaperDefinition,
   'information-paper': InformationPaperDefinition,
+  'position-paper': PositionPaperDefinition,
+  'decision-paper': DecisionPaperDefinition,
+  'coordination-page': CoordinationPageDefinition,
   'business-letter': BusinessLetterDefinition,
 };

@@ -50,23 +50,32 @@ export const EndorsementTemplate: DocumentTemplate = {
 
     // Footer
     sig: 'I. M. MARINE',
-    delegationText: '',
-    
+    delegationText: 'By direction',
+
     // Arrays
-    vias: [],
-    references: [], // Usually re-listed or added
-    enclosures: [],
-    copyTos: [],
-    
+    vias: [
+      'Commanding Officer, Intermediate Command'
+    ],
+    references: [
+      '(a) MCO 5216.20B',
+      '(b) SECNAVINST 5216.5E'
+    ],
+    enclosures: [
+      '(1) Original Request Package'
+    ],
+    copyTos: [
+      'Commanding General, Higher Headquarters'
+    ],
+
     // Defaults
     line1: '',
     line2: '',
     line3: '',
-    referenceWho: '',
-    referenceType: '',
-    referenceDate: '',
-    startingReferenceLevel: '',
-    startingEnclosureNumber: '',
+    referenceWho: 'CO, Originating Unit',
+    referenceType: 'ltr',
+    referenceDate: '5 Jan 26',
+    startingReferenceLevel: 'c',
+    startingEnclosureNumber: '2',
     startingPageNumber: 2, // Usually starts after the basic letter
     previousPackagePageCount: 1,
     headerType: 'USMC',

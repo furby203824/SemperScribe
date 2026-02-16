@@ -18,15 +18,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AutoSuggestInput } from '@/components/ui/AutoSuggestInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface DynamicFormProps {
   documentType: DocumentTypeDefinition;
   onSubmit: (data: any) => void;
   defaultValues?: any;
+  children?: React.ReactNode;
 }
 
-export function DynamicForm({ documentType, onSubmit, defaultValues }: DynamicFormProps) {
+export function DynamicForm({ documentType, onSubmit, defaultValues, children }: DynamicFormProps) {
   // Calculate allowed top-level keys based on document definitions
   const allowedTopLevelKeys = React.useMemo(() => {
     const keys = new Set<string>(['documentType']);
@@ -105,6 +107,8 @@ export function DynamicForm({ documentType, onSubmit, defaultValues }: DynamicFo
                 <Input type="text" placeholder={field.placeholder || 'DD MMM YY'} {...formField} value={formField.value ?? ''} />
               ) : field.type === 'textarea' ? (
                 <Textarea placeholder={field.placeholder} rows={field.rows} {...formField} value={formField.value ?? ''} />
+              ) : field.type === 'autosuggest' ? (
+                <AutoSuggestInput placeholder={field.placeholder} {...formField} />
               ) : field.type === 'number' ? (
                  <Input type="number" placeholder={field.placeholder} {...formField} value={formField.value ?? ''} />
               ) : field.type === 'select' ? (
@@ -158,6 +162,7 @@ export function DynamicForm({ documentType, onSubmit, defaultValues }: DynamicFo
              </CardContent>
           </Card>
         ))}
+        {children}
       </form>
     </Form>
   );

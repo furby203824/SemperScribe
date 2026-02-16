@@ -321,6 +321,16 @@ export function DocumentTypeSection({
                 }
               }}
             />
+
+            <DocumentTypeCard
+              type="coordination-page"
+              icon={<Users className="w-10 h-10" />}
+              title="Coordination Page"
+              description="A form for coordinating actions and decisions among multiple parties."
+              note="→ For multi-party decisions"
+              isActive={formData.documentType === 'coordination-page'}
+              onClick={() => setFormData(prev => ({ ...prev, documentType: 'coordination-page' }))}
+            />
           </div>
         </div>
 
@@ -348,8 +358,8 @@ export function DocumentTypeSection({
             <DocumentTypeCard
               type="position-paper"
               icon={<Flag className="w-10 h-10" />}
-              title="Position/Decision Paper"
-              description="Articulates official stance on a specific issue with decision block."
+              title="Position Paper"
+              description="Articulates official stance on a specific issue."
               note="→ For official stance"
               isActive={formData.documentType === 'position-paper'}
               onClick={() => {
@@ -357,6 +367,21 @@ export function DocumentTypeSection({
                 if (setParagraphs && formData.documentType !== 'position-paper') {
                   setParagraphs(getPositionPaperParagraphs());
                 }
+              }}
+            />
+
+            <DocumentTypeCard
+              type="decision-paper"
+              icon={<Flag className="w-10 h-10" />}
+              title="Decision Paper"
+              description="Requests a decision from a senior official."
+              note="→ For official decisions"
+              isActive={formData.documentType === 'decision-paper'}
+              onClick={() => {
+                  setFormData(prev => ({ ...prev, documentType: 'decision-paper' }));
+                  if (setParagraphs && formData.documentType !== 'decision-paper') {
+                      // setParagraphs(getDecisionPaperParagraphs());
+                  }
               }}
             />
           </div>
