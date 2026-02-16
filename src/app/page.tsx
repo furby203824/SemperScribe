@@ -631,7 +631,7 @@ function NavalLetterGeneratorInner() {
         )}
 
         {/* Sections with shared logic but conditional display */}
-        {!['moa', 'mou', 'business-letter', 'executive-correspondence', 'position-paper', 'information-paper'].includes(formData.documentType) && (
+        {!['moa', 'mou', 'business-letter', 'executive-correspondence', 'position-paper', 'information-paper', 'mco', 'bulletin'].includes(formData.documentType) && (
             <ViaSection vias={vias} setVias={setVias} />
         )}
         {!['moa', 'mou', 'business-letter', 'executive-correspondence', 'position-paper', 'information-paper', 'aa-form'].includes(formData.documentType) && (
