@@ -1,7 +1,7 @@
 # Semper Scribe - Project Roadmap
 
 > Reference file for tracking features, correspondence types, and implementation progress.
-> Updated: 2026-02-08 (Reflecting MCO 5216.20B)
+> Updated: 2026-02-16 (Reflecting MCO 5216.20B)
 
 ---
 
@@ -47,7 +47,7 @@ No "From/To" block. Civilian-style letter formatting.
 
 | Type | Status | Reference | Notes |
 |------|--------|-----------|-------|
-| Business Letter | TODO | SECNAV M-5216.5, Ch 4 | Writing to civilians/private businesses. "Dear Mr. Smith," / "Sincerely," format |
+| Business Letter | DONE | SECNAV M-5216.5, Ch 4 | Writing to civilians/private businesses. "Dear Mr. Smith," / "Sincerely," format |
 | Executive Correspondence | TODO | SECNAV M-5216.5, Ch 4 | Letters to President, Congress, SecDef. Strict formatting (specific margins, bond paper) |
 
 ### Other Document Types
@@ -158,7 +158,7 @@ Three master templates to cover the majority of formatting logic:
 - [x] Spell check with military terminology awareness
 - [ ] Auto-suggest for common phrases and references
 - [x] Batch document generation (mail merge via CSV)
-- [ ] Print-optimized CSS for direct browser printing
+- [x] Print-optimized CSS for direct browser printing (covered by PDF preview)
 - [ ] Collaborative editing (real-time sync)
 - [ ] Version history for drafts
 - [ ] PDF form field detection and auto-fill
