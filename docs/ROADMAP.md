@@ -155,9 +155,9 @@ Three master templates to cover the majority of formatting logic:
 - [ ] CMC Green/White Letters
 
 ### Feature Enhancements
-- [ ] Spell check with military terminology awareness
+- [x] Spell check with military terminology awareness
 - [ ] Auto-suggest for common phrases and references
-- [ ] Batch document generation
+- [x] Batch document generation (mail merge via CSV)
 - [ ] Print-optimized CSS for direct browser printing
 - [ ] Collaborative editing (real-time sync)
 - [ ] Version history for drafts

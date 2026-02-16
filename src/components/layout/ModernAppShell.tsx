@@ -35,6 +35,7 @@ interface ModernAppShellProps {
   // For mobile preview modal
   formData?: FormData;
   onAddSignature?: () => void;
+  onBatchGenerate?: () => void;
 }
 
 export function ModernAppShell({
@@ -62,6 +63,7 @@ export function ModernAppShell({
   onShareLink,
   formData,
   onAddSignature,
+  onBatchGenerate,
 }: ModernAppShellProps) {
   const [showPreview, setShowPreview] = React.useState(true);
   const [showPreviewModal, setShowPreviewModal] = React.useState(false);
@@ -131,6 +133,7 @@ export function ModernAppShell({
             onCopyAMHS={onCopyAMHS}
             onExportAMHS={onExportAMHS}
             onAddSignature={onAddSignature}
+            onBatchGenerate={onBatchGenerate}
           />
       </header>
 

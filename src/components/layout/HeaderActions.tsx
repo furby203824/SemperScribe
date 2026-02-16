@@ -13,7 +13,8 @@ import {
   Eye,
   EyeOff,
   Link2,
-  Check
+  Check,
+  FileSpreadsheet
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -68,6 +69,8 @@ interface HeaderActionsProps {
   onExportAMHS?: () => void;
   // Signature
   onAddSignature?: () => void;
+  // Batch Generate
+  onBatchGenerate?: () => void;
 }
 
 export function HeaderActions({
@@ -91,7 +94,8 @@ export function HeaderActions({
   className,
   onCopyAMHS,
   onExportAMHS,
-  onAddSignature
+  onAddSignature,
+  onBatchGenerate
 }: HeaderActionsProps) {
   const { 
     globalTemplates, 
@@ -403,6 +407,15 @@ export function HeaderActions({
                     <FileText className="w-4 h-4 mr-2" />
                     Word Document (.docx)
                   </DropdownMenuItem>
+                )}
+                {onBatchGenerate && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={onBatchGenerate} className="cursor-pointer focus:bg-accent focus:text-accent-foreground">
+                      <FileSpreadsheet className="w-4 h-4 mr-2" />
+                      Batch Generate (Mail Merge)
+                    </DropdownMenuItem>
+                  </>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
