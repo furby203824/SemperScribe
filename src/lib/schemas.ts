@@ -314,6 +314,13 @@ export const AAFormDefinition: DocumentTypeDefinition = {
 // 5. Marine Corps Order (MCO)
 export const MCOSchema = BasicLetterSchema.extend({
   documentType: z.literal('mco'),
+  // These fields are managed by UnitInfoSection / ClosingBlockSection, not DynamicForm.
+  // Override as optional so zodResolver doesn't reject the form when they're absent.
+  line1: z.string().optional(),
+  line2: z.string().optional(),
+  line3: z.string().optional(),
+  sig: z.string().optional(),
+  directiveTitle: z.string().optional(),
   reports: z.array(z.object({
     id: z.string(),
     title: z.string(),
@@ -353,15 +360,40 @@ export const MCODefinition: DocumentTypeDefinition = {
       title: 'Order Information',
       fields: [
          // MCOs use standard letter fields but "To" is usually fixed
-         ...BasicLetterDefinition.sections[0].fields.map(f => 
+         ...BasicLetterDefinition.sections[0].fields.map(f =>
            f.name === 'to' ? { ...f, defaultValue: 'Distribution List', placeholder: 'Distribution List' } : f
          ),
+         {
+           name: 'directiveTitle',
+           label: 'Designation Line',
+           type: 'text',
+           placeholder: 'e.g. MARINE CORPS ORDER 5215.1K',
+           description: 'Full designation in ALL CAPS (e.g., MARINE CORPS ORDER 5215.1K). Appears below the date.',
+           className: 'col-span-full'
+         },
          {
            name: 'distribution.pcn',
            label: 'PCN (Publication Control Number)',
            type: 'text',
            placeholder: 'e.g. 10200000000',
            className: 'md:col-span-1'
+         },
+         {
+           name: 'distribution.statementCode',
+           label: 'Distribution Statement',
+           type: 'select',
+           options: [
+             { label: 'A — Public release; unlimited', value: 'A' },
+             { label: 'B — U.S. Gov agencies only', value: 'B' },
+             { label: 'C — Gov agencies & contractors', value: 'C' },
+             { label: 'D — DoD & DoD contractors only', value: 'D' },
+             { label: 'E — DoD components only', value: 'E' },
+             { label: 'F — Further dissemination as directed', value: 'F' },
+             { label: 'X — Export-controlled', value: 'X' }
+           ],
+           defaultValue: 'A',
+           className: 'md:col-span-1',
+           description: 'Per DoD 5230.24. Shown at bottom of letterhead page.'
          }
       ]
     }
@@ -371,6 +403,12 @@ export const MCODefinition: DocumentTypeDefinition = {
 // 6. Marine Corps Bulletin (MCBul)
 export const BulletinSchema = BasicLetterSchema.extend({
   documentType: z.literal('bulletin'),
+  // These fields are managed by UnitInfoSection / ClosingBlockSection, not DynamicForm.
+  line1: z.string().optional(),
+  line2: z.string().optional(),
+  line3: z.string().optional(),
+  sig: z.string().optional(),
+  directiveTitle: z.string().optional(),
   cancellationDate: z.string().min(1, "Cancellation Date is required"),
   cancellationType: z.enum(['fixed', 'contingent']).optional(),
 });
@@ -386,9 +424,17 @@ export const BulletinDefinition: DocumentTypeDefinition = {
       id: 'header',
       title: 'Bulletin Information',
       fields: [
-        ...BasicLetterDefinition.sections[0].fields.map(f => 
+        ...BasicLetterDefinition.sections[0].fields.map(f =>
             f.name === 'to' ? { ...f, defaultValue: 'Distribution List', placeholder: 'Distribution List' } : f
         ),
+        {
+          name: 'directiveTitle',
+          label: 'Designation Line',
+          type: 'text',
+          placeholder: 'e.g. MARINE CORPS BULLETIN 1500',
+          description: 'Full designation in ALL CAPS (e.g., MARINE CORPS BULLETIN 1500). Appears below the date.',
+          className: 'col-span-full'
+        },
         {
           name: 'cancellationDate',
           label: 'Cancellation Date',
@@ -407,6 +453,30 @@ export const BulletinDefinition: DocumentTypeDefinition = {
           ],
           defaultValue: 'fixed',
           className: 'md:col-span-1'
+        },
+        {
+          name: 'distribution.pcn',
+          label: 'PCN (Publication Control Number)',
+          type: 'text',
+          placeholder: 'e.g. 10200000000',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'distribution.statementCode',
+          label: 'Distribution Statement',
+          type: 'select',
+          options: [
+            { label: 'A — Public release; unlimited', value: 'A' },
+            { label: 'B — U.S. Gov agencies only', value: 'B' },
+            { label: 'C — Gov agencies & contractors', value: 'C' },
+            { label: 'D — DoD & DoD contractors only', value: 'D' },
+            { label: 'E — DoD components only', value: 'E' },
+            { label: 'F — Further dissemination as directed', value: 'F' },
+            { label: 'X — Export-controlled', value: 'X' }
+          ],
+          defaultValue: 'A',
+          className: 'md:col-span-1',
+          description: 'Per DoD 5230.24. Shown at bottom of letterhead page.'
         }
       ]
     }

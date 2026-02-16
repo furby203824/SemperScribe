@@ -18,7 +18,7 @@ export const MCOTemplate: DocumentTemplate = {
 
     // MCO Specifics
     orderPrefix: 'MCO',
-    directiveTitle: 'MCO 5210.11G',
+    directiveTitle: 'MARINE CORPS ORDER 5210.11G',
     distribution: {
         type: 'pcn-with-copy',
         pcn: '10200150000',
@@ -129,6 +129,7 @@ export const BulletinTemplate: DocumentTemplate = {
 
       // Bulletin Specifics
       orderPrefix: 'MCBul',
+      directiveTitle: 'MARINE CORPS BULLETIN 1500',
       cancellationDate: '31 Dec 26',
       cancellationType: 'fixed',
       cancellationContingency: 'This bulletin is cancelled upon completion of the FY26 requalification cycle or 31 Dec 26, whichever occurs first.',
