@@ -30,7 +30,7 @@ import { cn } from '@/lib/utils';
 import { FormData, ParagraphData } from '@/types';
 import {
   MergeField,
-  MERGEABLE_FORM_FIELDS,
+  getMergeableFieldsForDocType,
   detectMergeFields,
 } from '@/lib/merge-utils';
 import { useBatchGenerate, BatchStatus } from '@/hooks/useBatchGenerate';
@@ -186,14 +186,11 @@ export function BatchGenerateModal({
             <div className="space-y-4">
               <div className="space-y-3">
                 <h4 className="text-sm font-semibold">Select form fields to include as CSV columns:</h4>
+                <p className="text-xs text-muted-foreground">
+                  Fields shown are relevant to <strong>{formData.documentType || 'this document type'}</strong>. Toggle to include them in the CSV template.
+                </p>
                 <div className="grid grid-cols-2 gap-2">
-                  {MERGEABLE_FORM_FIELDS
-                    .filter(f => {
-                      // Only show relevant fields for the current doc type
-                      if (formData.documentType === 'page11') return ['name', 'edipi'].includes(f.key);
-                      if (['aa-form'].includes(formData.documentType)) return ['to', 'from', 'subj', 'date', 'sig'].includes(f.key);
-                      return !['name', 'edipi'].includes(f.key);
-                    })
+                  {getMergeableFieldsForDocType(formData.documentType || 'basic')
                     .map(f => (
                       <label
                         key={f.key}
