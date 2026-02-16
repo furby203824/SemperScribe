@@ -69,8 +69,8 @@ Three master templates to cover the majority of formatting logic:
 | Template | Covers | Status |
 |----------|--------|--------|
 | Template A (Standard) | Standard Letters, Endorsements, Letterhead Memos | DONE |
-| Template B (Papers) | Information Papers, Position/Decision Papers (updated bullet logic) | TODO |
-| Template C (Civilian) | Business Letters, Executive Correspondence (center/right alignment, salutations) | TODO |
+| Template B (Papers) | Information Papers, Position/Decision Papers (updated bullet logic) | DONE |
+| Template C (Civilian) | Business Letters, Executive Correspondence (center/right alignment, salutations) | DONE |
 
 ---
 
@@ -150,8 +150,8 @@ Three master templates to cover the majority of formatting logic:
 ### Lower Priority
 - [ ] Executive Correspondence format
 - [x] MOA/MOU format (multi-party signature blocks)
-- [ ] Template B engine (bullet indentation logic for papers)
-- [ ] Template C engine (civilian letter formatting)
+- [x] Template B engine (bullet indentation logic for papers)
+- [x] Template C engine (civilian letter formatting)
 - [ ] CMC Green/White Letters
 
 ### Feature Enhancements
