@@ -53,7 +53,7 @@ import { ProofreadModal } from '@/components/ProofreadModal';
 
 // Inner component that uses useSearchParams (requires Suspense boundary)
 const initialState: FormData = {
-  documentType: 'basic',
+  documentType: '',
   ssic: '',
   originatorCode: '',
   date: new Date().toISOString().split('T')[0],
