@@ -36,6 +36,7 @@ interface ModernAppShellProps {
   formData?: FormData;
   onAddSignature?: () => void;
   onBatchGenerate?: () => void;
+  onProofread?: () => void;
 }
 
 export function ModernAppShell({
@@ -64,6 +65,7 @@ export function ModernAppShell({
   formData,
   onAddSignature,
   onBatchGenerate,
+  onProofread,
 }: ModernAppShellProps) {
   const [showPreview, setShowPreview] = React.useState(true);
   const [showPreviewModal, setShowPreviewModal] = React.useState(false);
@@ -134,6 +136,7 @@ export function ModernAppShell({
             onExportAMHS={onExportAMHS}
             onAddSignature={onAddSignature}
             onBatchGenerate={onBatchGenerate}
+            onProofread={onProofread}
           />
       </header>
 
