@@ -117,19 +117,19 @@ export function ParagraphSection({
       
       <CardContent className="pt-6 space-y-6">
         {numberingErrors.length > 0 && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-md shadow-sm">
+          <div className="bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 p-4 rounded-r-md shadow-sm">
             <div className="flex">
               <div className="flex-shrink-0">
-                <AlertTriangle className="h-5 w-5 text-yellow-600" aria-hidden="true" />
+                <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-yellow-800">Paragraph Numbering Issues</h3>
-                <div className="mt-2 text-sm text-yellow-700 space-y-1">
+                <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200">Paragraph Numbering Issues</h3>
+                <div className="mt-2 text-sm text-amber-700 dark:text-amber-300 space-y-1">
                   {numberingErrors.map((error, index) => (
                     <p key={index}>• {error}</p>
                   ))}
                 </div>
-                <p className="mt-2 text-xs text-yellow-600 font-medium">
+                <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 font-medium">
                   Rule: Sequence must be preserved (1, 2... a, b... (1), (2)...).
                 </p>
               </div>

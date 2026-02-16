@@ -6,10 +6,11 @@
 "use client"
 
 import * as React from "react"
+import { ChevronUp, ChevronDown } from "lucide-react"
 
 interface CollapsibleSectionProps {
   title: string;
-  icon?: string;
+  icon?: React.ReactNode;
   children: React.ReactNode;
   defaultExpanded?: boolean;
   className?: string;
@@ -29,14 +30,17 @@ export function CollapsibleSection({
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition-colors rounded-t-lg"
+        className="w-full flex items-center justify-between p-6 text-left hover:bg-muted/50 transition-colors rounded-t-lg"
         aria-expanded={isExpanded}
       >
         <div className="flex items-center gap-2">
-          {icon && <i className={`${icon} text-lg`}></i>}
+          {icon}
           <span className="text-lg font-semibold">{title}</span>
         </div>
-        <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'} text-gray-500 transition-transform`}></i>
+        {isExpanded
+          ? <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          : <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        }
       </button>
 
       {isExpanded && (

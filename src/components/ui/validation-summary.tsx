@@ -7,6 +7,7 @@
 
 import * as React from "react"
 import { ValidationState } from "@/types"
+import { AlertTriangle, XCircle } from "lucide-react"
 
 interface ValidationSummaryProps {
   validation: ValidationState;
@@ -39,18 +40,18 @@ export function ValidationSummary({ validation }: ValidationSummaryProps) {
 
   return (
     <div
-      className="validation-summary"
+      className="p-4 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30"
       role="alert"
       aria-label="Form validation errors"
     >
-      <h6 className="font-bold text-yellow-900 mb-3 flex items-center">
-        <i className="fas fa-exclamation-triangle mr-2"></i>
+      <h6 className="font-bold text-amber-900 dark:text-amber-200 mb-3 flex items-center">
+        <AlertTriangle className="h-4 w-4 mr-2" />
         Please fix the following issues before generating the document:
       </h6>
       <ul className="space-y-2">
         {errors.map((error, index) => (
           <li key={index} className="flex items-start">
-            <i className="fas fa-times-circle text-red-600 mr-2 mt-1"></i>
+            <XCircle className="h-4 w-4 text-destructive mr-2 mt-0.5 shrink-0" />
             <span>
               <strong>{error.field}:</strong> {error.message}
             </span>

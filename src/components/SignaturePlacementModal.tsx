@@ -361,7 +361,7 @@ export function SignaturePlacementModal({
           </div>
 
           {/* Main Canvas Area */}
-          <div className="flex-1 bg-slate-100 dark:bg-slate-900 overflow-hidden flex flex-col relative">
+          <div className="flex-1 bg-muted/50 dark:bg-muted/20 overflow-hidden flex flex-col relative">
             
             {/* Toolbar */}
             <div className="h-12 border-b bg-background flex items-center justify-center gap-4 z-10 shadow-sm interaction-ignore">

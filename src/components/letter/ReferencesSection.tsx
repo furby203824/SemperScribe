@@ -85,10 +85,10 @@ export function ReferencesSection({ references, setReferences, formData, setForm
           <div className="space-y-4 pt-2">
             {formData.documentType === 'endorsement' && (
               <>
-                <Alert variant="default" className="border-l-4 border-l-yellow-500 bg-yellow-50/50">
-                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                  <AlertTitle className="text-yellow-800 font-semibold ml-2">Endorsement Reference Rules</AlertTitle>
-                  <AlertDescription className="text-yellow-700 ml-2">
+                <Alert variant="default" className="border-l-4 border-l-amber-500 bg-amber-50/50 dark:bg-amber-950/30">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  <AlertTitle className="text-amber-800 dark:text-amber-200 font-semibold ml-2">Endorsement Reference Rules</AlertTitle>
+                  <AlertDescription className="text-amber-700 dark:text-amber-300 ml-2">
                     Only add NEW references not mentioned in the basic letter or previous endorsements. Continue the lettering sequence from the last reference.
                   </AlertDescription>
                 </Alert>
@@ -121,7 +121,7 @@ export function ReferencesSection({ references, setReferences, formData, setForm
             
             {references.map((ref, index) => (
               <div key={`ref-${index}`} className="flex w-full gap-2 items-center">
-                <span className="flex h-10 w-12 items-center justify-center flex-shrink-0 rounded-md bg-secondary text-primary-foreground border border-secondary font-medium shadow-sm">
+                <span className="flex h-10 w-12 items-center justify-center flex-shrink-0 rounded-md bg-secondary text-secondary-foreground border border-secondary font-medium shadow-sm">
                   ({getReferenceLetter(index, formData.startingReferenceLevel)})
                 </span>
                 <Input

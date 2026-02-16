@@ -296,7 +296,7 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
         <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col bg-card text-card-foreground">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold flex items-center">
-              <ShieldAlert className="w-6 h-6 mr-2 text-orange-500" />
+              <ShieldAlert className="w-6 h-6 mr-2 text-amber-500" />
               Application Disclaimers
             </DialogTitle>
             <DialogDescription>
@@ -308,14 +308,14 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
             <div className="space-y-6 text-sm">
               <section>
                 <h3 className="text-lg font-semibold mb-2 flex items-center text-foreground">
-                  <AlertTriangle className="w-5 h-5 mr-2 text-yellow-500" />
+                  <AlertTriangle className="w-5 h-5 mr-2 text-amber-500" />
                   1. Privacy & Data Handling (PII/PHI)
                 </h3>
                 <div className="space-y-2">
                   <p className="text-muted-foreground"><strong>Context:</strong> Displayed when the application detects Personally Identifiable Information (SSN, EDIPI) or Protected Health Information (Medical keywords) in a document.</p>
-                  <div className="bg-yellow-500/10 p-3 rounded border-l-4 border-yellow-500">
-                    <p className="font-bold text-yellow-600">Sensitive Data Detected!</p>
-                    <p className="text-yellow-600/80 text-xs mt-1">{DISCLAIMERS.PII_WARNING.message}</p>
+                  <div className="bg-amber-500/10 p-3 rounded border-l-4 border-amber-500">
+                    <p className="font-bold text-amber-600 dark:text-amber-400">Sensitive Data Detected!</p>
+                    <p className="text-amber-600/80 dark:text-amber-400/80 text-xs mt-1">{DISCLAIMERS.PII_WARNING.message}</p>
                   </div>
                   
                   <p className="text-muted-foreground mt-4"><strong>Context:</strong> Displayed at the bottom of administrative forms.</p>
@@ -330,19 +330,19 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
 
               <section>
                 <h3 className="text-lg font-semibold mb-2 flex items-center text-foreground">
-                  <ShieldAlert className="w-5 h-5 mr-2 text-orange-500" />
+                  <ShieldAlert className="w-5 h-5 mr-2 text-amber-500" />
                   2. Security & Classification
                 </h3>
                 <p className="text-muted-foreground"><strong>Context:</strong> Displayed when a user selects a classification level other than "Unclassified".</p>
-                <div className="bg-orange-500/10 p-3 rounded border-l-4 border-orange-500">
-                  <p className="font-bold text-orange-600">{DISCLAIMERS.CLASSIFIED_WARNING.title}</p>
-                  <p className="text-orange-600/80 text-xs mt-1">{DISCLAIMERS.CLASSIFIED_WARNING.message}</p>
+                <div className="bg-amber-500/10 p-3 rounded border-l-4 border-amber-500">
+                  <p className="font-bold text-amber-600 dark:text-amber-400">{DISCLAIMERS.CLASSIFIED_WARNING.title}</p>
+                  <p className="text-amber-600/80 dark:text-amber-400/80 text-xs mt-1">{DISCLAIMERS.CLASSIFIED_WARNING.message}</p>
                 </div>
               </section>
 
               <section>
                 <h3 className="text-lg font-semibold mb-2 flex items-center text-foreground">
-                  <Scale className="w-5 h-5 mr-2 text-blue-500" />
+                  <Scale className="w-5 h-5 mr-2 text-primary" />
                   3. Legal & Warranty (MIT License)
                 </h3>
                 <p className="text-muted-foreground"><strong>Context:</strong> General software license covering the application codebase.</p>

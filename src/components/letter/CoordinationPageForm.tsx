@@ -18,8 +18,8 @@ const COMMON_OFFICES = [
 ];
 
 function ConcurrenceIcon({ status }: { status: string }) {
-  if (status === 'concur') return <CheckCircle2 className="h-4 w-4 text-green-600" />;
-  if (status === 'nonconcur') return <XCircle className="h-4 w-4 text-red-600" />;
+  if (status === 'concur') return <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />;
+  if (status === 'nonconcur') return <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />;
   return <Clock className="h-4 w-4 text-muted-foreground" />;
 }
 
@@ -45,7 +45,7 @@ export function CoordinationPageForm() {
         {fields.length > 0 && (
           <div className="flex gap-4 mb-4 text-sm">
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
               <span className="text-muted-foreground">
                 {fields.filter((_, i) => {
                   const el = document.querySelector(`[name="coordinatingOffices.${i}.concurrence"]`);
@@ -54,7 +54,7 @@ export function CoordinationPageForm() {
               </span>
             </span>
             <span className="flex items-center gap-1.5">
-              <XCircle className="h-4 w-4 text-red-600" />
+              <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
               <span className="text-muted-foreground">Nonconcur</span>
             </span>
             <span className="flex items-center gap-1.5">
@@ -199,7 +199,7 @@ export function CoordinationPageForm() {
                         name={`coordinatingOffices.${index}.concurrence`}
                         render={({ field: concField }) => (
                           concField.value === 'nonconcur' ? (
-                            <span className="text-red-600 text-xs ml-2">(Required for nonconcurrence)</span>
+                            <span className="text-destructive text-xs ml-2">(Required for nonconcurrence)</span>
                           ) : <></>
                         )}
                       />

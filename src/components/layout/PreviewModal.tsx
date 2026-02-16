@@ -88,10 +88,10 @@ export function PreviewModal({
         <div className="flex-1 overflow-hidden">
           {isAMHS ? (
             // AMHS Preview
-            <div className="h-full bg-black">
+            <div className="h-full bg-zinc-950">
               <ScrollArea className="h-full w-full">
                 <div className="p-4">
-                  <pre className="text-green-500 font-mono text-xs whitespace-pre leading-relaxed">
+                  <pre className="text-green-400 font-mono text-xs whitespace-pre leading-relaxed">
                     {amhsMessage || 'Fill in the form to see preview...'}
                   </pre>
                 </div>
