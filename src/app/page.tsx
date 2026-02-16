@@ -10,16 +10,9 @@ import { ClosingBlockSection } from '@/components/letter/ClosingBlockSection';
 import { ViaSection } from '@/components/letter/ViaSection';
 import { ReferencesSection } from '@/components/letter/ReferencesSection';
 import { EnclosuresSection } from '@/components/letter/EnclosuresSection';
-import { MOAFormSection } from '@/components/letter/MOAFormSection';
 import { DecisionGridSection } from '@/components/letter/DecisionGridSection';
-import { ReportsSection } from '@/components/letter/ReportsSection';
-import { DistributionStatementSection } from '@/components/letter/DistributionStatementSection';
-import { DistributionSection } from '@/components/letter/DistributionSection';
 import { StructuredReferenceInput } from '@/components/letter/StructuredReferenceInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { FileSignature } from 'lucide-react';
 import { useEDMSContext, isEditMode } from '@/hooks/useEDMSContext';
 import { UNITS } from '@/lib/units';
@@ -454,7 +447,7 @@ function NavalLetterGeneratorInner() {
       }, 0);
       return () => clearTimeout(id);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- Intentional: runs once on mount; useRef flag prevents re-execution
 
   // Handlers
   const handleValidateSSIC = (value: string) => {

@@ -55,9 +55,6 @@ export interface DocumentTypeDefinition {
 
 // --- Validation Helpers ---
 
-const ssicRegex = /^[0-9]{4,5}$/;
-const dateRegex = /^(?:[0-9]{1,2} [A-Z][a-z]{2} [0-9]{2}|today)$/; // Simple validation for "DD Mmm YY" or "today"
-
 // Reusable inline validators for rich error messages while editing
 const ssicFieldRequired = () => z.string().superRefine((val, ctx) => {
   if (!val) {
