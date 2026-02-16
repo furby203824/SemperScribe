@@ -1235,9 +1235,7 @@ export async function generateDocxBlob(
           spacing: { after: 0 }
       }));
 
-      // Space for signature (4 lines)
-      signatureParagraphs.push(createEmptyLine(font));
-      signatureParagraphs.push(createEmptyLine(font));
+      // Space for signature (2 lines)
       signatureParagraphs.push(createEmptyLine(font));
       signatureParagraphs.push(createEmptyLine(font));
 
@@ -1268,7 +1266,6 @@ export async function generateDocxBlob(
           }));
       }
   } else if (formData.sig && !isStaffingPaper) {
-    signatureParagraphs.push(createEmptyLine(font));
     signatureParagraphs.push(createEmptyLine(font));
     signatureParagraphs.push(createEmptyLine(font));
     
