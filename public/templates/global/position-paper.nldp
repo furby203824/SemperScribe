@@ -1,0 +1,116 @@
+{
+  "metadata": {
+    "packageId": "nldp_1770758957959_position-paper",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-02-10T21:29:17.959Z",
+    "author": {
+      "name": "System Template",
+      "unit": "HQMC"
+    },
+    "package": {
+      "title": "Position/Decision Paper",
+      "description": "Used to advocate for a specific position or decision.",
+      "subject": "POSITION PAPER ON TOPIC",
+      "documentType": "position-paper",
+      "tags": [
+        "template",
+        "standard"
+      ]
+    },
+    "checksums": {
+      "dataHash": "",
+      "crc32": ""
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "position-paper",
+      "subj": "POSITION PAPER ON TOPIC",
+      "date": "10 Feb 26",
+      "classification": "UNCLASSIFIED",
+      "drafterName": "Capt J. M. Doe",
+      "drafterRank": "Capt",
+      "drafterOfficeCode": "G-3",
+      "drafterPhone": "555-1234",
+      "drafterService": "USMC",
+      "drafterAgency": "Unit",
+      "approverName": "Col I. M. Boss",
+      "approverRank": "Col",
+      "approverOfficeCode": "G-3",
+      "approverPhone": "555-5678",
+      "decisionMode": "SINGLE",
+      "decisionGrid": {
+        "recommenders": [],
+        "finalDecision": {
+          "role": "Commander",
+          "options": [
+            "Approve",
+            "Disapprove",
+            "Modify"
+          ]
+        }
+      },
+      "ssic": "",
+      "originatorCode": "",
+      "from": "",
+      "to": "",
+      "sig": "",
+      "line1": "",
+      "line2": "",
+      "line3": "",
+      "endorsementLevel": "",
+      "basicLetterReference": "",
+      "referenceWho": "",
+      "referenceType": "",
+      "referenceDate": "",
+      "startingReferenceLevel": "",
+      "startingEnclosureNumber": "",
+      "startingPageNumber": 1,
+      "previousPackagePageCount": 0,
+      "headerType": "USMC",
+      "bodyFont": "times",
+      "delegationText": "",
+      "accentColor": "black"
+    },
+    "vias": [],
+    "references": [],
+    "enclosures": [],
+    "copyTos": [],
+    "paragraphs": [
+      {
+        "id": 1,
+        "level": 0,
+        "content": "1. BLUF. Bottom Line Up Front...",
+        "title": "BLUF"
+      },
+      {
+        "id": 2,
+        "level": 0,
+        "content": "2. Background. Context of the issue...",
+        "title": "Background"
+      },
+      {
+        "id": 3,
+        "level": 0,
+        "content": "3. Discussion. Detailed analysis...",
+        "title": "Discussion"
+      },
+      {
+        "id": 4,
+        "level": 1,
+        "content": "a. Analysis point 1."
+      },
+      {
+        "id": 5,
+        "level": 2,
+        "content": "(1) Detail."
+      },
+      {
+        "id": 6,
+        "level": 0,
+        "content": "4. Recommendation. Specific action to take...",
+        "title": "Recommendation"
+      }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "packageId": "page11_vsi_ssb_separation",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-02-16T00:00:00.000Z",
+    "author": {
+      "name": "System Template"
+    },
+    "package": {
+      "title": "VSI/SSB Separation",
+      "description": "Voluntary Separation Incentive or Special Separation Benefit acknowledgment",
+      "documentType": "page11"
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "page11",
+      "name": "",
+      "edipi": "",
+      "date": "",
+      "remarksLeft": "Entry:",
+      "remarksRight": "(Date). Having been approved for separation under the (VSI) (SSB) program, I hereby acknowledge my required service obligations under PL 102-190, as outlined in the (VSI) (SSB) program disclosure. I further understand that my Reserve commission/enlistment will remain in effect until I request resignation/discharge upon completion of my required service obligation, or I am transferred to the Retired Reserve.\n\n\n_____________________\nSignature of Marine"
+    },
+    "vias": [],
+    "references": [],
+    "enclosures": [],
+    "copyTos": [],
+    "paragraphs": []
+  }
+}

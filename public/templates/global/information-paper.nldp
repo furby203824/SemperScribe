@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "packageId": "nldp_1770758957959_information-paper",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-02-10T21:29:17.959Z",
+    "author": {
+      "name": "System Template",
+      "unit": "HQMC"
+    },
+    "package": {
+      "title": "Information Paper",
+      "description": "Provides factual information in concise terms.",
+      "subject": "INFORMATION PAPER ON TOPIC",
+      "documentType": "information-paper",
+      "tags": [
+        "template",
+        "standard"
+      ]
+    },
+    "checksums": {
+      "dataHash": "",
+      "crc32": ""
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "information-paper",
+      "subj": "INFORMATION PAPER ON TOPIC",
+      "date": "10 Feb 26",
+      "classification": "UNCLASSIFIED",
+      "drafterName": "Capt J. M. Doe",
+      "drafterRank": "Capt",
+      "drafterOfficeCode": "G-3",
+      "drafterPhone": "555-1234",
+      "drafterService": "USMC",
+      "drafterAgency": "Unit",
+      "ssic": "",
+      "originatorCode": "",
+      "from": "",
+      "to": "",
+      "sig": "",
+      "line1": "",
+      "line2": "",
+      "line3": "",
+      "endorsementLevel": "",
+      "basicLetterReference": "",
+      "referenceWho": "",
+      "referenceType": "",
+      "referenceDate": "",
+      "startingReferenceLevel": "",
+      "startingEnclosureNumber": "",
+      "startingPageNumber": 1,
+      "previousPackagePageCount": 0,
+      "headerType": "USMC",
+      "bodyFont": "times",
+      "delegationText": "",
+      "accentColor": "black"
+    },
+    "vias": [],
+    "references": [],
+    "enclosures": [],
+    "copyTos": [],
+    "paragraphs": [
+      {
+        "id": 1,
+        "level": 1,
+        "content": "Purpose. To provide information regarding...",
+        "title": "Purpose"
+      },
+      {
+        "id": 2,
+        "level": 1,
+        "content": "Key Points. Bulletized list of facts...",
+        "title": "Key Points"
+      },
+      {
+        "id": 3,
+        "level": 2,
+        "content": "First fact."
+      },
+      {
+        "id": 4,
+        "level": 2,
+        "content": "Second fact."
+      },
+      {
+        "id": 5,
+        "level": 3,
+        "content": "Detail."
+      }
+    ]
+  }
+}

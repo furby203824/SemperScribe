@@ -1,0 +1,725 @@
+/**
+ * Naval letter formatting utilities
+ * Handles font selection and spacing for Times New Roman vs Courier New
+ */
+
+import { FormData, ParagraphData } from '@/types';
+
+/**
+ * Gets the font name based on user selection
+ *
+ * @param bodyFont - The font type selection
+ * @returns Full font name
+ */
+export function getBodyFont(bodyFont: 'times' | 'courier'): string {
+  return bodyFont === 'courier' ? 'Courier New' : 'Times New Roman';
+}
+
+/**
+ * Gets proper spacing for From/To labels
+ *
+ * @param label - "From" or "To"
+ * @param bodyFont - The font type
+ * @returns Formatted label with appropriate spacing
+ */
+export function getFromToSpacing(label: string, bodyFont: 'times' | 'courier'): string {
+  if (bodyFont === 'courier') {
+    if (label === 'From') return 'From:  '; // 2 spaces
+    if (label === 'To') return 'To:    '; // 4 spaces
+  }
+  return `${label}:\t`; // Tab for Times New Roman
+}
+
+/**
+ * Gets proper spacing for Via entries
+ *
+ * @param index - Index of the via entry
+ * @param bodyFont - The font type
+ * @returns Formatted via label with spacing
+ */
+export function getViaSpacing(index: number, bodyFont: 'times' | 'courier'): string {
+  if (bodyFont === 'courier') {
+    return index === 0
+      ? `Via:\u00A0\u00A0\u00A0(${index + 1})\u00A0` // 3 spaces before, 1 space after
+      : `\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0(${index + 1})\u00A0`; // 7 spaces before, 1 space after
+  }
+  return index === 0 ? `Via:\t(${index + 1})\t` : `\t(${index + 1})\t`;
+}
+
+/**
+ * Gets proper spacing for Subject label
+ *
+ * @param bodyFont - The font type
+ * @returns Formatted subject label with spacing
+ */
+export function getSubjSpacing(bodyFont: 'times' | 'courier'): string {
+  return bodyFont === 'courier' ? 'Subj:  ' : 'Subj:\t'; // 2 spaces or tab
+}
+
+/**
+ * Gets proper spacing for Reference entries
+ *
+ * @param letter - Reference letter (a, b, c, etc.)
+ * @param index - Index of the reference
+ * @param bodyFont - The font type
+ * @returns Formatted reference label with spacing
+ */
+export function getRefSpacing(letter: string, index: number, bodyFont: 'times' | 'courier'): string {
+  if (bodyFont === 'courier') {
+    return index === 0
+      ? `Ref:\u00A0\u00A0\u00A0(${letter})\u00A0` // 3 spaces before, 1 space after
+      : `\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0(${letter})\u00A0`; // 7 spaces before, 1 space after
+  }
+  // Times: tab to position "(a)", then single space before text
+  return index === 0 ? `Ref:\t(${letter}) ` : `\t(${letter}) `;
+}
+
+/**
+ * Gets proper spacing for Enclosure entries
+ *
+ * @param number - Enclosure number
+ * @param index - Index of the enclosure
+ * @param bodyFont - The font type
+ * @returns Formatted enclosure label with spacing
+ */
+export function getEnclSpacing(number: number, index: number, bodyFont: 'times' | 'courier'): string {
+  if (bodyFont === 'courier') {
+    return index === 0
+      ? `Encl:\u00A0\u00A0(${number})\u00A0` // 2 spaces before, 1 space after
+      : `\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0(${number})\u00A0`; // 7 spaces before, 1 space after
+  }
+  // Times: tab to position "(1)", then single space before text
+  return index === 0 ? `Encl:\t(${number}) ` : `\t(${number}) `;
+}
+
+/**
+ * Gets proper spacing for Copy To label
+ *
+ * @param bodyFont - The font type
+ * @returns Formatted copy to label with spacing
+ */
+export function getCopySpacing(bodyFont: 'times' | 'courier'): string {
+  return bodyFont === 'courier' ? 'Copy to:' : 'Copy to:';
+}
+
+/**
+ * Alias for getCopySpacing to match consumer expectations
+ */
+export const getCopyToSpacing = getCopySpacing;
+
+/**
+ * Splits a subject line into multiple lines based on a character limit
+ * while preserving whole words.
+ * 
+ * @param subject - The subject string
+ * @param maxLength - Maximum characters per line
+ * @returns Array of subject lines
+ */
+export function splitSubject(subject: string, maxLength: number = 60): string[] {
+  if (!subject) return [];
+  
+  const words = subject.split(' ');
+  const lines: string[] = [];
+  let currentLine = words[0];
+
+  for (let i = 1; i < words.length; i++) {
+    if (currentLine.length + 1 + words[i].length <= maxLength) {
+      currentLine += ' ' + words[i];
+    } else {
+      lines.push(currentLine);
+      currentLine = words[i];
+    }
+  }
+  lines.push(currentLine);
+  
+  return lines;
+}
+
+/**
+ * Formats a date string for cancellation (e.g., "Jun 2025")
+ * 
+ * @param dateString - The date string to format
+ * @returns Formatted date string or original if invalid
+ */
+export function formatCancellationDate(dateString: string): string {
+  if (!dateString) return '';
+  
+  try {
+    const dateObj = new Date(dateString);
+    if (isNaN(dateObj.getTime())) return dateString;
+    
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[dateObj.getMonth()];
+    const year = dateObj.getFullYear();
+    return `${month} ${year}`;
+  } catch {
+    return dateString;
+  }
+}
+
+/**
+ * Formats a directive SSIC with classification prefix, reserve designation, and revision letter.
+ * Per MCO 5215.1K:
+ *   - Para 9: Classified prefix (C/S) before SSIC (e.g., MCO C5215.1)
+ *   - Para 22: Reserve designation "R" after SSIC (e.g., MCO 5215R.15)
+ *   - Para 21e: Revision letter suffix (e.g., MCO 5215.1K)
+ *
+ * @param ssic - The raw SSIC code (e.g., "5215")
+ * @param options - Classification prefix, reserve flag, revision letter, point number
+ * @returns Formatted SSIC string
+ */
+export function formatDirectiveSSIC(
+  ssic: string,
+  options?: {
+    classificationPrefix?: string;
+    isReserveOnly?: boolean;
+    revisionLetter?: string;
+    pointNumber?: string;
+  }
+): string {
+  if (!ssic) return '';
+  const { classificationPrefix, isReserveOnly, revisionLetter, pointNumber } = options || {};
+
+  let result = '';
+
+  // Classification prefix before SSIC (e.g., "C5215" or "S5215")
+  if (classificationPrefix) {
+    result += classificationPrefix;
+  }
+
+  result += ssic;
+
+  // Reserve designation after SSIC (e.g., "5215R")
+  if (isReserveOnly) {
+    result += 'R';
+  }
+
+  // Point number if present (e.g., "5215.1")
+  if (pointNumber) {
+    result += '.' + pointNumber;
+  }
+
+  // Revision letter suffix (e.g., "5215.1K")
+  if (revisionLetter) {
+    result += revisionLetter;
+  }
+
+  return result;
+}
+
+/**
+ * Builds the full directive title line (e.g., "MCO C5215R.1K")
+ * Combines order prefix with formatted SSIC.
+ */
+export function buildDirectiveTitle(formData: FormData): string {
+  const prefix = formData.orderPrefix || (formData.documentType === 'bulletin' ? 'MCBul' : 'MCO');
+  const ssic = formData.ssic || '';
+
+  // Extract point number from existing directiveTitle if present
+  // e.g., "MCO 5210.11G" -> pointNumber="11", revisionLetter="G"
+  let pointNumber = '';
+  if (formData.directiveTitle) {
+    // Try to parse point number from the existing title
+    const match = formData.directiveTitle.match(/\d{4,5}\.(\d+)([A-Z]?)$/);
+    if (match) {
+      pointNumber = match[1];
+    }
+  }
+
+  const formattedSSIC = formatDirectiveSSIC(ssic, {
+    classificationPrefix: formData.classificationPrefix || '',
+    isReserveOnly: formData.isReserveOnly || false,
+    revisionLetter: formData.revisionLetter || '',
+    pointNumber,
+  });
+
+  return formattedSSIC ? `${prefix} ${formattedSSIC}` : '';
+}
+
+/**
+ * Formats the SSIC display in the identification block for directives.
+ * The SSIC block shows the raw SSIC with classification prefix and reserve designation,
+ * without the order prefix or point number.
+ */
+export function formatDirectiveSSICBlock(formData: FormData): string {
+  if (!formData.ssic) return '';
+
+  let result = '';
+  if (formData.classificationPrefix) {
+    result += formData.classificationPrefix;
+  }
+  result += formData.ssic;
+  if (formData.isReserveOnly) {
+    result += 'R';
+  }
+  return result;
+}
+
+/**
+ * Standard MCO 5-Paragraph Order (SMEAC) scaffold per MCO 5216.20B Ch2.
+ * Includes mandatory sub-paragraphs for Execution and Command and Signal.
+ * Cancellation (para 2) is included as optional — delete if not needed.
+ */
+export function getMCOParagraphs(): ParagraphData[] {
+  return [
+    { id: 1,  level: 1, content: '', title: 'Situation', isMandatory: true },
+    { id: 2,  level: 1, content: '', title: 'Cancellation' },
+    { id: 3,  level: 1, content: '', title: 'Mission', isMandatory: true },
+    { id: 4,  level: 1, content: '', title: 'Execution', isMandatory: true },
+    { id: 5,  level: 2, content: '', title: 'Commander\'s Intent and Concept of Operations' },
+    { id: 6,  level: 3, content: '', title: 'Commander\'s Intent' },
+    { id: 7,  level: 3, content: '', title: 'Concept of Operations' },
+    { id: 8,  level: 2, content: '', title: 'Subordinate Element Missions' },
+    { id: 9,  level: 2, content: '', title: 'Coordinating Instructions' },
+    { id: 10, level: 1, content: '', title: 'Administration and Logistics', isMandatory: true },
+    { id: 11, level: 1, content: '', title: 'Command and Signal', isMandatory: true },
+    { id: 12, level: 2, content: '', title: 'Command' },
+    { id: 13, level: 2, content: '', title: 'Signal' },
+  ];
+}
+
+/**
+ * Assumption of Command Paragraphs
+ * Per MCO 5215.1K, Chapter 1, Figure 1-1
+ */
+export function getAssumptionOfCommandParagraphs(): ParagraphData[] {
+  return [
+    { id: 1, level: 0, content: '1. Situation. To publish an assumption of command as required by reference (a).' },
+    { id: 2, level: 0, content: '2. Cancellation. [Predecessor\'s assumption of command order].' },
+    { id: 3, level: 0, content: '3. Execution. I have assumed duties as Commanding General, [Unit Designation], this date as directed by reference (b). All effective orders and directives issued by my predecessors remain in effect.' },
+  ];
+}
+
+/**
+ * Standard MCBul paragraph scaffold per MCO 5216.20B Ch3 Section 11.
+ * Bulletins use their own paragraph structure (NOT SMEAC):
+ *   Purpose, Cancellation, Background, Action, Reserve Applicability,
+ *   and Cancellation Contingency (if contingent cancellation type).
+ */
+export function getMCBulParagraphs(): ParagraphData[] {
+  return [
+    { id: 1, level: 1, content: '', title: 'Purpose', isMandatory: true },
+    { id: 2, level: 1, content: '', title: 'Cancellation' },
+    { id: 3, level: 1, content: '', title: 'Background' },
+    { id: 4, level: 1, content: '', title: 'Action' },
+    { id: 5, level: 1, content: '', title: 'Reserve Applicability' },
+  ];
+}
+
+/**
+ * Standard MOA/MOU Paragraphs
+ */
+export function getMOAParagraphs(type: 'moa' | 'mou' = 'moa'): ParagraphData[] {
+  return [
+    { id: 1, level: 1, content: 'To define the inter-service support agreement between [Activity A] and [Activity B] regarding', title: 'Purpose' },
+    { id: 2, level: 1, content: 'The [Activity A] requires support from [Activity B] to', title: 'Problem' },
+    { id: 3, level: 1, content: 'This agreement applies to', title: 'Scope' },
+    { id: 4, level: 1, content: '', title: type === 'moa' ? 'Agreement' : 'Understanding' },
+    { id: 5, level: 2, content: 'The [Activity A] agrees to', title: '' },
+    { id: 6, level: 2, content: 'The [Activity B] agrees to', title: '' },
+    { id: 7, level: 1, content: 'This agreement is effective upon signature by both parties and will remain in effect until', title: 'Effective Date' },
+  ];
+}
+
+/**
+ * Standard Business Letter Paragraphs
+ */
+export function getBusinessLetterParagraphs(): ParagraphData[] {
+  return [
+    { id: 1, level: 1, content: '', title: '' },
+  ];
+}
+
+/**
+ * Generates a standardized filename for exports
+ */
+export function getExportFilename(formData: FormData, extension: 'pdf' | 'docx' | 'txt'): string {
+  const sanitize = (str: string) => (str || '').replace(/[^a-zA-Z0-9\-_ ]/g, '').trim();
+  const ssic = sanitize(formData.ssic) || 'Draft';
+  const subject = sanitize(formData.subj) || 'Letter';
+
+  // Order / Directive
+  if (formData.documentType === 'mco') {
+    const prefix = sanitize(formData.orderPrefix ?? '') || 'MCO';
+    return `${prefix} ${ssic} - ${subject}.${extension}`;
+  }
+
+  // Bulletin
+  if (formData.documentType === 'bulletin') {
+    return `MCBul ${ssic} - ${subject}.${extension}`;
+  }
+
+  // Change Transmittal
+  if (formData.documentType === 'change-transmittal') {
+    const parent = sanitize(formData.parentDirectiveTitle ?? '') || 'Directive';
+    const chNum = formData.changeNumber || 1;
+    return `${parent} Ch ${chNum} - ${subject}.${extension}`;
+  }
+
+  // Endorsement
+  if (formData.documentType === 'endorsement') {
+    const level = formData.endorsementLevel || 'Endorsement';
+    const ref = sanitize(formData.basicLetterReference) || 'Ref';
+    return `${level} on ${ref}.${extension}`;
+  }
+
+  // AA Form
+  if (formData.documentType === 'aa-form') {
+    return `NAVMC 10274 - ${ssic}.${extension}`;
+  }
+
+  // Page 11
+  if (formData.documentType === 'page11') {
+    const name = sanitize(formData.name ?? '') || 'Marine';
+    return `NAVMC 118(11) - ${name}.${extension}`;
+  }
+
+  // AMHS
+  if (formData.documentType === 'amhs') {
+    return `AMHS - ${subject}.${extension}`;
+  }
+
+  // MOA/MOU
+  if (formData.documentType === 'moa' || formData.documentType === 'mou') {
+    const type = formData.documentType.toUpperCase();
+    return `${type} - ${subject}.${extension}`;
+  }
+
+  // Staffing Papers
+  if (['position-paper', 'information-paper'].includes(formData.documentType)) {
+    const type = formData.documentType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    return `${type} - ${subject}.${extension}`;
+  }
+
+  // Default Basic Letter
+  return `Letter ${ssic} - ${subject}.${extension}`;
+}
+
+/**
+ * Merges Admin Subsections (Records Management, Privacy Act, Reports Required)
+ * into the main paragraphs array for export.
+ */
+export function mergeAdminSubsections(
+  paragraphs: ParagraphData[],
+  adminSubsections?: import('@/types').AdminSubsections
+): ParagraphData[] {
+  if (!adminSubsections) return paragraphs;
+
+  // Find "Administration and Logistics" paragraph
+  const adminParaIndex = paragraphs.findIndex(p => 
+    p.title && p.title.toLowerCase().includes('administration and logistics')
+  );
+
+  if (adminParaIndex === -1) return paragraphs;
+
+  const adminPara = paragraphs[adminParaIndex];
+  const newParagraphs = [...paragraphs];
+  
+  // Prepare subsections to insert
+  const subsectionsToInsert: ParagraphData[] = [];
+  let nextId = Math.max(...paragraphs.map(p => p.id)) + 1;
+
+  // Helper to create subsection
+  const createSubsection = (content: string) => ({
+    id: nextId++,
+    level: adminPara.level + 1,
+    content: content || ' ', // Ensure non-empty for rendering
+    title: '' // Subsections usually don't have titles in the data structure, just content
+  });
+
+  // 1. Records Management
+  if (adminSubsections.recordsManagement?.show) {
+    const p = createSubsection(adminSubsections.recordsManagement.content);
+    // Use markdown for bold header
+    p.content = `**Records Management.** ${p.content}`;
+    subsectionsToInsert.push(p);
+  }
+
+  // 2. Privacy Act
+  if (adminSubsections.privacyAct?.show) {
+    const p = createSubsection(adminSubsections.privacyAct.content);
+    p.content = `**Privacy Act.** ${p.content}`;
+    subsectionsToInsert.push(p);
+  }
+
+  // 3. Reports Required
+  if (adminSubsections.reportsRequired?.show) {
+    const p = createSubsection(adminSubsections.reportsRequired.content);
+    p.content = `**Reports Required.** ${p.content}`;
+    subsectionsToInsert.push(p);
+  }
+
+  // Insert after the admin paragraph
+  newParagraphs.splice(adminParaIndex + 1, 0, ...subsectionsToInsert);
+
+  return newParagraphs;
+}
+
+/**
+ * Validates acronym first-use per MCO 5215.1K para 16.
+ * Rules:
+ * - On first use, spell out the term followed by the acronym in parentheses
+ * - After first use, the acronym alone may be used
+ *
+ * @returns Map of paragraph ID to error message string
+ */
+export function validateAcronymFirstUse(paragraphs: ParagraphData[]): Map<number, string> {
+  // Well-known abbreviations exempt from spell-out requirement
+  const EXEMPT = new Set([
+    // Government/Military organizations
+    'USMC', 'DOD', 'DON', 'CMC', 'HQMC', 'MCO', 'NAVMC',
+    'SECNAV', 'SECDEF', 'MARADMIN', 'ALMAR', 'GENADMIN',
+    'NATO', 'TECOM', 'MCCDC', 'MARCENT', 'MARFOR',
+    // Common correspondence terms
+    'NLT', 'IAW', 'POC', 'IOT', 'IRT', 'DTG', 'SSIC', 'PCN',
+    'SMEAC', 'FOUO', 'CUI', 'PII', 'OPSEC',
+    // Ranks, grades, designations
+    'SNCO', 'NCO', 'MOS', 'EDIPI', 'SSN',
+    // Fiscal/Admin
+    'USD', 'GAO', 'OMB', 'OPM',
+    // Standard abbreviations
+    'SOP', 'POA', 'PPE', 'TBD', 'TTP', 'MEF',
+    'FBI', 'CIA', 'NSA', 'DHS', 'OSD',
+    'USA', 'USN', 'USCG', 'USAF',
+    // Common short forms
+    'PDF', 'URL',
+  ]);
+
+  // Detect acronyms: 3+ consecutive uppercase letters at word boundaries
+  const acronymRegex = /\b([A-Z]{3,})\b/g;
+
+  // Detect definitions: "Words In Mixed Case (ACRONYM)" pattern
+  const definitionRegex = /[A-Z][a-z]+(?:[\s\-\/]+[A-Za-z]+)*\s*\(([A-Z]{3,})\)/g;
+
+  // Track where each acronym is first defined and all uses
+  const definedAt: Map<string, number> = new Map();
+  const firstUseAt: Map<string, number> = new Map();
+  const useCount: Map<string, number> = new Map();
+
+  paragraphs.forEach((paragraph, index) => {
+    const text = paragraph.content || '';
+    if (!text.trim()) return;
+
+    // Find definitions
+    let match;
+    definitionRegex.lastIndex = 0;
+    while ((match = definitionRegex.exec(text)) !== null) {
+      const acronym = match[1];
+      if (!definedAt.has(acronym)) {
+        definedAt.set(acronym, index);
+      }
+    }
+
+    // Find uses (only in content, not in brackets/placeholders)
+    const cleanText = text.replace(/\[[^\]]*\]/g, ''); // Remove bracketed placeholders
+    acronymRegex.lastIndex = 0;
+    while ((match = acronymRegex.exec(cleanText)) !== null) {
+      const acronym = match[1];
+      if (EXEMPT.has(acronym)) continue;
+
+      useCount.set(acronym, (useCount.get(acronym) || 0) + 1);
+      if (!firstUseAt.has(acronym)) {
+        firstUseAt.set(acronym, index);
+      }
+    }
+  });
+
+  // Generate errors
+  const errorsByParagraph: Map<number, string[]> = new Map();
+
+  for (const [acronym, firstIdx] of firstUseAt) {
+    const defIdx = definedAt.get(acronym);
+    const paraId = paragraphs[firstIdx].id;
+
+    // Not defined anywhere
+    if (defIdx === undefined) {
+      const msgs = errorsByParagraph.get(paraId) || [];
+      msgs.push(`"${acronym}" not spelled out on first use (para 16)`);
+      errorsByParagraph.set(paraId, msgs);
+    }
+    // Defined, but after first use
+    else if (defIdx > firstIdx) {
+      const msgs = errorsByParagraph.get(paraId) || [];
+      msgs.push(`"${acronym}" used before its definition (para 16)`);
+      errorsByParagraph.set(paraId, msgs);
+    }
+  }
+
+  // Convert to Map<number, string>
+  const result: Map<number, string> = new Map();
+  for (const [id, msgs] of errorsByParagraph) {
+    result.set(id, msgs.join('; '));
+  }
+
+  return result;
+}
+
+/**
+ * Validates gender-neutral language per MCO 5215.1K para 15.
+ * Rules:
+ * - Avoid gendered pronouns used alone ("he" should be "he or she")
+ * - Avoid first-person pronouns in directives ("I", "me", "my")
+ *
+ * @param paragraphs  All paragraphs to validate
+ * @param isDirective Whether the document is a directive (enables first-person check)
+ * @returns Map of paragraph ID to warning message
+ */
+export function validateGenderNeutralLanguage(
+  paragraphs: ParagraphData[],
+  isDirective: boolean = false
+): Map<number, string> {
+  const result: Map<number, string> = new Map();
+
+  for (const paragraph of paragraphs) {
+    const text = paragraph.content || '';
+    if (!text.trim()) continue;
+    const warnings: string[] = [];
+
+    // Check for gendered pronouns without paired form
+    // Match standalone "he" not part of "he or she" / "he and she" / "the" / "them" etc.
+    if (/\bhe\b/i.test(text) && !/\bhe\s+(?:or|and)\s+she\b/i.test(text) && !/\bshe\s+(?:or|and)\s+he\b/i.test(text)) {
+      // Exclude "the", "them", "then", "there", "these", "they", "their" — only match standalone "he"
+      const matches = text.match(/(?<!\w)(?:^|\s)he(?:\s|[.,;:!?]|$)/gi);
+      if (matches && matches.length > 0) {
+        warnings.push('Gendered pronoun "he" — use "he or she" or rewrite (para 15)');
+      }
+    }
+
+    if (/\bhim\b/i.test(text) && !/\bhim\s+(?:or|and)\s+her\b/i.test(text)) {
+      warnings.push('Gendered pronoun "him" — use "him or her" or rewrite (para 15)');
+    }
+
+    if (/\bhimself\b/i.test(text) && !/\bhimself\s+(?:or|and)\s+herself\b/i.test(text)) {
+      warnings.push('Gendered pronoun "himself" — use "himself or herself" or rewrite (para 15)');
+    }
+
+    // First-person check for directives only
+    if (isDirective) {
+      // Match capital "I" as a word (not in Roman numerals context or mid-word)
+      if (/(?:^|[\s(,"'])I(?:[\s.,;:!?)"']|$)/.test(text)) {
+        warnings.push('First-person "I" — avoid in directives (para 15)');
+      }
+      if (/\bmy\b/i.test(text)) {
+        warnings.push('First-person "my" — avoid in directives (para 15)');
+      }
+    }
+
+    if (warnings.length > 0) {
+      result.set(paragraph.id, warnings.join('; '));
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Validates spacing conventions per MCO 5215.1K para 36.
+ * Rules:
+ * - One space after closing parenthesis
+ * - Two spaces after end-of-sentence period
+ *
+ * @returns Map of paragraph ID to warning message
+ */
+export function validateSpacing(paragraphs: ParagraphData[]): Map<number, string> {
+  const result: Map<number, string> = new Map();
+
+  for (const paragraph of paragraphs) {
+    const text = paragraph.content || '';
+    if (!text.trim()) continue;
+    const warnings: string[] = [];
+
+    // Check: two+ spaces after closing parenthesis (should be one)
+    if (/\)\s{2,}/.test(text)) {
+      warnings.push('Use one space after closing parenthesis (para 36)');
+    }
+
+    // Check: single space after end-of-sentence period (should be two)
+    // Match period followed by exactly one space then an uppercase letter (new sentence)
+    // Exclude abbreviations like "U.S." / "e.g." / "i.e." and reference labels like "(a)."
+    const sentenceEndPattern = /(?<![A-Z])\.(?!\w)\s(?=[A-Z])/g;
+    const singleSpaceMatches = text.match(sentenceEndPattern);
+    if (singleSpaceMatches && singleSpaceMatches.length > 0) {
+      // Verify they're not already double-spaced
+      const doubleSpacePattern = /(?<![A-Z])\.\s{2}(?=[A-Z])/g;
+      const doubleSpaceMatches = text.match(doubleSpacePattern);
+      const singleCount = singleSpaceMatches.length - (doubleSpaceMatches?.length || 0);
+      if (singleCount > 0) {
+        warnings.push('Use two spaces after end-of-sentence periods (para 36)');
+      }
+    }
+
+    if (warnings.length > 0) {
+      result.set(paragraph.id, warnings.join('; '));
+    }
+  }
+
+  return result;
+}
+
+export function getPositionPaperParagraphs(): ParagraphData[] {
+  return [
+    { 
+      id: 1, 
+      level: 1, 
+      content: 'Bottom Line Up Front (BLUF): briefly state who the paper is for and why. For example: "Obtain CMC decision/establish Marine Corps position on subject."', 
+      title: 'Purpose', 
+      isMandatory: true 
+    },
+    { 
+      id: 2, 
+      level: 1, 
+      content: 'Briefly summarize main points to be made.', 
+      title: 'Major Points', 
+      isMandatory: true 
+    },
+    { 
+      id: 3, 
+      level: 2, 
+      content: 'State each point in one brief sentence.', 
+      title: '', 
+      isMandatory: true 
+    },
+    { 
+      id: 4, 
+      level: 2, 
+      content: 'Major points should stand alone and not require amplification by subordinate points.', 
+      title: '', 
+      isMandatory: true 
+    },
+    { 
+      id: 5, 
+      level: 1, 
+      content: '', 
+      title: 'Discussion', 
+      isMandatory: true 
+    },
+    { 
+      id: 6, 
+      level: 2, 
+      content: 'Tailor discussion to needs and knowledge of the reader.', 
+      title: '', 
+      isMandatory: true 
+    },
+    { 
+      id: 7, 
+      level: 2, 
+      content: 'Write in short, clear, direct conversational style so the reader understands the key points and arrives at a logical conclusion.', 
+      title: '', 
+      isMandatory: true 
+    },
+    { 
+      id: 8, 
+      level: 1, 
+      content: 'The recommendation(s) must flow logically from the major points and discussion. State in direct and positive language.', 
+      title: 'Recommendation', 
+      isMandatory: true 
+    },
+  ];
+}
+
+export function getInformationPaperParagraphs(): ParagraphData[] {
+  return [
+    { id: 1, level: 1, content: 'State the reason for the paper.', title: 'Purpose', isMandatory: true },
+    { id: 2, level: 1, content: 'Present the main points in a logical sequence.', title: 'Key Points', isMandatory: true },
+  ];
+}

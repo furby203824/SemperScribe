@@ -1,0 +1,350 @@
+import { Paragraph, TextRun, TabStopType, AlignmentType, UnderlineType } from 'docx';
+import { ParagraphData } from '@/types';
+
+// Helper to parse markdown-like formatting to TextRuns
+export const parseContentToRuns = (text: string, font: string, size: number, color: string = "000000"): TextRun[] => {
+  if (!text) return [];
+  
+  // Split by markers: **...**, *...*, <u>...</u>
+  const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|<u>.*?<\/u>)/g);
+  
+  return parts.map(part => {
+    if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+      return new TextRun({ 
+        text: part.slice(2, -2), 
+        font, 
+        size, 
+        bold: true,
+        color
+      });
+    }
+    if (part.startsWith('*') && part.endsWith('*') && part.length >= 2) {
+      return new TextRun({ 
+        text: part.slice(1, -1), 
+        font, 
+        size, 
+        italics: true,
+        color
+      });
+    }
+    if (part.startsWith('<u>') && part.endsWith('</u>') && part.length >= 7) {
+      return new TextRun({ 
+        text: part.slice(3, -4), 
+        font, 
+        size, 
+        color,
+        underline: { 
+          type: UnderlineType.SINGLE, 
+          color: color 
+        } 
+      });
+    }
+    return new TextRun({ text: part, font, size, color });
+  });
+};
+
+// 1 inch = 1440 TWIPs. All values are in TWIPs.
+// These specs define the tab stop positions for each level's citation
+// and where the text following the citation should begin.
+export const NAVAL_TAB_STOPS = {
+    // Level 1: "1." at 0", text at 0.25"
+    1: { citation: 0, text: 360 },
+    // Level 2: "a." at 0.25", text at 0.5"
+    2: { citation: 360, text: 720 },
+    // Level 3: "(1)" at 0.5", text at 0.75"
+    3: { citation: 720, text: 1080 },
+    // Level 4: "(a)" at 0.75", text at 1.0"
+    4: { citation: 1080, text: 1440 },
+    // Levels 5-8 continue the pattern
+    5: { citation: 1440, text: 1800 },
+    6: { citation: 1800, text: 2160 },
+    7: { citation: 2160, text: 2520 },
+    8: { citation: 2520, text: 2880 },
+};
+
+
+/**
+ * Generates the correct citation string (e.g., "1.", "a.", "(1)") for a given paragraph.
+ * This function calculates the count based on preceding sibling paragraphs at the same level.
+ */
+export function generateCitation(
+  paragraph: ParagraphData,
+  index: number,
+  allParagraphs: ParagraphData[]
+): { citation: string } {
+    const { level } = paragraph;
+    
+    // Find the list of siblings at the same level that belong to the same parent.
+    let listStartIndex = 0;
+    if (level > 1) {
+        // Search backwards from the current paragraph to find the parent.
+        for (let i = index - 1; i >= 0; i--) {
+            if (allParagraphs[i].level < level) {
+                listStartIndex = i + 1;
+                break;
+            }
+        }
+    }
+
+    // Count position within that list of siblings.
+    let count = 0;
+    for (let i = listStartIndex; i <= index; i++) {
+        const p = allParagraphs[i];
+        // Only count paragraphs at the same level within the same sibling group.
+        if (p.level === level) {
+             if (p.content.trim() || p.id === paragraph.id) {
+                count++;
+            }
+        }
+    }
+    
+    if (count === 0) count = 1;
+
+    let citation = '';
+    switch (level) {
+        case 1: citation = `${count}.`; break;
+        case 2: citation = `${String.fromCharCode(96 + count)}.`; break;
+        case 3: citation = `(${count})`; break;
+        case 4: citation = `(${String.fromCharCode(96 + count)})`; break;
+        // Per SECNAV M-5216.5, levels 5-8 have underlined numbers/letters (not punctuation)
+        case 5: citation = `${count}.`; break; 
+        case 6: citation = `${String.fromCharCode(96 + count)}.`; break;
+        case 7: citation = `(${count})`; break;
+        case 8: citation = `(${String.fromCharCode(96 + count)})`; break;
+        default: citation = '';
+    }
+
+    return { citation };
+}
+
+
+export function createFormattedParagraph(
+  paragraph: ParagraphData,
+  index: number,
+  allParagraphs: ParagraphData[],
+  font: string = "Times New Roman",
+  color: string = "000000",
+  isDirective: boolean = false,
+  shouldBoldTitle: boolean = true,
+  shouldUppercaseTitle: boolean = true,
+  isBusinessLetter: boolean = false,
+  isShortLetter: boolean = false
+): Paragraph {
+    const { content, level } = paragraph;
+    const { citation } = generateCitation(paragraph, index, allParagraphs);
+    
+    // Helper to process title
+    const processTitle = (title: string) => {
+        return shouldUppercaseTitle ? title.toUpperCase() : title;
+    };
+    
+    // BUSINESS LETTER MODE
+    if (isBusinessLetter) {
+       // Level 1: No citation, 0.5" first line indent (or 1" for Short Letter)
+       if (level === 1) {
+           const children: TextRun[] = [];
+           if (paragraph.title) {
+                const suffix = content ? '.' : '';
+                children.push(new TextRun({ 
+                    text: processTitle(paragraph.title) + suffix, 
+                    font: font, 
+                    size: 24, 
+                    bold: shouldBoldTitle, 
+                    color 
+                }));
+                if (content) children.push(new TextRun({ text: '\u00A0\u00A0', font: font, size: 24, color }));
+           }
+           children.push(...parseContentToRuns(content, font, 24, color));
+           
+           // Use 0.25" (360 twips) for standard Business Letter indent to match "8 spaces" policy
+           const indentSize = isShortLetter ? 1440 : 360; 
+           
+           return new Paragraph({
+               children,
+               alignment: AlignmentType.LEFT,
+               indent: { firstLine: indentSize }, 
+               spacing: isShortLetter ? { line: 480 } : undefined // Double space for short letter
+           });
+       }
+       
+       // Level 2+: Standard Naval Letter logic
+    }
+    
+    // Directive (Block Style) logic:
+    // Level 1: Citation at 0", Text at 1.0" (1440 twips)
+    // Level 2: Citation at 0.5" (720 twips), Text at 1.0" (1440 twips)
+    // For Directives, hanging indent is always aligned with text start (1440)
+    
+    // Naval Letter logic (SECNAV M-5216.5):
+    // Defined in NAVAL_TAB_STOPS (cascading indent)
+    const spec = NAVAL_TAB_STOPS[level as keyof typeof NAVAL_TAB_STOPS];
+    
+    // Calculate hanging indent to ensure wrapped text aligns with the start of the first line text
+    const indentConfig = {
+        left: spec.text,
+        hanging: spec.text - spec.citation
+    };
+    
+    const isCourier = font === "Courier New";
+
+    // Build citation runs with proper formatting
+    let citationRuns: TextRun[];
+    
+    // Per SECNAV M-5216.5: Only levels 5-8 have underlined numbers/letters (not punctuation)
+    if (level >= 5 && level <= 8) {
+        if (citation.includes('(')) {
+            // Levels 7 and 8: "(1)" or "(a)" - only underline the number/letter
+            const innerText = citation.replace(/[()]/g, '');
+            citationRuns = [
+                new TextRun({ text: "(", font: font, size: 24, color }),
+                new TextRun({ text: innerText, font: font, size: 24, color, underline: { color } }),
+                new TextRun({ text: ")", font: font, size: 24, color }),
+            ];
+        } else {
+            // Levels 5 and 6: "1." or "a." - only underline the number/letter, not the period
+            const numberOrLetter = citation.slice(0, -1); // Remove the period
+            citationRuns = [
+                new TextRun({ text: numberOrLetter, font: font, size: 24, color, underline: { color } }),
+                new TextRun({ text: ".", font: font, size: 24, color }),
+            ];
+        }
+    } else {
+        // Levels 1-4: No underline
+        citationRuns = [new TextRun({ text: citation, font: font, size: 24, color })];
+    }
+    
+    // For Courier New, use non-breaking spaces instead of tabs
+    if (isCourier) {
+        // Calculate leading spaces based on level using non-breaking spaces
+        // Level 1: 0, Level 2: 4, Level 3: 8, Level 4: 12, Level 5: 16, Level 6: 20, Level 7: 24, Level 8: 28
+        const indentSpaces = '\u00A0'.repeat((level - 1) * 4); // 4 non-breaking spaces per level
+        
+        // Determine spacing after citation: 2 spaces for periods, 1 space for parentheses
+        const spacesAfterCitation = citation.endsWith('.') ? '\u00A0\u00A0' : '\u00A0';
+        
+        const children = [
+            new TextRun({ text: indentSpaces, font: font, size: 24, color }),
+            ...citationRuns,
+            new TextRun({ text: spacesAfterCitation, font: font, size: 24, color })
+        ];
+
+        if (paragraph.title) {
+        // Only add period if content exists (standard naval letter)
+        const suffix = content ? '.' : '';
+        // Removed bold: shouldBoldTitle from children.push
+        // Removed underline: type: UnderlineType.SINGLE from TextRun if present (it wasn't explicitly here, but we ensure clean style)
+        // User requested removal of underlining from main paragraphs.
+        // Standard naval letter usually underlines titles (e.g. Purpose.) but user wants it gone.
+        // We will assume `shouldBoldTitle` handles bolding (if any), but we ensure NO underline.
+        
+        children.push(new TextRun({ 
+            text: processTitle(paragraph.title) + suffix, 
+            font: font, 
+            size: 24, 
+            bold: shouldBoldTitle, 
+            color,
+            underline: undefined // Explicitly undefined to ensure no underline
+        }));
+        if (content) children.push(new TextRun({ text: '\u00A0\u00A0', font: font, size: 24, color }));
+    }
+        children.push(...parseContentToRuns(content, font, 24, color));
+
+        return new Paragraph({
+            children,
+            alignment: AlignmentType.LEFT,
+            // Courier might need manual hanging indent if desired, but spaces approach is fragile with wrapping.
+            // For now, leaving Courier as is (flush left wrap) unless requested, as it uses spaces for visual indent.
+        });
+    }
+    
+    // DIRECTIVE MODE (Block Style)
+    if (isDirective) {
+        const children: any[] = [];
+        
+        // Level 1: "1." at margin
+        if (level === 1) {
+             children.push(...citationRuns);
+             children.push(new TextRun({ text: '\t', font: font, size: 24, color }));
+        } 
+        // Level 2+: Indented 0.5" then tab to 1.0"
+        else {
+             children.push(new TextRun({ text: '\t', font: font, size: 24, color })); // Tab to 0.5"
+             children.push(...citationRuns);
+             children.push(new TextRun({ text: '\t', font: font, size: 24, color })); // Tab to 1.0"
+        }
+
+        if (paragraph.title) {
+        // Only add period if content exists (standard naval letter)
+        const suffix = content ? '.' : '';
+        
+        children.push(new TextRun({ 
+            text: processTitle(paragraph.title) + suffix, 
+            font: font, 
+            size: 24, 
+            bold: shouldBoldTitle, 
+            color,
+            underline: undefined
+        }));
+        if (content) children.push(new TextRun({ text: '\u00A0\u00A0', font: font, size: 24, color }));
+    }
+        children.push(...parseContentToRuns(content, font, 24, color));
+
+        return new Paragraph({
+            children,
+            tabStops: [
+                { type: TabStopType.LEFT, position: 720 },  // 0.5" for citation indent
+                { type: TabStopType.LEFT, position: 1440 }, // 1.0" for text start
+            ],
+            alignment: AlignmentType.LEFT,
+            indent: { left: 1440, hanging: level === 1 ? 1440 : 720 }, // Wrap aligns with text at 1.0"
+        });
+    }
+
+    // STANDARD NAVAL LETTER MODE (Original behavior)
+    // Handle Level 1 separately: no initial tab, citation starts at 0"
+    if (level === 1) {
+        const children = [...citationRuns];
+        children.push(new TextRun({ text: '\t', font: font, size: 24, color }));
+        
+        if (paragraph.title) {
+            // Only add period if content exists (standard naval letter)
+            const suffix = content ? '.' : '';
+            children.push(new TextRun({ text: processTitle(paragraph.title) + suffix, font: font, size: 24, bold: shouldBoldTitle, color }));
+            if (content) children.push(new TextRun({ text: '\u00A0\u00A0', font: font, size: 24, color }));
+        }
+        children.push(...parseContentToRuns(content, font, 24, color));
+
+        return new Paragraph({
+            children,
+            tabStops: [
+                { type: TabStopType.LEFT, position: spec.text },
+            ],
+            alignment: AlignmentType.LEFT,
+            indent: indentConfig, // Added hanging indent
+        });
+    }
+
+    // Levels 2-8
+    const children = [
+        // REMOVED leading tab because indent: { left: ..., hanging: ... } already places the cursor at the citation start position.
+        // Adding a tab here would push the citation to the NEXT tab stop (the text position), which is incorrect.
+        ...citationRuns,
+        new TextRun({ text: '\t', font: font, size: 24, color }), // Tab to start text
+    ];
+
+    if (paragraph.title) {
+        children.push(new TextRun({ text: processTitle(paragraph.title) + '.', font: font, size: 24, bold: shouldBoldTitle, color }));
+        if (content) children.push(new TextRun({ text: '\u00A0\u00A0', font: font, size: 24, color }));
+    }
+    children.push(...parseContentToRuns(content, font, 24, color));
+
+    return new Paragraph({
+        children,
+        tabStops: [
+            { type: TabStopType.LEFT, position: spec.citation },
+            { type: TabStopType.LEFT, position: spec.text },
+        ],
+        alignment: AlignmentType.LEFT,
+        indent: indentConfig, // Added hanging indent
+    });
+}

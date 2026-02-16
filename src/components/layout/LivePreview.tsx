@@ -1,0 +1,65 @@
+import React from 'react';
+import { FileText, Download, Printer, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+
+import { PageCountIndicator } from './PageCountIndicator';
+
+interface LivePreviewProps {
+  className?: string;
+  previewUrl?: string; // If we have a blob URL
+  isLoading?: boolean;
+  onUpdatePreview?: () => void;
+  documentType?: string;
+}
+
+export function LivePreview({ className, previewUrl, isLoading, onUpdatePreview, documentType = 'standard' }: LivePreviewProps) {
+  return (
+    <aside className={cn("w-[45%] max-w-[900px] min-w-[500px] bg-muted/20 border-l border-border hidden xl:flex flex-col h-full", className)}>
+      <div className="h-12 bg-card border-b border-border flex items-center justify-between px-4 shrink-0">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Live Preview</h3>
+        <div className="flex items-center space-x-1">
+           {onUpdatePreview && (
+             <Button 
+               variant="ghost" 
+               size="sm" 
+               className="h-7 text-xs text-primary hover:text-primary/80 hover:bg-primary/10 px-2 gap-1.5 mr-2"
+               onClick={onUpdatePreview}
+               disabled={isLoading}
+             >
+               <RefreshCw className={cn("w-3.5 h-3.5", isLoading && "animate-spin")} />
+               Refresh
+             </Button>
+           )}
+           <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
+             <Printer className="w-3.5 h-3.5" />
+           </Button>
+           <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
+             <Download className="w-3.5 h-3.5" />
+           </Button>
+        </div>
+      </div>
+      
+      <div className="flex-1 overflow-hidden relative bg-muted/40">
+        <PageCountIndicator url={previewUrl || null} documentType={documentType} />
+        {isLoading ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+              <p className="text-xs text-muted-foreground">Generating preview...</p>
+            </div>
+          </div>
+        ) : previewUrl ? (
+          <iframe src={previewUrl} className="w-full h-full border-none" title="PDF Preview" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-center text-muted-foreground/40">
+            <div>
+              <FileText className="w-12 h-12 mx-auto mb-2 opacity-20" />
+              <p className="text-sm">Preview not available</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+}

@@ -1,0 +1,351 @@
+/* Naval Letter Form Styles */
+
+:root {
+  /* Color Palette */
+  --color-gold-dark: #b8860b;
+  --color-gold-light: #ffd700;
+  --color-naval-dark: #1a1a2e;
+  --color-naval-light: #16213e;
+  --color-text-shadow: #0066cc;
+  --color-success: #28a745;
+  --color-success-dark: #218838;
+  --color-success-light: #20c997;
+  --color-success-lighter: #1da88a;
+  --color-danger: #dc3545;
+  --color-danger-dark: #c82333;
+  --color-danger-darker: #a71e2a;
+  --color-warning: #ffc107;
+  --color-warning-dark: #856404;
+  --color-info: #17a2b8;
+  --color-primary: #007bff;
+  --color-primary-dark: #996c09;
+  --color-primary-darker: #e6c200;
+
+  /* Gradients */
+  --gradient-gold: linear-gradient(45deg, var(--color-gold-dark), var(--color-gold-light));
+  --gradient-gold-hover: linear-gradient(45deg, var(--color-primary-dark), var(--color-primary-darker));
+  --gradient-naval: linear-gradient(135deg, var(--color-naval-dark) 0%, var(--color-naval-light) 100%);
+  --gradient-success: linear-gradient(45deg, var(--color-success), var(--color-success-light));
+  --gradient-success-hover: linear-gradient(45deg, var(--color-success-dark), var(--color-success-lighter));
+  --gradient-danger: linear-gradient(45deg, var(--color-danger), var(--color-danger-dark));
+  --gradient-danger-hover: linear-gradient(45deg, var(--color-danger-dark), var(--color-danger-darker));
+
+  /* Shadows */
+  --text-shadow-naval: 0 0 3px var(--color-text-shadow), 0 0 6px var(--color-text-shadow);
+}
+
+.naval-gradient-bg {
+  background: var(--gradient-naval);
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.main-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  margin: 20px auto;
+  padding: 30px;
+  max-width: 1200px;
+}
+
+.main-title {
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: bold;
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.form-section {
+  background: rgba(248, 249, 250, 0.8);
+  border-radius: 15px;
+  padding: 25px;
+  margin-bottom: 25px;
+  border: 2px solid rgba(184, 134, 11, 0.2);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.section-legend {
+  background: var(--gradient-gold);
+  color: white;
+  text-shadow: var(--text-shadow-naval);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  display: block;
+  font-size: 1.1rem;
+  text-align: center;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.input-group {
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+.input-group-text {
+  background: var(--gradient-gold);
+  color: white;
+  text-shadow: var(--text-shadow-naval);
+  border: none;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: 8px 0 0 8px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+}
+
+.form-control {
+  flex: 1;
+  border-width: 2px;
+  border-style: solid;
+  border-color: #e9ecef;
+  border-radius: 0 8px 8px 0;
+  padding: 12px;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #b8860b;
+  box-shadow: 0 0 0 0.2rem rgba(184, 134, 11, 0.25);
+}
+
+.input-group .input-group-text + .form-control {
+  border-radius: 0;
+}
+
+.input-group .form-control:last-of-type {
+  border-radius: 0 8px 8px 0;
+}
+
+.is-valid {
+  border-left: 4px solid #28a745 !important;
+  background-color: rgba(40, 167, 69, 0.05);
+}
+
+.is-invalid {
+  border-left: 4px solid #dc3545 !important;
+  background-color: rgba(220, 53, 69, 0.05);
+}
+
+.feedback-message {
+  font-size: 0.875rem;
+  margin-top: 5px;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+.text-success {
+  color: #28a745 !important;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+
+.text-info {
+  color: #17a2b8 !important;
+}
+
+.btn {
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--gradient-gold);
+  color: white;
+  text-shadow: var(--text-shadow-naval);
+}
+
+.btn-primary:hover {
+  background: var(--gradient-gold-hover);
+  transform: translateY(-2px);
+}
+
+.btn-success {
+  background: var(--gradient-success);
+  color: white;
+  text-shadow: var(--text-shadow-naval);
+}
+
+.btn-success:hover {
+  background: var(--gradient-success-hover);
+  transform: translateY(-2px);
+}
+
+.btn-danger {
+  background: var(--gradient-danger);
+  color: white;
+  text-shadow: var(--text-shadow-naval);
+}
+
+.btn-danger:hover {
+  background: var(--gradient-danger-hover);
+  transform: translateY(-2px);
+}
+
+/* Structured Reference Input Styles */
+.sri-container {
+  margin-top: 1rem;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.sri-header {
+  background: linear-gradient(to right, #2563eb, #1d4ed8);
+  color: white;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sri-header::before {
+  content: '📄';
+  font-size: 1.1em;
+}
+
+.sri-body {
+  padding: 1.25rem;
+  background: #f8fafc;
+}
+
+.sri-info-box {
+  background-color: #e0f2fe;
+  border-left: 4px solid #0284c7;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 4px;
+}
+
+.sri-info-row {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #0c4a6e;
+}
+
+.sri-info-row:last-child {
+  margin-bottom: 0;
+}
+
+.sri-info-label {
+  font-weight: 700;
+  margin-right: 0.5rem;
+}
+
+.sri-info-text {
+  font-family: monospace;
+}
+
+.sri-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* Changed to 4 columns to accommodate SSIC */
+  gap: 1rem;
+}
+
+@media (max-width: 992px) {
+  .sri-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .sri-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sri-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sri-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.sri-input, .sri-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  background: white;
+  width: 100%;
+}
+
+.sri-input:focus, .sri-select:focus {
+  border-color: #2563eb;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.sri-hint {
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.2;
+}
+
+.sri-hint-long {
+  grid-column: 1 / -1;
+}
+
+.sri-errors {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.sri-error {
+  color: #ef4444;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+/* Fallback Utility Classes for Page Numbering Cards */
+.bg-yellow-100 { background-color: #fef9c3 !important; }
+.border-yellow-400 { border-color: #facc15 !important; }
+.text-yellow-900 { color: #713f12 !important; }
+.bg-yellow-200 { background-color: #fef08a !important; }
+
+.bg-indigo-50 { background-color: #eef2ff !important; }
+.border-indigo-200 { border-color: #c7d2fe !important; }
+.text-indigo-900 { color: #312e81 !important; }
+.text-indigo-800 { color: #3730a3 !important; }
+.border-indigo-300 { border-color: #a5b4fc !important; }
+
+.bg-slate-100 { background-color: #f1f5f9 !important; }
+.border-slate-300 { border-color: #cbd5e1 !important; }
+.text-slate-700 { color: #334155 !important; }
+
+.bg-blue-100 { background-color: #dbeafe !important; }
+.border-blue-500 { border-color: #3b82f6 !important; }
+.text-blue-900 { color: #1e3a8a !important; }

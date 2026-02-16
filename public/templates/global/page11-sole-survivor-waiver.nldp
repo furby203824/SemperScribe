@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "packageId": "page11_sole_survivor_waiver",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-02-16T00:00:00.000Z",
+    "author": {
+      "name": "System Template"
+    },
+    "package": {
+      "title": "Sole Surviving Son/Daughter Waiver",
+      "description": "Waiver of restrictive assignment rights per MCO 1300.8 W/CH 1",
+      "documentType": "page11"
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "page11",
+      "name": "",
+      "edipi": "",
+      "date": "",
+      "remarksLeft": "Entry:",
+      "remarksRight": "(Date). I hereby waive my rights to restrictive assignment as a sole surviving son/daughter per MCO 1300.8 W/CH 1.\n\n\n_____________________\nSignature of Marine"
+    },
+    "vias": [],
+    "references": [],
+    "enclosures": [],
+    "copyTos": [],
+    "paragraphs": []
+  }
+}

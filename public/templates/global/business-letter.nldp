@@ -1,0 +1,116 @@
+{
+  "metadata": {
+    "packageId": "nldp_1770758957956_business-letter",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-02-10T21:29:17.956Z",
+    "author": {
+      "name": "System Template",
+      "unit": "HQMC"
+    },
+    "package": {
+      "title": "Business Letter",
+      "description": "Correspondence with non-DoD entities, agencies, or individuals.",
+      "subject": "BUSINESS LETTER TEMPLATE",
+      "documentType": "business-letter",
+      "tags": [
+        "template",
+        "standard"
+      ]
+    },
+    "checksums": {
+      "dataHash": "",
+      "crc32": ""
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "business-letter",
+      "ssic": "1000",
+      "originatorCode": "CODE",
+      "date": "February 10, 2026",
+      "recipientName": "Mr. John Doe",
+      "recipientTitle": "Director of Operations",
+      "businessName": "Acme Corporation",
+      "recipientAddress": "123 Business Blvd\nCity, State 12345",
+      "salutation": "Dear Mr. Doe:",
+      "complimentaryClose": "Sincerely,",
+      "subj": "BUSINESS LETTER TEMPLATE",
+      "sig": "I. M. MARINE",
+      "signerRank": "Colonel",
+      "signerTitle": "Commanding Officer",
+      "isWindowEnvelope": false,
+      "isShortLetter": false,
+      "isVipMode": false,
+      "from": "",
+      "to": "",
+      "line1": "",
+      "line2": "",
+      "line3": "",
+      "endorsementLevel": "",
+      "basicLetterReference": "",
+      "referenceWho": "",
+      "referenceType": "",
+      "referenceDate": "",
+      "startingReferenceLevel": "",
+      "startingEnclosureNumber": "",
+      "startingPageNumber": 1,
+      "previousPackagePageCount": 0,
+      "headerType": "USMC",
+      "bodyFont": "times",
+      "delegationText": "",
+      "accentColor": "black"
+    },
+    "vias": [],
+    "references": [],
+    "enclosures": [],
+    "copyTos": [],
+    "paragraphs": [
+      {
+        "id": 1,
+        "level": 1,
+        "content": "This is the first paragraph of a business letter. Unlike naval letters, paragraphs are typically not numbered.",
+        "isMandatory": true
+      },
+      {
+        "id": 2,
+        "level": 1,
+        "content": "This is the second paragraph. However, if the letter is complex, you may use an outline format."
+      },
+      {
+        "id": 3,
+        "level": 2,
+        "content": "This is a sub-paragraph (a)."
+      },
+      {
+        "id": 4,
+        "level": 3,
+        "content": "This is a sub-sub-paragraph (1)."
+      },
+      {
+        "id": 5,
+        "level": 4,
+        "content": "This is a sub-sub-sub-paragraph (a)."
+      },
+      {
+        "id": 6,
+        "level": 5,
+        "content": "This is the fifth level <u>1</u>."
+      },
+      {
+        "id": 7,
+        "level": 6,
+        "content": "This is the sixth level <u>a</u>."
+      },
+      {
+        "id": 8,
+        "level": 7,
+        "content": "This is the seventh level (<u>1</u>)."
+      },
+      {
+        "id": 9,
+        "level": 8,
+        "content": "This is the eighth level (<u>a</u>)."
+      }
+    ]
+  }
+}
