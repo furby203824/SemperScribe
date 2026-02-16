@@ -10,8 +10,6 @@ interface BusinessLetterData {
   sig: string;
   senderAddress?: string;
   body?: string;
-  closing?: string;
-  signatureName?: string;
   [key: string]: unknown;
 }
 
@@ -83,12 +81,12 @@ export async function createBusinessLetterPdf(data: BusinessLetterData): Promise
   }
 
   // 6. Closing
-  const closingText = data.closing || data.complimentaryClose || '';
+  const closingText = data.complimentaryClose || '';
   y = drawText(closingText, margin, y);
   y -= lineHeight * 3; // Space for signature
 
   // 7. Signature Name
-  const sigName = data.signatureName || data.sig || '';
+  const sigName = data.sig || '';
   drawText(sigName, margin, y);
 
   return pdfDoc.save();
