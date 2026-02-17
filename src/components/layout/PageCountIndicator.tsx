@@ -1,14 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Document, pdfjs } from 'react-pdf';
+import dynamic from 'next/dynamic';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, CheckCircle, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Configure PDF.js worker
+// Dynamically import react-pdf to avoid SSR issues (pdfjs-dist requires Promise.withResolvers)
+const Document = dynamic(() => import("react-pdf").then((mod) => mod.Document), { ssr: false });
+
+// Configure PDF.js worker on client only
 if (typeof window !== 'undefined') {
-    pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+    import("react-pdf").then((pdfjs) => {
+        pdfjs.pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.pdfjs.version}/build/pdf.worker.min.mjs`;
+    });
 }
 
 interface PageCountIndicatorProps {
