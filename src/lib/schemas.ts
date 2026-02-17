@@ -91,6 +91,22 @@ const ssicFieldOptional = () => z.string().optional().superRefine((val, ctx) => 
   }
 });
 
+// Directive SSIC allows the full identifier: C5216R.3K w/ ch 1
+// Must start with an optional classification prefix (C/S), then 4-5 digit SSIC,
+// optional R (reserve), optional .# (point number), optional revision letter,
+// optional "w/ ch #" (change indicator)
+const ssicFieldDirective = () => z.string().superRefine((val, ctx) => {
+  if (!val) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "SSIC is required" });
+    return;
+  }
+  // Must contain a 4-5 digit SSIC code somewhere
+  if (!/\d{4,5}/.test(val)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "SSIC must contain a 4-5 digit code (e.g., 5216.3K)" });
+    return;
+  }
+});
+
 const subjFieldRequired = () => z.string()
   .min(1, "Subject is required")
   .refine(val => val === val.toUpperCase(), { message: "Subject must be in ALL CAPS" });
@@ -314,6 +330,8 @@ export const AAFormDefinition: DocumentTypeDefinition = {
 // 5. Marine Corps Order (MCO)
 export const MCOSchema = BasicLetterSchema.extend({
   documentType: z.literal('mco'),
+  // Override SSIC to accept expanded directive format (e.g., C5216R.3K w/ ch 1)
+  ssic: ssicFieldDirective(),
   // These fields are managed by UnitInfoSection / ClosingBlockSection, not DynamicForm.
   // Override as optional so zodResolver doesn't reject the form when they're absent.
   line1: z.string().optional(),
@@ -460,6 +478,8 @@ export const MCODefinition: DocumentTypeDefinition = {
 // 6. Marine Corps Bulletin (MCBul)
 export const BulletinSchema = BasicLetterSchema.extend({
   documentType: z.literal('bulletin'),
+  // Override SSIC to accept expanded directive format
+  ssic: ssicFieldDirective(),
   // These fields are managed by UnitInfoSection / ClosingBlockSection, not DynamicForm.
   line1: z.string().optional(),
   line2: z.string().optional(),
@@ -1647,6 +1667,8 @@ export const ExecutiveCorrespondenceDefinition: DocumentTypeDefinition = {
 // 18. Change Transmittal (MCO 5215.1K para 40-44)
 export const ChangeTransmittalSchema = BasicLetterSchema.extend({
   documentType: z.literal('change-transmittal'),
+  // Override SSIC to accept expanded directive format
+  ssic: ssicFieldDirective(),
   // The parent directive being changed
   parentDirectiveTitle: z.string().min(1, "Parent directive title is required (e.g., MCO 5215.1K)"),
   // Change number (Ch 1, Ch 2, etc.)
