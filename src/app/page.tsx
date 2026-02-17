@@ -23,6 +23,7 @@ import { useParagraphs } from '@/hooks/useParagraphs';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { useImportExport } from '@/hooks/useImportExport';
 import { ProofreadModal } from '@/components/ProofreadModal';
+import { BatchGenerateModal } from '@/components/BatchGenerateModal';
 import { SettingsDialog } from '@/components/SettingsDialog';
 import { useUserProfile } from '@/hooks/useUserProfile';
 
@@ -112,6 +113,9 @@ function NavalLetterGeneratorInner() {
 
   // Proofread modal state
   const [showProofreadModal, setShowProofreadModal] = useState(false);
+
+  // Batch generate modal state
+  const [showBatchModal, setShowBatchModal] = useState(false);
 
   // Signature placement state
   const [showSignatureModal, setShowSignatureModal] = useState(false);
@@ -599,6 +603,7 @@ function NavalLetterGeneratorInner() {
       onCopyAMHS={handleCopyAMHS}
       onExportAMHS={handleExportAMHS}
       onProofread={() => setShowProofreadModal(true)}
+      onBatchGenerate={() => setShowBatchModal(true)}
       onSettings={() => setShowSettings(true)}
       customRightPanel={
         formData.documentType === 'amhs' ? (
@@ -651,6 +656,17 @@ function NavalLetterGeneratorInner() {
         paragraphs={paragraphs}
         enclosures={enclosures}
         references={references}
+      />
+      <BatchGenerateModal
+        open={showBatchModal}
+        onOpenChange={setShowBatchModal}
+        formData={formData}
+        paragraphs={paragraphs}
+        vias={vias}
+        references={references}
+        enclosures={enclosures}
+        copyTos={copyTos}
+        distList={distList}
       />
       <SettingsDialog
         open={showSettings}
