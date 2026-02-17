@@ -155,23 +155,37 @@ function NavalLetterGeneratorInner() {
   // Apply user profile defaults on initial load
   useEffect(() => {
     if (profileLoaded) {
-      const defaults = getFormDefaults();
-      setFormData(prev => ({
-        ...prev,
-        // Only apply profile defaults for fields that are still empty (initial state)
-        ...(prev.sig ? {} : { sig: defaults.sig }),
-        ...(prev.from ? {} : { from: defaults.from }),
-        ...(prev.originatorCode ? {} : { originatorCode: defaults.originatorCode }),
-        ...(prev.line1 ? {} : { line1: defaults.line1, line2: defaults.line2, line3: defaults.line3 }),
-        // Formatting defaults always apply from profile
-        headerType: defaults.headerType,
-        bodyFont: defaults.bodyFont,
-        accentColor: defaults.accentColor,
-        amhsClassification: defaults.amhsClassification,
-        amhsPrecedence: defaults.amhsPrecedence,
-      }));
+      applyProfileToForm();
     }
   }, [profileLoaded]);
+
+  // Re-apply profile when settings change (e.g. user edits profile mid-session)
+  const applyProfileToForm = useCallback(() => {
+    const defaults = getFormDefaults();
+    setFormData(prev => ({
+      ...prev,
+      // Identity fields: apply if field is empty
+      ...(prev.sig ? {} : { sig: defaults.sig }),
+      ...(prev.from ? {} : { from: defaults.from }),
+      ...(prev.originatorCode ? {} : { originatorCode: defaults.originatorCode }),
+      ...(prev.line1 ? {} : { line1: defaults.line1, line2: defaults.line2, line3: defaults.line3 }),
+      // Formatting defaults always track the profile
+      headerType: defaults.headerType,
+      bodyFont: defaults.bodyFont,
+      accentColor: defaults.accentColor,
+      amhsClassification: defaults.amhsClassification,
+      amhsPrecedence: defaults.amhsPrecedence,
+    }));
+    // Sync unit code/name for header display
+    if (profile.unitRuc) {
+      const unit = UNITS.find(u => u.ruc === profile.unitRuc);
+      if (unit) {
+        setCurrentUnitCode(unit.ruc);
+        setCurrentUnitName(unit.unitName.toUpperCase());
+      }
+    }
+    setFormKey(prev => prev + 1);
+  }, [getFormDefaults, profile.unitRuc]);
 
   // Auto-select unit from EDMS
   useEffect(() => {
@@ -640,7 +654,10 @@ function NavalLetterGeneratorInner() {
       />
       <SettingsDialog
         open={showSettings}
-        onOpenChange={setShowSettings}
+        onOpenChange={(open) => {
+          setShowSettings(open);
+          if (!open) applyProfileToForm();
+        }}
         profile={profile}
         onUpdateProfile={updateProfile}
         onClearProfile={clearProfile}
