@@ -37,6 +37,8 @@ interface DocumentLayoutProps {
   setEnclosures: React.Dispatch<React.SetStateAction<string[]>>;
   copyTos: string[];
   setCopyTos: React.Dispatch<React.SetStateAction<string[]>>;
+  distList: string[];
+  setDistList: React.Dispatch<React.SetStateAction<string[]>>;
   // Paragraphs
   paragraphs: ParagraphData[];
   activeVoiceInput: number | null;
@@ -73,6 +75,8 @@ export function DocumentLayout({
   setEnclosures,
   copyTos,
   setCopyTos,
+  distList,
+  setDistList,
   paragraphs,
   activeVoiceInput,
   validateParagraphNumbering,
@@ -216,6 +220,8 @@ export function DocumentLayout({
               setFormData={setFormData}
               copyTos={copyTos}
               setCopyTos={setCopyTos}
+              distList={distList}
+              setDistList={setDistList}
             />
           )}
 

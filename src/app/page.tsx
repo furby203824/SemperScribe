@@ -88,6 +88,7 @@ function NavalLetterGeneratorInner() {
   const [references, setReferences] = useState<string[]>(['']);
   const [enclosures, setEnclosures] = useState<string[]>(['']);
   const [copyTos, setCopyTos] = useState<string[]>(['']);
+  const [distList, setDistList] = useState<string[]>(['']);
 
   const [paragraphs, setParagraphs] = useState<ParagraphData[]>([{ id: 1, level: 1, content: '', acronymError: '' }]);
   const [savedLetters, setSavedLetters] = useState<SavedLetter[]>([]);
@@ -1015,6 +1016,8 @@ function NavalLetterGeneratorInner() {
         setEnclosures={setEnclosures}
         copyTos={copyTos}
         setCopyTos={setCopyTos}
+        distList={distList}
+        setDistList={setDistList}
         paragraphs={paragraphs}
         activeVoiceInput={activeVoiceInput}
         validateParagraphNumbering={validateParagraphNumbering}
