@@ -39,7 +39,7 @@ import { DOC_SETTINGS, TAB_STOPS, INDENTS } from "./doc-settings";
 
 // Constants for layout (in twips)
 // 1 inch = 1440 twips
-const MARGIN_TOP = 0; // Legacy uses 0 for top margin
+const MARGIN_TOP = 720; // 0.5" top margin per reference app
 const MARGIN_BOTTOM = 1440;
 const MARGIN_LEFT = 1440;
 const MARGIN_RIGHT = 1440;
@@ -53,7 +53,7 @@ const getFont = (font: 'times' | 'courier') => {
 
 // Get header color based on user selection (black or blue only)
 const getHeaderColor = (colorName?: string) => {
-  return colorName === 'blue' ? "002D72" : "000000"; // Navy blue or black
+  return colorName === 'blue' ? "000080" : "000000"; // Navy blue (#000080 per reference) or black
 };
 
 // Helper to create empty lines - Matches legacy app behavior
@@ -120,7 +120,7 @@ export async function generateDocxBlob(
         : 'DEPARTMENT OF THE NAVY';
         
       letterheadParagraphs.push(new Paragraph({
-        children: [new TextRun({ text: headerText, font: 'Times New Roman', bold: true, size: 20, color: headerColor })], // Size 20 (10pt) per legacy
+        children: [new TextRun({ text: headerText, font: 'Arial', bold: true, size: 20, color: headerColor })], // Size 20 (10pt), Arial per reference
         alignment: AlignmentType.CENTER,
         spacing: { after: 0 },
       }));
@@ -129,7 +129,7 @@ export async function generateDocxBlob(
       [formData.line1, formData.line2, formData.line3].forEach(line => {
         if (line) {
           letterheadParagraphs.push(new Paragraph({
-            children: [new TextRun({ text: line, font: 'Times New Roman', size: 16, color: headerColor })], // Size 16 (8pt) per legacy
+            children: [new TextRun({ text: line, font: 'Arial', size: 16, color: headerColor })], // Size 16 (8pt), Arial per reference
             alignment: AlignmentType.CENTER,
             spacing: { after: 0 },
           }));
@@ -1339,9 +1339,11 @@ export async function generateDocxBlob(
           }));
       }
   } else if (formData.sig && !isStaffingPaper) {
+    // Three empty lines before signature per reference app (matches SECNAV M-5216.5)
     signatureParagraphs.push(createEmptyLine(font));
     signatureParagraphs.push(createEmptyLine(font));
-    
+    signatureParagraphs.push(createEmptyLine(font));
+
     signatureParagraphs.push(new Paragraph({
       children: [
         new TextRun({ text: formData.sig.toUpperCase(), font, size: FONT_SIZE_BODY }),
@@ -1351,12 +1353,21 @@ export async function generateDocxBlob(
     }));
     
     if (formData.delegationText && !isFromToMemo) {
-      signatureParagraphs.push(new Paragraph({
-        children: [
-          new TextRun({ text: formData.delegationText, font, size: FONT_SIZE_BODY }),
-        ],
-        indent: { left: signatureIndent },
-      }));
+      // Support both string and array formats for delegation text (reference uses string[])
+      const delegationLines = Array.isArray(formData.delegationText)
+        ? formData.delegationText
+        : [formData.delegationText];
+
+      delegationLines.forEach((line: string) => {
+        if (line && line.trim()) {
+          signatureParagraphs.push(new Paragraph({
+            children: [
+              new TextRun({ text: line, font, size: FONT_SIZE_BODY }),
+            ],
+            indent: { left: signatureIndent },
+          }));
+        }
+      });
     }
   }
 

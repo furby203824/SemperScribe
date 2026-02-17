@@ -4,6 +4,19 @@ import { useState, useCallback, useEffect } from 'react';
 import { ParagraphData } from '@/types';
 
 /**
+ * Converts a number to Excel-style letters (1=a, 2=b... 26=z, 27=aa, 28=ab)
+ */
+function numberToLetter(num: number): string {
+  let result = '';
+  while (num > 0) {
+    const remainder = (num - 1) % 26;
+    result = String.fromCharCode(97 + remainder) + result;
+    num = Math.floor((num - 1) / 26);
+  }
+  return result;
+}
+
+/**
  * Hook for paragraph state management and CRUD operations.
  * Encapsulates add, remove, move, update, citation generation, and validation.
  */
@@ -145,11 +158,11 @@ export function useParagraphs(initialParagraphs?: ParagraphData[]) {
         switch (targetLevel) {
           case 1: return `${chapterNum}${String(count).padStart(3, '0')}.`;
           case 2: return `${count}`;
-          case 3: return `${String.fromCharCode(96 + count)}`;
+          case 3: return `${numberToLetter(count)}`;
           case 4: return `(${count})`;
-          case 5: return `(${String.fromCharCode(96 + count)})`;
+          case 5: return `(${numberToLetter(count)})`;
           case 6: return `${count}.`;
-          case 7: return `${String.fromCharCode(96 + count)}.`;
+          case 7: return `${numberToLetter(count)}.`;
           case 8: return `(${count})`;
           default: return '';
         }
@@ -157,13 +170,13 @@ export function useParagraphs(initialParagraphs?: ParagraphData[]) {
 
       switch (targetLevel) {
         case 1: return `${count}.`;
-        case 2: return `${String.fromCharCode(96 + count)}`;
+        case 2: return `${numberToLetter(count)}`;
         case 3: return `(${count})`;
-        case 4: return `(${String.fromCharCode(96 + count)})`;
+        case 4: return `(${numberToLetter(count)})`;
         case 5: return `${count}.`;
-        case 6: return `${String.fromCharCode(96 + count)}.`;
+        case 6: return `${numberToLetter(count)}.`;
         case 7: return `(${count})`;
-        case 8: return `(${String.fromCharCode(96 + count)})`;
+        case 8: return `(${numberToLetter(count)})`;
         default: return '';
       }
     };
