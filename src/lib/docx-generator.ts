@@ -21,7 +21,7 @@ import {
   VerticalAlign
 } from "docx";
 import { FormData, ParagraphData } from "@/types";
-import { getDoDSealBufferSync } from "./dod-seal";
+import { getDoDSealBuffer } from "./dod-seal";
 import { 
   splitSubject, 
   formatCancellationDate, 
@@ -72,7 +72,7 @@ export async function generateDocxBlob(
 ): Promise<Blob> {
   const font = getFont(formData.bodyFont);
   const headerColor = getHeaderColor(formData.accentColor);
-  const sealBuffer = await getDoDSealBufferSync(formData.headerType as 'USMC' | 'DON');
+  const sealBuffer = await getDoDSealBuffer(formData.headerType as 'USMC' | 'DON');
   const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin';
   const isStaffingPaper = ['position-paper', 'information-paper'].includes(formData.documentType);
   const isPositionPaper = formData.documentType === 'position-paper';
