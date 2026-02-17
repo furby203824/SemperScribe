@@ -10,7 +10,7 @@ interface ParagraphData {
 
 /**
  * Converts a number to Excel-style letters (1=a, 2=b... 26=z, 27=aa, 28=ab)
- * Handles counts >26 which numberToLetter(count) cannot.
+ * Handles counts >26 which String.fromCharCode(96 + count) cannot.
  */
 function numberToLetter(num: number): string {
   let result = '';
