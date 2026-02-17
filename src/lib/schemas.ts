@@ -75,6 +75,7 @@ export interface DocumentFeatures {
   isAMHS: boolean;
   isDirective: boolean;
   paragraphTemplate?: 'mco' | 'bulletin' | 'moa' | 'default';
+  showMultipleTo: boolean;
   category: DocumentCategory;
 
   // Export capabilities
@@ -190,6 +191,7 @@ const STANDARD_LETTER_FEATURES: DocumentFeatures = {
   showSignature: true,
   isAMHS: false,
   isDirective: false,
+  showMultipleTo: false,
   category: 'standard-letter',
   exportFormats: ['pdf', 'docx'],
   pdfPipeline: 'standard',
@@ -278,13 +280,13 @@ export const MultipleAddressLetterDefinition: DocumentTypeDefinition = {
   description: 'Letter addressed to two or more commands/activities.',
   icon: '📨',
   schema: MultipleAddressLetterSchema,
-  features: { ...STANDARD_LETTER_FEATURES },
+  features: { ...STANDARD_LETTER_FEATURES, showMultipleTo: true },
   sections: [
     {
       id: 'header',
       title: 'Header Information',
       fields: [
-        // Exclude 'to' because we handle it with a custom section
+        // Exclude 'to' because we handle it with MultipleToSection
         ...BasicLetterDefinition.sections[0].fields.filter(f => f.name !== 'to')
       ]
     }

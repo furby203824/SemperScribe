@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
-import { ParagraphData, SavedLetter, ValidationState, FormData } from '@/types';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { ParagraphData, SavedLetter, ValidationState, FormData, AdminSubsections } from '@/types';
 import { ModernAppShell } from '@/components/layout/ModernAppShell';
 import { DocumentLayout } from '@/components/document/DocumentLayout';
 import { useEDMSContext, isEditMode } from '@/hooks/useEDMSContext';
@@ -9,22 +9,19 @@ import { UNITS } from '@/lib/units';
 import { getTodaysDate } from '@/lib/date-utils';
 import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getExportFilename, mergeAdminSubsections } from '@/lib/naval-format-utils';
 import { validateSSIC, validateSubject, validateFromTo } from '@/lib/validation-utils';
-import { loadSavedLetters, saveLetterToStorage, findLetterById } from '@/lib/storage-utils';
+import { loadSavedLetters, saveLetterToStorage } from '@/lib/storage-utils';
 import { getPDFPageCount, addMultipleSignaturesToBlob, ManualSignaturePosition } from '@/lib/pdf-generator';
 import { generateDocxBlob } from '@/lib/docx-generator';
 import { SignaturePosition } from '@/components/SignaturePlacementModal';
-import { configureConsole, logError, debugUserAction, debugFormChange } from '@/lib/console-utils';
-import { getDoDSealBuffer } from '@/lib/dod-seal';
-import { createFormattedParagraph } from '@/lib/paragraph-formatter';
-import { DOC_SETTINGS } from '@/lib/doc-settings';
-import { openBlobInNewTab } from '@/lib/blob-utils';
-import { getBasePath } from '@/lib/path-utils';
+import { configureConsole, debugUserAction, debugFormChange } from '@/lib/console-utils';
 import { DOCUMENT_TYPES } from '@/lib/schemas';
 import { AMHSPreview } from '@/components/amhs/AMHSPreview';
 import { generatePdfForDocType } from '@/services/export/pdfPipelineService';
-import { generateFullMessage, validateAMHSMessage } from '@/services/amhs/amhsFormatter';
 import { useToast } from '@/hooks/use-toast';
-import { generateShareableUrl, getStateFromUrl, clearShareParam, copyToClipboard, ShareableState } from '@/lib/url-state';
+import { getStateFromUrl, clearShareParam } from '@/lib/url-state';
+import { useParagraphs } from '@/hooks/useParagraphs';
+import { useVoiceInput } from '@/hooks/useVoiceInput';
+import { useImportExport } from '@/hooks/useImportExport';
 
 // Inner component that uses useSearchParams (requires Suspense boundary)
 function NavalLetterGeneratorInner() {
@@ -68,11 +65,9 @@ function NavalLetterGeneratorInner() {
   });
 
   const handleDynamicFormSubmit = useCallback((data: any) => {
-    // Merge dynamic form data into main state
     setFormData(prev => ({
         ...prev,
         ...data,
-        // Ensure complex objects are merged correctly if needed
     }));
     debugFormChange('Dynamic Form Update', data);
   }, []);
@@ -90,16 +85,22 @@ function NavalLetterGeneratorInner() {
   const [copyTos, setCopyTos] = useState<string[]>(['']);
   const [distList, setDistList] = useState<string[]>(['']);
 
-  const [paragraphs, setParagraphs] = useState<ParagraphData[]>([{ id: 1, level: 1, content: '', acronymError: '' }]);
+  // Paragraph state and CRUD via hook
+  const {
+    paragraphs, setParagraphs,
+    addParagraph, removeParagraph, updateParagraphContent,
+    moveParagraphUp, moveParagraphDown,
+    getUiCitation, validateParagraphNumbering,
+  } = useParagraphs();
+
   const [savedLetters, setSavedLetters] = useState<SavedLetter[]>([]);
 
   // Preview State
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(undefined);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
-  
-  // Voice recognition state
-  const [voiceRecognition, setVoiceRecognition] = useState<any>(null);
-  const [activeVoiceInput, setActiveVoiceInput] = useState<number | null>(null);
+
+  // Voice recognition via hook
+  const { activeVoiceInput, toggleVoiceInput } = useVoiceInput(paragraphs, updateParagraphContent);
 
   // Key to force form remount on import
   const [formKey, setFormKey] = useState(0);
@@ -108,11 +109,6 @@ function NavalLetterGeneratorInner() {
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [signaturePdfBlob, setSignaturePdfBlob] = useState<Blob | null>(null);
   const [signaturePdfPageCount, setSignaturePdfPageCount] = useState(1);
-  const [signaturePosition, setSignaturePosition] = useState<ManualSignaturePosition | null>(null);
-
-  // Refs
-  const activeVoiceInputRef = useRef<number | null>(null);
-  const paragraphsRef = useRef<ParagraphData[]>(paragraphs);
 
   // EDMS Integration
   const edmsContext = useEDMSContext();
@@ -120,14 +116,22 @@ function NavalLetterGeneratorInner() {
   const [currentUnitName, setCurrentUnitName] = useState<string | undefined>(undefined);
   const [isLoadingFromEDMS, setIsLoadingFromEDMS] = useState(false);
 
-  // Update refs when state changes
-  useEffect(() => {
-    activeVoiceInputRef.current = activeVoiceInput;
-  }, [activeVoiceInput]);
-  
-  useEffect(() => {
-    paragraphsRef.current = paragraphs;
-  }, [paragraphs]);
+  // Import/Export/Share via hook
+  const {
+    handleImport, handleLoadDraft, handleLoadTemplateUrl,
+    handleExportNldp, handleShareLink,
+    handleCopyAMHS, handleExportAMHS,
+  } = useImportExport({
+    formData, setFormData,
+    paragraphs, setParagraphs,
+    vias, setVias,
+    references, setReferences,
+    enclosures, setEnclosures,
+    copyTos, setCopyTos,
+    distList, setDistList,
+    setFormKey, setValidation,
+    savedLetters, toast,
+  });
 
   // Load saved letters
   useEffect(() => {
@@ -193,7 +197,7 @@ function NavalLetterGeneratorInner() {
           if (letterData.subject) handleValidateSubject(letterData.subject);
           if (letterData.from) handleValidateFromTo(letterData.from, 'from');
           if (letterData.to) handleValidateFromTo(letterData.to, 'to');
-          
+
           setFormKey(prev => prev + 1);
         })
         .catch(err => console.error('Failed to load letter from EDMS:', err))
@@ -206,7 +210,7 @@ function NavalLetterGeneratorInner() {
     if (formData.documentType === 'bulletin') {
       const needsContingencyPara = formData.cancellationType === 'contingent';
       const hasContingencyPara = paragraphs.some(p => p.title === 'Cancellation Contingency');
-      
+
       if (needsContingencyPara && !hasContingencyPara) {
         const newId = (paragraphs.length > 0 ? Math.max(...paragraphs.map(p => p.id)) : 0) + 1;
         setParagraphs(prev => [...prev, {
@@ -227,7 +231,7 @@ function NavalLetterGeneratorInner() {
     if (DOCUMENT_TYPES[formData.documentType]?.features?.showReports) {
       let content = 'None.';
       const validReports = formData.reports?.filter(r => r.title) || [];
-      
+
       if (validReports.length > 0) {
         const reportTexts = validReports.map(r => {
           if (r.exempt) {
@@ -238,7 +242,6 @@ function NavalLetterGeneratorInner() {
         content = reportTexts.join(' ');
       }
 
-      // Only update if content changed to avoid infinite loop
       if (formData.adminSubsections?.reportsRequired?.content !== content) {
          setFormData(prev => ({
             ...prev,
@@ -258,7 +261,6 @@ function NavalLetterGeneratorInner() {
   const handleUpdatePreview = useCallback(async () => {
     setIsGeneratingPreview(true);
     try {
-      // Skip preview if critical data is missing for standard letters
       const features = DOCUMENT_TYPES[formData.documentType]?.features;
       if (features?.pdfPipeline === 'standard' && !formData.subj && !formData.from) {
         setIsGeneratingPreview(false);
@@ -282,9 +284,9 @@ function NavalLetterGeneratorInner() {
   // Initial Preview Generation
   useEffect(() => {
     handleUpdatePreview();
-  }, []); // Only run on mount
+  }, []);
 
-  // Handlers
+  // Validation Handlers
   const handleValidateSSIC = (value: string) => {
     setValidation(prev => ({ ...prev, ssic: validateSSIC(value) }));
   };
@@ -304,7 +306,7 @@ function NavalLetterGeneratorInner() {
             privacyAct: { show: false, content: '', order: 0 },
             reportsRequired: { show: false, content: 'None.', order: 0 }
         };
-        
+
         return {
             ...prev,
             adminSubsections: {
@@ -322,7 +324,6 @@ function NavalLetterGeneratorInner() {
     const newFeatures = DOCUMENT_TYPES[newType]?.features;
     const oldFeatures = DOCUMENT_TYPES[formData.documentType]?.features;
 
-    // Select paragraph template based on features config
     let newParagraphs: ParagraphData[] = [{ id: 1, level: 1, content: '', acronymError: '' }];
     const template = newFeatures?.paragraphTemplate;
     if (template === 'mco') {
@@ -332,10 +333,8 @@ function NavalLetterGeneratorInner() {
     } else if (template === 'moa') {
       newParagraphs = getMOAParagraphs();
     } else if (oldFeatures?.paragraphTemplate) {
-      // Switching away from a template type — reset paragraphs
       newParagraphs = [{ id: 1, level: 1, content: '', acronymError: '' }];
     } else {
-      // Preserve existing paragraphs when switching between non-template types
       newParagraphs = paragraphs;
     }
 
@@ -347,7 +346,6 @@ function NavalLetterGeneratorInner() {
       referenceWho: newType === 'basic' ? '' : prev.referenceWho,
       referenceType: newType === 'basic' ? '' : prev.referenceType,
       referenceDate: newType === 'basic' ? '' : prev.referenceDate,
-      // Directives always use Distribution List
       to: newFeatures?.isDirective ? 'Distribution List' : prev.to,
       startingReferenceLevel: 'a',
       startingEnclosureNumber: '1',
@@ -380,238 +378,6 @@ function NavalLetterGeneratorInner() {
     setSavedLetters(updatedLetters);
   };
 
-  // Paragraph Management Logic
-  const addParagraph = (type: 'main' | 'sub' | 'same' | 'up', afterId: number) => {
-    const currentParagraph = paragraphs.find(p => p.id === afterId);
-    if (!currentParagraph) return;
-
-    let newLevel = 1;
-    switch (type) {
-      case 'main': newLevel = 1; break;
-      case 'same': newLevel = currentParagraph.level; break;
-      case 'sub': newLevel = Math.min(currentParagraph.level + 1, 8); break;
-      case 'up': newLevel = Math.max(currentParagraph.level - 1, 1); break;
-    }
-
-    const newId = (paragraphs.length > 0 ? Math.max(...paragraphs.map(p => p.id)) : 0) + 1;
-    const currentIndex = paragraphs.findIndex(p => p.id === afterId);
-    const newParagraphs = [...paragraphs];
-    newParagraphs.splice(currentIndex + 1, 0, { id: newId, level: newLevel, content: '' });
-
-    setParagraphs(newParagraphs);
-  };
-
-  const removeParagraph = (id: number) => {
-    const paragraphToRemove = paragraphs.find(p => p.id === id);
-    if (paragraphToRemove?.isMandatory) {
-      alert("This paragraph is mandatory for the selected document type and cannot be removed.");
-      return;
-    }
-
-    if (paragraphs.length <= 1) {
-      if (paragraphs[0].id === id) {
-        updateParagraphContent(id, '');
-        return;
-      }
-    }
-
-    const newParagraphs = paragraphs.filter(p => p.id !== id);
-    const numberingErrors = validateParagraphNumbering(newParagraphs);
-    if (numberingErrors.length > 0) {
-      const proceed = window.confirm(
-        `Removing this paragraph may create numbering issues:\n\n${numberingErrors.join('\n')}\n\nDo you want to proceed?`
-      );
-      if (!proceed) return;
-    }
-
-    setParagraphs(newParagraphs);
-  };
-
-  const updateParagraphContent = (id: number, content: string) => {
-    const cleanedContent = content
-      .replace(/\u00A0/g, ' ')
-      .replace(/\u2007/g, ' ')
-      .replace(/\u202F/g, ' ')
-      .replace(/[\r\n]/g, ' ');
-
-    const newParagraphs = paragraphs.map(p => p.id === id ? { ...p, content: cleanedContent } : p)
-    setParagraphs(newParagraphs);
-    // validateAcronyms(newParagraphs); // Temporarily removed for performance or re-implement if needed
-  };
-
-  const moveParagraphUp = (id: number) => {
-    const currentIndex = paragraphs.findIndex(p => p.id === id);
-    if (currentIndex > 0) {
-      const currentPara = paragraphs[currentIndex];
-      const paraAbove = paragraphs[currentIndex - 1];
-      if (currentPara.level > paraAbove.level) return;
-
-      const newParagraphs = [...paragraphs];
-      [newParagraphs[currentIndex - 1], newParagraphs[currentIndex]] = [newParagraphs[currentIndex], newParagraphs[currentIndex - 1]];
-      setParagraphs(newParagraphs);
-    }
-  };
-
-  const moveParagraphDown = (id: number) => {
-    const currentIndex = paragraphs.findIndex(p => p.id === id);
-    if (currentIndex < paragraphs.length - 1) {
-      const newParagraphs = [...paragraphs];
-      [newParagraphs[currentIndex], newParagraphs[currentIndex + 1]] = [newParagraphs[currentIndex + 1], newParagraphs[currentIndex]];
-      setParagraphs(newParagraphs);
-    }
-  };
-
-  // Helper functions for paragraph UI
-  const getUiCitation = (paragraph: ParagraphData, index: number, allParagraphs: ParagraphData[]): string => {
-    const { level } = paragraph;
-
-    const getCitationPart = (targetLevel: number, parentIndex: number) => {
-      let listStartIndex = 0;
-      if (targetLevel > 1) {
-        for (let i = parentIndex - 1; i >= 0; i--) {
-          if (allParagraphs[i].level < targetLevel) {
-            listStartIndex = i + 1;
-            break;
-          }
-        }
-      }
-
-      let count = 0;
-      for (let i = listStartIndex; i <= parentIndex; i++) {
-        if (allParagraphs[i].level === targetLevel) {
-          count++;
-        }
-      }
-
-      switch (targetLevel) {
-        case 1: return `${count}.`;
-        case 2: return `${String.fromCharCode(96 + count)}`;
-        case 3: return `(${count})`;
-        case 4: return `(${String.fromCharCode(96 + count)})`;
-        case 5: return `${count}.`;
-        case 6: return `${String.fromCharCode(96 + count)}.`;
-        case 7: return `(${count})`;
-        case 8: return `(${String.fromCharCode(96 + count)})`;
-        default: return '';
-      }
-    };
-
-    if (level === 1) return getCitationPart(1, index);
-    if (level === 2) {
-      let parentCitation = '';
-      for (let i = index - 1; i >= 0; i--) {
-        if (allParagraphs[i].level === 1) {
-          parentCitation = getCitationPart(1, i).replace('.', '');
-          break;
-        }
-      }
-      return `${parentCitation}${getCitationPart(2, index)}`;
-    }
-
-    let citationPath = [];
-    let parentLevel = level - 1;
-    for (let i = index - 1; i >= 0; i--) {
-      const p = allParagraphs[i];
-      if (p.level === parentLevel) {
-        citationPath.unshift(getCitationPart(p.level, i).replace(/[.()]/g, ''));
-        parentLevel--;
-        if (parentLevel === 0) break;
-      }
-    }
-    citationPath.push(getCitationPart(level, index));
-    return citationPath.join('');
-  };
-
-  const validateParagraphNumbering = useCallback((allParagraphs: ParagraphData[]): string[] => {
-    const errors: string[] = [];
-    const levelGroups: { [key: string]: number[] } = {};
-
-    allParagraphs.forEach((paragraph, index) => {
-      const { level } = paragraph;
-      let parentPath = '';
-      let currentLevel = level - 1;
-      for (let i = index - 1; i >= 0 && currentLevel > 0; i--) {
-        if (allParagraphs[i].level === currentLevel) {
-          const citation = getUiCitation(allParagraphs[i], i, allParagraphs);
-          parentPath = citation.replace(/[.()]/g, '') + parentPath;
-          currentLevel--;
-        }
-      }
-      const groupKey = `${parentPath}_level${level}`;
-      if (!levelGroups[groupKey]) levelGroups[groupKey] = [];
-      levelGroups[groupKey].push(index);
-    });
-
-    Object.entries(levelGroups).forEach(([groupKey, indices]) => {
-      if (indices.length === 1) {
-        const index = indices[0];
-        const paragraph = allParagraphs[index];
-        const citation = getUiCitation(paragraph, index, allParagraphs);
-        if (paragraph.level > 1) {
-          errors.push(`Paragraph ${citation} requires at least one sibling paragraph at the same level.`);
-        }
-      }
-    });
-    return errors;
-  }, []);
-
-  // Voice Recognition
-  const initializeVoiceRecognition = useCallback(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'en-US';
-      
-      recognition.onresult = function(event: any) {
-        let finalTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          }
-        }
-        if (finalTranscript && activeVoiceInputRef.current !== null) {
-          const currentParagraph = paragraphsRef.current.find(p => p.id === activeVoiceInputRef.current);
-          if (currentParagraph) {
-            const newContent = currentParagraph.content + (currentParagraph.content ? ' ' : '') + finalTranscript;
-            updateParagraphContent(activeVoiceInputRef.current, newContent);
-          }
-        }
-      };
-
-      recognition.onerror = function(event: any) {
-        logError('Voice Recognition', event.error);
-        setActiveVoiceInput(null);
-      };
-      
-      recognition.onend = function() {
-        setActiveVoiceInput(null);
-      };
-      
-      setVoiceRecognition(recognition);
-    }
-  }, []);
-
-  useEffect(() => {
-    initializeVoiceRecognition();
-  }, []);
-
-  const toggleVoiceInput = (paragraphId: number) => {
-    if (!voiceRecognition) {
-      alert('Voice recognition not supported in this browser');
-      return;
-    }
-    if (activeVoiceInput === paragraphId) {
-      voiceRecognition.stop();
-      setActiveVoiceInput(null);
-    } else {
-      if (activeVoiceInput !== null) voiceRecognition.stop();
-      setActiveVoiceInput(paragraphId);
-      voiceRecognition.start();
-    }
-  };
-
   // Signature placement workflow handlers
   const handleOpenSignaturePlacement = async () => {
     try {
@@ -632,7 +398,6 @@ function NavalLetterGeneratorInner() {
 
       const baseBlob = await generatePdfForDocType({ formData, vias, references, enclosures, copyTos, paragraphs });
 
-      // Convert SignaturePositions to ManualSignaturePositions
       const manualPositions: ManualSignaturePosition[] = positions.map(pos => ({
         page: pos.page,
         x: pos.x,
@@ -641,10 +406,7 @@ function NavalLetterGeneratorInner() {
         height: pos.height
       }));
 
-      // Add all signature fields
       const signedBlob = await addMultipleSignaturesToBlob(baseBlob, manualPositions);
-
-      // Download the PDF
       const filename = getExportFilename(formData, 'pdf');
 
       const url = window.URL.createObjectURL(signedBlob);
@@ -675,7 +437,6 @@ function NavalLetterGeneratorInner() {
       if (format === 'pdf') {
         blob = await generatePdfForDocType({ formData, vias, references, enclosures, copyTos, paragraphs });
       } else {
-        // Merge Admin Subsections for MCOs/Orders
         const features = DOCUMENT_TYPES[formData.documentType]?.features;
         const paragraphsToRender = features?.isDirective
           ? mergeAdminSubsections(paragraphs, formData.adminSubsections)
@@ -696,63 +457,6 @@ function NavalLetterGeneratorInner() {
       console.error(`Error generating ${format.toUpperCase()}:`, error);
       alert(`Failed to generate ${format.toUpperCase()}. Please check the console for details.`);
     }
-  };
-
-  // New Handlers for HeaderActions
-  const handleImport = (inputData: any) => {
-    try {
-        // Handle both flat structures (SavedLetter) and nested NLDP structures
-        const data = inputData.data ? inputData.data : inputData;
-        const formDataToMerge = data.formData || data;
-
-        setFormData(prev => ({
-            ...prev,
-            ...formDataToMerge,
-        }));
-        
-        if (data.paragraphs) setParagraphs(data.paragraphs);
-        if (data.vias) setVias(data.vias);
-        if (data.references) setReferences(data.references);
-        if (data.enclosures) setEnclosures(data.enclosures);
-        if (data.copyTos) setCopyTos(data.copyTos);
-
-        // Re-validate known fields
-        if (formDataToMerge.ssic) handleValidateSSIC(formDataToMerge.ssic);
-        if (formDataToMerge.subj) handleValidateSubject(formDataToMerge.subj);
-        if (formDataToMerge.from) handleValidateFromTo(formDataToMerge.from, 'from');
-        if (formDataToMerge.to) handleValidateFromTo(formDataToMerge.to, 'to');
-
-        // Force form remount
-        setFormKey(prev => prev + 1);
-
-        debugUserAction('Import Data', { source: 'File/Template' });
-    } catch (error) {
-        console.error('Import failed', error);
-        alert('Failed to import data structure.');
-    }
-  };
-
-  const handleLoadDraft = (id: string) => {
-      const letter = findLetterById(id, savedLetters);
-      if (letter) {
-          handleImport(letter);
-      }
-  };
-
-  const handleLoadTemplateUrl = async (url: string) => {
-      try {
-          // Prepend basePath to template URL for correct path resolution
-          const basePath = getBasePath();
-          const fullUrl = url.startsWith('/') ? `${basePath}${url}` : url;
-          const res = await fetch(fullUrl);
-          if (!res.ok) throw new Error(`Failed to load template: ${res.statusText}`);
-          const data = await res.json();
-          handleImport(data);
-          debugUserAction('Load Template', { url: fullUrl });
-      } catch (error) {
-          console.error('Template load failed', error);
-          alert('Failed to load template. Please try again.');
-      }
   };
 
   const handleClearForm = () => {
@@ -783,7 +487,6 @@ function NavalLetterGeneratorInner() {
             name: '',
             edipi: '',
             box11: '',
-            // AMHS Specific
             amhsMessageType: 'GENADMIN',
             amhsClassification: 'UNCLASSIFIED',
             amhsPrecedence: 'ROUTINE',
@@ -808,165 +511,16 @@ function NavalLetterGeneratorInner() {
       }
   };
 
-  const handleCopyAMHS = () => {
-    // Validate before copying
-    const validation = validateAMHSMessage(formData, formData.amhsReferences || []);
-    if (!validation.isValid) {
-      toast({
-        title: "Validation Failed",
-        description: validation.errors.join('. '),
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const message = generateFullMessage(formData, formData.amhsReferences || [], formData.amhsPocs || []);
-    navigator.clipboard.writeText(message);
-    toast({
-      title: "Copied to Clipboard",
-      description: "Message text is ready to paste into AMHS.",
-    });
-  };
-
-  const handleExportAMHS = () => {
-    // Validate before exporting
-    const validation = validateAMHSMessage(formData, formData.amhsReferences || []);
-    if (!validation.isValid) {
-      toast({
-        title: "Validation Failed",
-        description: validation.errors.join('. '),
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const message = generateFullMessage(formData, formData.amhsReferences || [], formData.amhsPocs || []);
-    const blob = new Blob([message], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const msgType = formData.amhsMessageType || 'MSG';
-    a.download = `SEMPERADMIN_${msgType}_${dateStr}.txt`;
-
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleExportNldp = () => {
-    const exportData = {
-      metadata: {
-        packageId: `export_${Date.now()}`,
-        formatVersion: "1.0.0",
-        createdAt: new Date().toISOString(),
-        author: {
-          name: formData.from || "Unknown"
-        },
-        package: {
-          title: formData.subj || "Untitled Package",
-          description: "Exported from Naval Letter Formatter",
-          subject: formData.subj,
-          documentType: formData.documentType
-        }
-      },
-      data: {
-        formData,
-        vias,
-        references,
-        enclosures,
-        copyTos,
-        paragraphs
-      }
-    };
-
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Naval_Package_${formData.ssic || 'Draft'}.nldp`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-    debugUserAction('Export Data', { format: 'nldp' });
-  };
-
-  // Share Link Handler
-  const handleShareLink = async () => {
-    if (!formData.documentType) {
-      toast({
-        title: "No Document",
-        description: "Please select a document type first.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const state: ShareableState = {
-      formData,
-      paragraphs,
-      references,
-      enclosures,
-      vias,
-      copyTos,
-      version: 1
-    };
-
-    const { url, isLong, error } = generateShareableUrl(state);
-
-    if (error && !url) {
-      toast({
-        title: "Failed to Generate Link",
-        description: error,
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const success = await copyToClipboard(url);
-
-    if (success) {
-      toast({
-        title: "Link Copied!",
-        description: isLong
-          ? "Link copied. Note: This link is very long and may not work in all applications."
-          : "Share link copied to clipboard. Anyone with this link can view and edit the document.",
-      });
-    } else {
-      toast({
-        title: "Copy Failed",
-        description: "Could not copy to clipboard. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
   // Load shared state from URL on mount
   useEffect(() => {
     const sharedState = getStateFromUrl();
     if (sharedState) {
-      // Load the shared state into the form
-      setFormData(sharedState.formData);
-      if (sharedState.paragraphs) setParagraphs(sharedState.paragraphs);
-      if (sharedState.references) setReferences(sharedState.references);
-      if (sharedState.enclosures) setEnclosures(sharedState.enclosures);
-      if (sharedState.vias) setVias(sharedState.vias);
-      if (sharedState.copyTos) setCopyTos(sharedState.copyTos);
-
-      // Clear the share param from URL to keep it clean
+      handleImport(sharedState);
       clearShareParam();
-
-      // Show a toast notification
       toast({
         title: "Document Loaded",
         description: "Shared document has been loaded. You can view and edit it.",
       });
-
-      // Force form remount to pick up new values
-      setFormKey(prev => prev + 1);
     }
   }, []);
 

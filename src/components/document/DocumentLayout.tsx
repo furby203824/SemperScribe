@@ -8,6 +8,7 @@ import { LandingPage } from '@/components/layout/LandingPage';
 import { UnitInfoSection } from '@/components/letter/UnitInfoSection';
 import { ParagraphSection } from '@/components/letter/ParagraphSection';
 import { ClosingBlockSection } from '@/components/letter/ClosingBlockSection';
+import { MultipleToSection } from '@/components/letter/MultipleToSection';
 import { ViaSection } from '@/components/letter/ViaSection';
 import { ReferencesSection } from '@/components/letter/ReferencesSection';
 import { EnclosuresSection } from '@/components/letter/EnclosuresSection';
@@ -158,6 +159,16 @@ export function DocumentLayout({
               defaultValues={formData}
             />
           </div>
+
+          {features.showMultipleTo && (
+            <MultipleToSection
+              recipients={formData.distribution?.recipients || ['']}
+              setRecipients={(recipients) => setFormData(prev => ({
+                ...prev,
+                distribution: { ...prev.distribution, recipients }
+              }))}
+            />
+          )}
 
           {features.showDirectiveTitle && (
             <DirectiveTitleSection formData={formData} setFormData={setFormData} />
