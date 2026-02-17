@@ -2,9 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { DisclaimerModal } from "@/components/DisclaimerModal";
-
-// Remove Vercel Analytics since we're deploying to GitHub Pages
-// import { Analytics } from '@vercel/analytics/next';
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
   title: 'Naval Letter Generator',
@@ -25,12 +23,13 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
       </head>
       <body className="font-body antialiased flex flex-col min-h-screen">
-        <main className="flex-1">
-          {children}
-        </main>
-        <DisclaimerModal />
-        <Toaster />
-        {/* Analytics removed for GitHub Pages deployment */}
+        <ThemeProvider>
+          <main className="flex-1">
+            {children}
+          </main>
+          <DisclaimerModal />
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
