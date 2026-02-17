@@ -22,6 +22,7 @@ import { getStateFromUrl, clearShareParam } from '@/lib/url-state';
 import { useParagraphs } from '@/hooks/useParagraphs';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { useImportExport } from '@/hooks/useImportExport';
+import { ProofreadModal } from '@/components/ProofreadModal';
 
 // Inner component that uses useSearchParams (requires Suspense boundary)
 function NavalLetterGeneratorInner() {
@@ -104,6 +105,9 @@ function NavalLetterGeneratorInner() {
 
   // Key to force form remount on import
   const [formKey, setFormKey] = useState(0);
+
+  // Proofread modal state
+  const [showProofreadModal, setShowProofreadModal] = useState(false);
 
   // Signature placement state
   const [showSignatureModal, setShowSignatureModal] = useState(false);
@@ -546,6 +550,7 @@ function NavalLetterGeneratorInner() {
       onUpdatePreview={handleUpdatePreview}
       onCopyAMHS={handleCopyAMHS}
       onExportAMHS={handleExportAMHS}
+      onProofread={() => setShowProofreadModal(true)}
       customRightPanel={
         formData.documentType === 'amhs' ? (
           <AMHSPreview
@@ -589,6 +594,14 @@ function NavalLetterGeneratorInner() {
         signaturePdfBlob={signaturePdfBlob}
         signaturePdfPageCount={signaturePdfPageCount}
         handleDynamicFormSubmit={handleDynamicFormSubmit}
+      />
+      <ProofreadModal
+        open={showProofreadModal}
+        onOpenChange={setShowProofreadModal}
+        formData={formData}
+        paragraphs={paragraphs}
+        enclosures={enclosures}
+        references={references}
       />
     </ModernAppShell>
   );
