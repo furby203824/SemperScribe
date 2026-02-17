@@ -144,6 +144,18 @@ export function DynamicForm({ documentType, onSubmit, defaultValues, children }:
       return null;
     }
 
+    // Hidden fields: register in form data but don't render UI
+    if (field.type === 'hidden') {
+      return (
+        <FormField
+          key={field.name}
+          control={form.control}
+          name={field.name}
+          render={() => <></>}
+        />
+      );
+    }
+
     return (
       <FormField
         key={field.name}
