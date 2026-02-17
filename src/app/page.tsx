@@ -23,6 +23,8 @@ import { useParagraphs } from '@/hooks/useParagraphs';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { useImportExport } from '@/hooks/useImportExport';
 import { ProofreadModal } from '@/components/ProofreadModal';
+import { SettingsDialog } from '@/components/SettingsDialog';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 // Inner component that uses useSearchParams (requires Suspense boundary)
 function NavalLetterGeneratorInner() {
@@ -32,6 +34,8 @@ function NavalLetterGeneratorInner() {
   }, []);
 
   const { toast } = useToast();
+  const { profile, loaded: profileLoaded, updateProfile, clearProfile, getFormDefaults } = useUserProfile();
+  const [showSettings, setShowSettings] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     documentType: '',
@@ -147,6 +151,27 @@ function NavalLetterGeneratorInner() {
   useEffect(() => {
     setFormData(prev => ({ ...prev, date: getTodaysDate() }));
   }, []);
+
+  // Apply user profile defaults on initial load
+  useEffect(() => {
+    if (profileLoaded) {
+      const defaults = getFormDefaults();
+      setFormData(prev => ({
+        ...prev,
+        // Only apply profile defaults for fields that are still empty (initial state)
+        ...(prev.sig ? {} : { sig: defaults.sig }),
+        ...(prev.from ? {} : { from: defaults.from }),
+        ...(prev.originatorCode ? {} : { originatorCode: defaults.originatorCode }),
+        ...(prev.line1 ? {} : { line1: defaults.line1, line2: defaults.line2, line3: defaults.line3 }),
+        // Formatting defaults always apply from profile
+        headerType: defaults.headerType,
+        bodyFont: defaults.bodyFont,
+        accentColor: defaults.accentColor,
+        amhsClassification: defaults.amhsClassification,
+        amhsPrecedence: defaults.amhsPrecedence,
+      }));
+    }
+  }, [profileLoaded]);
 
   // Auto-select unit from EDMS
   useEffect(() => {
@@ -466,6 +491,7 @@ function NavalLetterGeneratorInner() {
   const handleClearForm = () => {
       if (window.confirm('Are you sure you want to clear the form? All unsaved progress will be lost.')) {
         const currentType = formData.documentType;
+        const defaults = getFormDefaults();
 
         setFormData({
             documentType: currentType,
@@ -476,11 +502,14 @@ function NavalLetterGeneratorInner() {
             referenceDate: '',
             startingReferenceLevel: 'a',
             startingEnclosureNumber: '1',
-            line1: '', line2: '', line3: '', ssic: '', originatorCode: '', date: getTodaysDate(), from: '', to: '', subj: '', sig: '', delegationText: '',
+            line1: defaults.line1, line2: defaults.line2, line3: defaults.line3,
+            ssic: '', originatorCode: defaults.originatorCode, date: getTodaysDate(),
+            from: defaults.from, to: '', subj: '', sig: defaults.sig, delegationText: '',
             startingPageNumber: 1,
             previousPackagePageCount: 0,
-            headerType: 'USMC',
-            bodyFont: 'times',
+            headerType: defaults.headerType,
+            bodyFont: defaults.bodyFont,
+            accentColor: defaults.accentColor,
             directiveTitle: '',
             cancellationDate: '',
             cancellationType: 'fixed',
@@ -492,8 +521,8 @@ function NavalLetterGeneratorInner() {
             edipi: '',
             box11: '',
             amhsMessageType: 'GENADMIN',
-            amhsClassification: 'UNCLASSIFIED',
-            amhsPrecedence: 'ROUTINE',
+            amhsClassification: defaults.amhsClassification,
+            amhsPrecedence: defaults.amhsPrecedence,
             amhsDtg: '',
             amhsOfficeCode: '',
             amhsPocs: [],
@@ -513,6 +542,11 @@ function NavalLetterGeneratorInner() {
         });
         setFormKey(prev => prev + 1);
       }
+  };
+
+  const handleClearSavedLetters = () => {
+    localStorage.removeItem('navalLetters');
+    setSavedLetters([]);
   };
 
   // Load shared state from URL on mount
@@ -551,6 +585,7 @@ function NavalLetterGeneratorInner() {
       onCopyAMHS={handleCopyAMHS}
       onExportAMHS={handleExportAMHS}
       onProofread={() => setShowProofreadModal(true)}
+      onSettings={() => setShowSettings(true)}
       customRightPanel={
         formData.documentType === 'amhs' ? (
           <AMHSPreview
@@ -602,6 +637,15 @@ function NavalLetterGeneratorInner() {
         paragraphs={paragraphs}
         enclosures={enclosures}
         references={references}
+      />
+      <SettingsDialog
+        open={showSettings}
+        onOpenChange={setShowSettings}
+        profile={profile}
+        onUpdateProfile={updateProfile}
+        onClearProfile={clearProfile}
+        savedLetterCount={savedLetters.length}
+        onClearSavedLetters={handleClearSavedLetters}
       />
     </ModernAppShell>
   );

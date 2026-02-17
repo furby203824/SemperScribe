@@ -37,6 +37,7 @@ interface ModernAppShellProps {
   onAddSignature?: () => void;
   onBatchGenerate?: () => void;
   onProofread?: () => void;
+  onSettings?: () => void;
   isDirty?: boolean;
   lastSavedAt?: Date | null;
 }
@@ -68,6 +69,7 @@ export function ModernAppShell({
   onAddSignature,
   onBatchGenerate,
   onProofread,
+  onSettings,
   isDirty,
   lastSavedAt,
 }: ModernAppShellProps) {
@@ -153,6 +155,7 @@ export function ModernAppShell({
             onAddSignature={onAddSignature}
             onBatchGenerate={onBatchGenerate}
             onProofread={onProofread}
+            onSettings={onSettings}
           />
       </header>
 

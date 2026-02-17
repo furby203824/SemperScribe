@@ -16,7 +16,8 @@ import {
   Check,
   FileSpreadsheet,
   ClipboardCheck,
-  MoreVertical
+  MoreVertical,
+  Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -111,6 +112,8 @@ interface HeaderActionsProps {
   onBatchGenerate?: () => void;
   // Proofread
   onProofread?: () => void;
+  // Settings
+  onSettings?: () => void;
 }
 
 export function HeaderActions({
@@ -136,7 +139,8 @@ export function HeaderActions({
   onExportAMHS,
   onAddSignature,
   onBatchGenerate,
-  onProofread
+  onProofread,
+  onSettings
 }: HeaderActionsProps) {
   const { 
     globalTemplates, 
@@ -195,7 +199,12 @@ export function HeaderActions({
   return (
     <div className="flex items-center space-x-2">
       <ThemeToggle />
-      
+      {onSettings && (
+        <Button variant="ghost" size="sm" className={buttonClass("hidden sm:flex")} onClick={onSettings} title="Settings">
+          <Settings className={cn("w-4 h-4", iconClass)} />
+        </Button>
+      )}
+
       {/* Templates Dialog */}
       <Dialog open={isTemplateOpen} onOpenChange={setIsTemplateOpen}>
         <DialogTrigger asChild>
@@ -386,6 +395,13 @@ export function HeaderActions({
                   <DropdownMenuItem onClick={onProofread} className="cursor-pointer focus:bg-accent focus:text-accent-foreground">
                     <ClipboardCheck className="w-4 h-4 mr-2" />
                     Proofread
+                  </DropdownMenuItem>
+                )}
+                {onSettings && <DropdownMenuSeparator className="bg-border" />}
+                {onSettings && (
+                  <DropdownMenuItem onClick={onSettings} className="cursor-pointer focus:bg-accent focus:text-accent-foreground">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Settings
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
