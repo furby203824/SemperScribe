@@ -10,11 +10,8 @@ import {
   validateCsvColumns,
   CsvParseResult,
 } from '@/lib/merge-utils';
-import { generateBasePDFBlob } from '@/lib/pdf-generator';
-import { generateNavmc10274 } from '@/services/pdf/navmc10274Generator';
-import { generateNavmc11811 } from '@/services/pdf/navmc11811Generator';
-import { mergeAdminSubsections, getExportFilename } from '@/lib/naval-format-utils';
-import { Navmc11811Data } from '@/types/navmc';
+import { generatePdfForDocType } from '@/services/export/pdfPipelineService';
+import { getExportFilename } from '@/lib/naval-format-utils';
 import JSZip from 'jszip';
 
 export type BatchStatus = 'idle' | 'generating' | 'done' | 'error';
@@ -29,54 +26,6 @@ export interface BatchProgress {
 export function useBatchGenerate() {
   const [status, setStatus] = useState<BatchStatus>('idle');
   const [progress, setProgress] = useState<BatchProgress>({ current: 0, total: 0, currentLabel: '', errors: [] });
-
-  /**
-   * Build a single PDF blob for one merged document.
-   */
-  const buildSinglePdf = useCallback(async (
-    formData: FormData,
-    vias: string[],
-    references: string[],
-    enclosures: string[],
-    copyTos: string[],
-    paragraphs: ParagraphData[],
-    distList: string[],
-  ): Promise<Blob> => {
-    if (formData.documentType === 'aa-form') {
-      const aaFormData = {
-        actionNo: formData.actionNo || '',
-        ssic: formData.ssic || '',
-        date: formData.date || '',
-        from: formData.from || '',
-        orgStation: formData.orgStation || '',
-        to: formData.to || '',
-        via: vias.filter(v => v.trim()).join('\n'),
-        subject: formData.subj || '',
-        reference: references.filter(r => r.trim()).join('\n'),
-        enclosure: enclosures.filter(e => e.trim()).join('\n'),
-        supplementalInfo: paragraphs.map(p => p.content).join('\n'),
-        supplementalInfoParagraphs: paragraphs,
-        copyTo: copyTos.filter(c => c.trim()).join('\n'),
-        signature: formData.sig || '',
-      };
-      const pdfBytes = await generateNavmc10274(aaFormData);
-      return new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
-    }
-
-    if (formData.documentType === 'page11') {
-      const navmcData: Navmc11811Data = {
-        name: formData.name || '',
-        edipi: formData.edipi || '',
-        remarksLeft: formData.remarksLeft || '',
-        remarksRight: formData.remarksRight || '',
-      };
-      const pdfBytes = await generateNavmc11811(navmcData);
-      return new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
-    }
-
-    const paragraphsToRender = mergeAdminSubsections(paragraphs, formData.adminSubsections);
-    return generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender, distList);
-  }, []);
 
   /**
    * Export a CSV template for the given merge fields.
@@ -155,16 +104,15 @@ export function useBatchGenerate() {
           mergeFields,
         );
 
-        // Generate PDF
-        const blob = await buildSinglePdf(
-          mergedFormData,
+        // Generate PDF via unified pipeline
+        const blob = await generatePdfForDocType({
+          formData: mergedFormData,
           vias,
           references,
           enclosures,
           copyTos,
-          mergedParagraphs,
-          distList,
-        );
+          paragraphs: mergedParagraphs,
+        });
 
         // Determine filename
         const baseFilename = getExportFilename(mergedFormData, 'pdf').replace('.pdf', '');
@@ -203,7 +151,7 @@ export function useBatchGenerate() {
       setStatus('error');
       setProgress(prev => ({ ...prev, currentLabel: `ZIP creation failed: ${err}` }));
     }
-  }, [buildSinglePdf]);
+  }, []);
 
   const reset = useCallback(() => {
     setStatus('idle');
