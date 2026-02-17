@@ -8,6 +8,20 @@ interface ParagraphData {
     title?: string;
 }
 
+/**
+ * Converts a number to Excel-style letters (1=a, 2=b... 26=z, 27=aa, 28=ab)
+ * Handles counts >26 which numberToLetter(count) cannot.
+ */
+function numberToLetter(num: number): string {
+  let result = '';
+  while (num > 0) {
+    const remainder = (num - 1) % 26;
+    result = String.fromCharCode(97 + remainder) + result;
+    num = Math.floor((num - 1) / 26);
+  }
+  return result;
+}
+
 // 1 inch = 1440 TWIPs. All values are in TWIPs.
 // These specs define the tab stop positions for each level's citation
 // and where the text following the citation should begin.
@@ -56,49 +70,16 @@ function generateCitation(
   // Set indentation and spacing based on level for Courier New
   if (isCourier) {
     switch (level) {
-      case 1: 
-        indent = '';              // 0 spaces before
-        citation = `${count}.`;
-        spacing = '  ';           // 2 spaces after period
-        break;
-      case 2: 
-        indent = '    ';          // 4 spaces before
-        citation = `${numberToLetter(count)}.`;
-        spacing = '  ';           // 2 spaces after period
-        break;
-      case 3: 
-        indent = '        ';      // 8 spaces before
-        citation = `(${count})`;
-        spacing = ' ';            // 1 space after parenthesis
-        break;
-      case 4: 
-        indent = '            ';  // 12 spaces before
-        citation = `(${numberToLetter(count)})`;
-        spacing = ' ';            // 1 space after parenthesis
-        break;
-      case 5: 
-        indent = '                ';     // 16 spaces before
-        citation = `${count}.`;
-        spacing = '  ';           // 2 spaces after period
-        break;
-      case 6: 
-        indent = '                    '; // 20 spaces before
-        citation = `${numberToLetter(count)}.`;
-        spacing = '  ';           // 2 spaces after period
-        break;
-      case 7: 
-        indent = '                        ';     // 24 spaces before
-        citation = `(${count})`;
-        spacing = ' ';            // 1 space after parenthesis
-        break;
-      case 8: 
-        indent = '                            '; // 28 spaces before
-        citation = `(${numberToLetter(count)})`;
-        spacing = ' ';            // 1 space after parenthesis
-        break;
-      default: 
-        citation = '';
-        spacing = '';
+        case 1: citation = `${count}.`; break;
+        case 2: citation = `${numberToLetter(count)}.`; break;
+        case 3: citation = `(${count})`; break;
+        case 4: citation = `(${numberToLetter(count)})`; break;
+        // Per SECNAV M-5216.5, levels 5-8 have underlined numbers/letters (not punctuation)
+        case 5: citation = `${count}.`; break; 
+        case 6: citation = `${numberToLetter(count)}.`; break;
+        case 7: citation = `(${count})`; break;
+        case 8: citation = `(${numberToLetter(count)})`; break;
+        default: citation = '';
     }
     return indent + citation + spacing;
   }
