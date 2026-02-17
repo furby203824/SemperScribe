@@ -398,6 +398,7 @@ function NavalLetterGeneratorInner() {
        }
     }
 
+    const isDirectiveType = ['mco', 'bulletin', 'change-transmittal'].includes(newType);
     setFormData(prev => ({
       ...prev,
       documentType: newType as FormData['documentType'],
@@ -406,6 +407,8 @@ function NavalLetterGeneratorInner() {
       referenceWho: newType === 'basic' ? '' : prev.referenceWho,
       referenceType: newType === 'basic' ? '' : prev.referenceType,
       referenceDate: newType === 'basic' ? '' : prev.referenceDate,
+      // Directives always use Distribution List
+      to: isDirectiveType ? 'Distribution List' : prev.to,
       startingReferenceLevel: 'a',
       startingEnclosureNumber: '1',
       startingPageNumber: 1,
