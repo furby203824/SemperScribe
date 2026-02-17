@@ -3,45 +3,25 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { ParagraphData, SavedLetter, ValidationState, FormData } from '@/types';
 import { ModernAppShell } from '@/components/layout/ModernAppShell';
-import { UnitInfoSection } from '@/components/letter/UnitInfoSection';
-import { ParagraphSection } from '@/components/letter/ParagraphSection';
-import { ClosingBlockSection } from '@/components/letter/ClosingBlockSection';
-import { ViaSection } from '@/components/letter/ViaSection';
-import { ReferencesSection } from '@/components/letter/ReferencesSection';
-import { EnclosuresSection } from '@/components/letter/EnclosuresSection';
-import { MOAFormSection } from '@/components/letter/MOAFormSection';
-import { ReportsSection } from '@/components/letter/ReportsSection';
-import { DistributionStatementSection } from '@/components/letter/DistributionStatementSection';
-import { DistributionSection } from '@/components/letter/DistributionSection';
-import { StructuredReferenceInput } from '@/components/letter/StructuredReferenceInput';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { FileSignature } from 'lucide-react';
+import { DocumentLayout } from '@/components/document/DocumentLayout';
 import { useEDMSContext, isEditMode } from '@/hooks/useEDMSContext';
 import { UNITS } from '@/lib/units';
 import { getTodaysDate } from '@/lib/date-utils';
 import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getExportFilename, mergeAdminSubsections } from '@/lib/naval-format-utils';
 import { validateSSIC, validateSubject, validateFromTo } from '@/lib/validation-utils';
 import { loadSavedLetters, saveLetterToStorage, findLetterById } from '@/lib/storage-utils';
-import { generateBasePDFBlob, generatePDFBlob, getPDFPageCount, addMultipleSignaturesToBlob, ManualSignaturePosition } from '@/lib/pdf-generator';
+import { getPDFPageCount, addMultipleSignaturesToBlob, ManualSignaturePosition } from '@/lib/pdf-generator';
 import { generateDocxBlob } from '@/lib/docx-generator';
-import { SignaturePlacementModal, SignaturePosition } from '@/components/SignaturePlacementModal';
+import { SignaturePosition } from '@/components/SignaturePlacementModal';
 import { configureConsole, logError, debugUserAction, debugFormChange } from '@/lib/console-utils';
 import { getDoDSealBuffer } from '@/lib/dod-seal';
 import { createFormattedParagraph } from '@/lib/paragraph-formatter';
 import { DOC_SETTINGS } from '@/lib/doc-settings';
-import { generateNavmc10274 } from '@/services/pdf/navmc10274Generator';
-import { generateNavmc11811 } from '@/services/pdf/navmc11811Generator';
-import { Navmc11811Data } from '@/types/navmc';
 import { openBlobInNewTab } from '@/lib/blob-utils';
 import { getBasePath } from '@/lib/path-utils';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DynamicForm } from '@/components/ui/DynamicForm';
 import { DOCUMENT_TYPES } from '@/lib/schemas';
-import { AMHSEditor } from '@/components/amhs/AMHSEditor';
 import { AMHSPreview } from '@/components/amhs/AMHSPreview';
-import { LandingPage } from '@/components/layout/LandingPage';
+import { generatePdfForDocType } from '@/services/export/pdfPipelineService';
 import { generateFullMessage, validateAMHSMessage } from '@/services/amhs/amhsFormatter';
 import { useToast } from '@/hooks/use-toast';
 import { generateShareableUrl, getStateFromUrl, clearShareParam, copyToClipboard, ShareableState } from '@/lib/url-state';
@@ -243,7 +223,7 @@ function NavalLetterGeneratorInner() {
 
   // Sync Reports to Admin Subsections
   useEffect(() => {
-    if (formData.documentType === 'mco' || formData.documentType === 'order') {
+    if (DOCUMENT_TYPES[formData.documentType]?.features?.showReports) {
       let content = 'None.';
       const validReports = formData.reports?.filter(r => r.title) || [];
       
@@ -277,59 +257,14 @@ function NavalLetterGeneratorInner() {
   const handleUpdatePreview = useCallback(async () => {
     setIsGeneratingPreview(true);
     try {
-      let blob: Blob;
-
-      if (formData.documentType === 'page11') {
-        const page11Data: Navmc11811Data = {
-          name: formData.name || '',
-          edipi: formData.edipi || '',
-          remarksLeft: formData.remarksLeft,
-          remarksRight: formData.remarksRight
-        };
-        const pdfBytes = await generateNavmc11811(page11Data);
-        blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      } else if (formData.documentType === 'navmc10274') {
-         // Placeholder for AA Form if needed later, or use base generator if it supports it
-         // For now, fall back to base or implement specific if known. 
-         // Assuming base for now or separate generator. 
-         // The user asked for Pg 11 specifically.
-         // Let's check if generateNavmc10274 is available (it is imported).
-         const pdfBytes = await generateNavmc10274({
-            actionNo: formData.actionNo || '',
-            ssic: formData.ssic || '',
-            date: formData.date || '',
-            from: formData.from || '',
-            orgStation: formData.orgStation || '',
-            to: formData.to || '',
-            via: vias[0] || '', // Simple mapping for now
-            subject: formData.subj || '',
-            reference: references[0] || '',
-            enclosure: enclosures[0] || '',
-            supplementalInfo: '', // Need to map this from somewhere if it exists
-            copyTo: copyTos[0] || '',
-            isDraft: true
-         });
-         blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      } else {
-        // Standard Naval Letter
-        // Skip if critical data is missing
-        if (!formData.subj && !formData.from) {
-            setIsGeneratingPreview(false);
-            return;
-        }
-
-        // Merge Admin Subsections for preview
-        const paragraphsToRender = mergeAdminSubsections(paragraphs, formData.adminSubsections);
-
-        blob = await generateBasePDFBlob(
-          formData,
-          vias,
-          references,
-          enclosures,
-          copyTos,
-          paragraphsToRender
-        );
+      // Skip preview if critical data is missing for standard letters
+      const features = DOCUMENT_TYPES[formData.documentType]?.features;
+      if (features?.pdfPipeline === 'standard' && !formData.subj && !formData.from) {
+        setIsGeneratingPreview(false);
+        return;
       }
+
+      const blob = await generatePdfForDocType({ formData, vias, references, enclosures, copyTos, paragraphs });
 
       const url = URL.createObjectURL(blob);
       setPreviewUrl(prev => {
@@ -383,22 +318,26 @@ function NavalLetterGeneratorInner() {
   };
 
   const handleDocumentTypeChange = (newType: string) => {
+    const newFeatures = DOCUMENT_TYPES[newType]?.features;
+    const oldFeatures = DOCUMENT_TYPES[formData.documentType]?.features;
+
+    // Select paragraph template based on features config
     let newParagraphs: ParagraphData[] = [{ id: 1, level: 1, content: '', acronymError: '' }];
-    if (newType === 'mco') {
+    const template = newFeatures?.paragraphTemplate;
+    if (template === 'mco') {
       newParagraphs = getMCOParagraphs();
-    } else if (newType === 'bulletin') {
+    } else if (template === 'bulletin') {
       newParagraphs = getMCBulParagraphs();
-    } else if (newType === 'moa' || newType === 'mou') {
+    } else if (template === 'moa') {
       newParagraphs = getMOAParagraphs();
+    } else if (oldFeatures?.paragraphTemplate) {
+      // Switching away from a template type — reset paragraphs
+      newParagraphs = [{ id: 1, level: 1, content: '', acronymError: '' }];
     } else {
-       if (formData.documentType === 'mco' || formData.documentType === 'bulletin') {
-          newParagraphs = [{ id: 1, level: 1, content: '', acronymError: '' }];
-       } else {
-          newParagraphs = paragraphs;
-       }
+      // Preserve existing paragraphs when switching between non-template types
+      newParagraphs = paragraphs;
     }
 
-    const isDirectiveType = ['mco', 'bulletin', 'change-transmittal'].includes(newType);
     setFormData(prev => ({
       ...prev,
       documentType: newType as FormData['documentType'],
@@ -408,13 +347,13 @@ function NavalLetterGeneratorInner() {
       referenceType: newType === 'basic' ? '' : prev.referenceType,
       referenceDate: newType === 'basic' ? '' : prev.referenceDate,
       // Directives always use Distribution List
-      to: isDirectiveType ? 'Distribution List' : prev.to,
+      to: newFeatures?.isDirective ? 'Distribution List' : prev.to,
       startingReferenceLevel: 'a',
       startingEnclosureNumber: '1',
       startingPageNumber: 1,
       previousPackagePageCount: 0,
     }));
-    
+
     setParagraphs(newParagraphs);
   };
 
@@ -672,76 +611,10 @@ function NavalLetterGeneratorInner() {
     }
   };
 
-  const downloadPDF = async (formData: FormData, vias: string[], references: string[], enclosures: string[], copyTos: string[], paragraphs: ParagraphData[], withSignature?: ManualSignaturePosition) => {
-    try {
-      // Merge Admin Subsections for export
-      const paragraphsToRender = mergeAdminSubsections(paragraphs, formData.adminSubsections);
-
-      let blob: Blob;
-      if (withSignature) {
-        // Generate PDF with signature field at specified position
-        blob = await generatePDFBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender, withSignature);
-      } else {
-        // Generate base PDF without signature field
-        blob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender);
-      }
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = getExportFilename(formData, 'pdf');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please check the console for details.');
-    }
-  };
-
   // Signature placement workflow handlers
   const handleOpenSignaturePlacement = async () => {
     try {
-      let blob: Blob;
-
-      if (formData.documentType === 'aa-form') {
-        // ... (AA Form logic remains same)
-        // Generate AA Form PDF
-        const aaFormData = {
-          actionNo: formData.actionNo || '',
-          ssic: formData.ssic || '',
-          date: formData.date || '',
-          from: formData.from || '',
-          orgStation: formData.orgStation || '',
-          to: formData.to || '',
-          via: vias.filter(v => v.trim()).join('\n'),
-          subject: formData.subj || '',
-          reference: references.filter(r => r.trim()).join('\n'),
-          enclosure: enclosures.filter(e => e.trim()).join('\n'),
-          supplementalInfo: paragraphs.map(p => p.content).join('\n'),
-          supplementalInfoParagraphs: paragraphs,
-          copyTo: copyTos.filter(c => c.trim()).join('\n'),
-          signature: formData.sig || '',
-        };
-        const pdfBytes = await generateNavmc10274(aaFormData);
-        blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      } else if (formData.documentType === 'page11') {
-        // ... (Page 11 logic remains same)
-        const navmcData: Navmc11811Data = {
-          name: formData.name || '',
-          edipi: formData.edipi || '',
-          remarksLeft: formData.remarksLeft || '',
-          remarksRight: formData.remarksRight || ''
-        };
-        const pdfBytes = await generateNavmc11811(navmcData);
-        blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      } else {
-        // Generate standard letter PDF
-        // Merge Admin Subsections
-        const paragraphsToRender = mergeAdminSubsections(paragraphs, formData.adminSubsections);
-        blob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender);
-      }
-
+      const blob = await generatePdfForDocType({ formData, vias, references, enclosures, copyTos, paragraphs });
       const pageCount = await getPDFPageCount(blob);
       setSignaturePdfBlob(blob);
       setSignaturePdfPageCount(pageCount);
@@ -756,45 +629,7 @@ function NavalLetterGeneratorInner() {
     try {
       setShowSignatureModal(false);
 
-      let baseBlob: Blob;
-
-      // Generate appropriate PDF based on document type
-      if (formData.documentType === 'aa-form') {
-         // ... AA Form logic
-        const aaFormData = {
-          actionNo: formData.actionNo || '',
-          ssic: formData.ssic || '',
-          date: formData.date || '',
-          from: formData.from || '',
-          orgStation: formData.orgStation || '',
-          to: formData.to || '',
-          via: vias.filter(v => v.trim()).join('\n'),
-          subject: formData.subj || '',
-          reference: references.filter(r => r.trim()).join('\n'),
-          enclosure: enclosures.filter(e => e.trim()).join('\n'),
-          supplementalInfo: paragraphs.map(p => p.content).join('\n'),
-          supplementalInfoParagraphs: paragraphs,
-          copyTo: copyTos.filter(c => c.trim()).join('\n'),
-          signature: formData.sig || '',
-        };
-        const pdfBytes = await generateNavmc10274(aaFormData);
-        baseBlob = new Blob([pdfBytes], { type: 'application/pdf' });
-      } else if (formData.documentType === 'page11') {
-        // ... Page 11 logic
-        const navmcData: Navmc11811Data = {
-          name: formData.name || '',
-          edipi: formData.edipi || '',
-          remarksLeft: formData.remarksLeft || '',
-          remarksRight: formData.remarksRight || ''
-        };
-        const pdfBytes = await generateNavmc11811(navmcData);
-        baseBlob = new Blob([pdfBytes], { type: 'application/pdf' });
-      } else {
-        // Generate standard letter PDF
-        // Merge Admin Subsections
-        const paragraphsToRender = mergeAdminSubsections(paragraphs, formData.adminSubsections);
-        baseBlob = await generateBasePDFBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender);
-      }
+      const baseBlob = await generatePdfForDocType({ formData, vias, references, enclosures, copyTos, paragraphs });
 
       // Convert SignaturePositions to ManualSignaturePositions
       const manualPositions: ManualSignaturePosition[] = positions.map(pos => ({
@@ -833,88 +668,32 @@ function NavalLetterGeneratorInner() {
   };
 
   const generateDocument = async (format: 'docx' | 'pdf') => {
-    if (format === 'pdf') {
-      // Check if this is an AA Form
-      if (formData.documentType === 'aa-form') {
-        try {
-          // Map formData to Navmc10274Data
-          const aaFormData = {
-            actionNo: formData.actionNo || '',
-            ssic: formData.ssic || '',
-            date: formData.date || '',
-            from: formData.from || '',
-            orgStation: formData.orgStation || '',
-            to: formData.to || '',
-            via: vias.filter(v => v.trim()).join('\n'),
-            subject: formData.subj || '',
-            reference: references.filter(r => r.trim()).join('\n'),
-            enclosure: enclosures.filter(e => e.trim()).join('\n'),
-            supplementalInfo: paragraphs.map(p => p.content).join('\n'),
-            supplementalInfoParagraphs: paragraphs,
-            copyTo: copyTos.filter(c => c.trim()).join('\n'),
-            signature: formData.sig || '',
-          };
+    try {
+      let blob: Blob;
 
-          const pdfBytes = await generateNavmc10274(aaFormData);
-          const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = getExportFilename(formData, 'pdf');
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
-        } catch (error) {
-          console.error('Error generating AA Form PDF:', error);
-          alert('Failed to generate AA Form PDF. Please check the console for details.');
-        }
-      } else if (formData.documentType === 'page11') {
-        try {
-          const navmcData: Navmc11811Data = {
-            name: formData.name || '',
-            edipi: formData.edipi || '',
-            remarksLeft: formData.remarksLeft || '',
-            remarksRight: formData.remarksRight || ''
-          };
-          const pdfBytes = await generateNavmc11811(navmcData);
-          const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `NAVMC_118(11)_${formData.name?.replace(/\s+/g, '_') || 'Page11'}.pdf`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
-        } catch (error) {
-          console.error('Error generating Page 11 PDF:', error);
-          alert('Failed to generate Page 11 PDF. Please check the console for details.');
-        }
+      if (format === 'pdf') {
+        blob = await generatePdfForDocType({ formData, vias, references, enclosures, copyTos, paragraphs });
       } else {
-        // Standard letter PDF generation
-        await downloadPDF(formData, vias, references, enclosures, copyTos, paragraphs);
-      }
-    } else {
-       try {
-         // Merge Admin Subsections for MCOs/Orders
-         const paragraphsToRender = (formData.documentType === 'mco' || formData.documentType === 'order')
-            ? mergeAdminSubsections(paragraphs, formData.adminSubsections)
-            : paragraphs;
+        // Merge Admin Subsections for MCOs/Orders
+        const features = DOCUMENT_TYPES[formData.documentType]?.features;
+        const paragraphsToRender = features?.isDirective
+          ? mergeAdminSubsections(paragraphs, formData.adminSubsections)
+          : paragraphs;
 
-         const blob = await generateDocxBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender);
-         const url = window.URL.createObjectURL(blob);
-         const link = document.createElement('a');
-         link.href = url;
-         link.download = getExportFilename(formData, 'docx');
-         document.body.appendChild(link);
-         link.click();
-         document.body.removeChild(link);
-         window.URL.revokeObjectURL(url);
-       } catch (error) {
-         console.error('Error generating Docx:', error);
-         alert('Failed to generate Word document.');
-       }
+        blob = await generateDocxBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender);
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = getExportFilename(formData, format);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(`Error generating ${format.toUpperCase()}:`, error);
+      alert(`Failed to generate ${format.toUpperCase()}. Please check the console for details.`);
     }
   };
 
@@ -1222,385 +1001,38 @@ function NavalLetterGeneratorInner() {
       }
       formData={formData}
     >
-      {!formData.documentType ? (
-        <LandingPage />
-      ) : (
-        <>
-          {/* Document Type Header */}
-          <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6 flex items-center gap-4">
-            <div className="text-4xl text-primary">
-              {DOCUMENT_TYPES[formData.documentType]?.icon || DOCUMENT_TYPES['basic'].icon}
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">
-                {DOCUMENT_TYPES[formData.documentType]?.name || DOCUMENT_TYPES['basic'].name}
-              </h2>
-              <p className="text-muted-foreground">
-                {DOCUMENT_TYPES[formData.documentType]?.description || DOCUMENT_TYPES['basic'].description}
-              </p>
-            </div>
-          </div>
-
-          {/* AMHS Editor - Exclusive View */}
-          {formData.documentType === 'amhs' ? (
-            <AMHSEditor 
-              formData={formData} 
-              onUpdate={(data) => setFormData(prev => ({ ...prev, ...data }))} 
-            />
-          ) : (
-            <>
-              {/* Header Settings (Hidden for AA Form, Page 11, and AMHS) */}
-              {/* Header Settings (Hidden for AA Form, Page 11, AMHS, From-To Memo, MOA, MOU) */}
-      {formData.documentType !== 'aa-form' && formData.documentType !== 'page11' && formData.documentType !== 'from-to-memo' && formData.documentType !== 'moa' && formData.documentType !== 'mou' && (
-                <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Header Type</label>
-            <Select
-              value={formData.headerType}
-              onValueChange={(val: any) => setFormData(prev => ({ ...prev, headerType: val }))}
-            >
-              <SelectTrigger className="bg-background border-input">
-                <SelectValue placeholder="Select Header" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="USMC">USMC Standard</SelectItem>
-                <SelectItem value="DON">Department of the Navy</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">Changes header title text</p>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Body Font</label>
-            <Select
-              value={formData.bodyFont}
-              onValueChange={(val: any) => setFormData(prev => ({ ...prev, bodyFont: val }))}
-            >
-              <SelectTrigger className="bg-background border-input">
-                <SelectValue placeholder="Select Font" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="times">Times New Roman</SelectItem>
-                <SelectItem value="courier">Courier New</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">Font for document body</p>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Header Color</label>
-            <Select
-              value={formData.accentColor || 'black'}
-              onValueChange={(val: any) => setFormData(prev => ({ ...prev, accentColor: val }))}
-            >
-              <SelectTrigger className="bg-background border-input">
-                <SelectValue placeholder="Select Color" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="black">Black</SelectItem>
-                <SelectItem value="blue">Blue</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">Color of header text only</p>
-          </div>
-        </div>
-      )}
-
-      {/* Unit Info / Letterhead - Hide for Page 11, From-To Memo, MFR */ }
-      {formData.documentType !== 'page11' && formData.documentType !== 'from-to-memo' && formData.documentType !== 'mfr' && (
-        <UnitInfoSection
-          formData={formData}
-          setFormData={setFormData}
-          setCurrentUnitCode={setCurrentUnitCode}
-          setCurrentUnitName={setCurrentUnitName}
-        />
-      )}
-
-      {/* MOA/MOU Form Section */}
-      {(formData.documentType === 'moa' || formData.documentType === 'mou') && (
-        <MOAFormSection formData={formData} setFormData={setFormData} />
-      )}
-
-
-      {/* Endorsement-Specific Fields */}
-      {formData.documentType === 'endorsement' && (
-        <Card className="border-primary/20 shadow-md overflow-hidden mb-6">
-          <CardHeader className="bg-secondary text-secondary-foreground border-b border-secondary/10 p-4 flex flex-row items-center gap-2">
-            <FileSignature className="w-5 h-5" />
-            <CardTitle className="text-lg font-bold font-headline tracking-wide">Endorsement Details</CardTitle>
-          </CardHeader>
-
-          <CardContent className="space-y-6 pt-6">
-            {/* Endorsement Level Selector */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Endorsement Level <span className="text-destructive">*</span></Label>
-              <Select
-                value={formData.endorsementLevel}
-                onValueChange={(val) => setFormData(prev => ({ ...prev, endorsementLevel: val as any }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select endorsement level..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="FIRST">FIRST ENDORSEMENT</SelectItem>
-                  <SelectItem value="SECOND">SECOND ENDORSEMENT</SelectItem>
-                  <SelectItem value="THIRD">THIRD ENDORSEMENT</SelectItem>
-                  <SelectItem value="FOURTH">FOURTH ENDORSEMENT</SelectItem>
-                  <SelectItem value="FIFTH">FIFTH ENDORSEMENT</SelectItem>
-                  <SelectItem value="SIXTH">SIXTH ENDORSEMENT</SelectItem>
-                  <SelectItem value="SEVENTH">SEVENTH ENDORSEMENT</SelectItem>
-                  <SelectItem value="EIGHTH">EIGHTH ENDORSEMENT</SelectItem>
-                  <SelectItem value="NINTH">NINTH ENDORSEMENT</SelectItem>
-                  <SelectItem value="TENTH">TENTH ENDORSEMENT</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Basic Letter Reference Builder */}
-            {formData.endorsementLevel && (
-              <div className="space-y-4">
-                <StructuredReferenceInput formData={formData} setFormData={setFormData} />
-
-                <div className="p-4 bg-secondary/5 border border-secondary/10 rounded-lg text-sm font-mono text-muted-foreground flex items-center gap-2">
-                  <span className="font-bold text-primary">Preview:</span>
-                  {formData.endorsementLevel} ENDORSEMENT on {formData.basicLetterReference || "[Basic Letter Reference]"}
-                </div>
-              </div>
-            )}
-
-            {/* Page Numbering and Sequencing */}
-            {formData.endorsementLevel && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border/50">
-                {/* Page Numbering Section */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-foreground flex items-center gap-2">
-                    <span className="bg-secondary/20 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
-                    Page Numbering
-                  </h4>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">Last Page # of Previous Document</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.previousPackagePageCount}
-                      onChange={(e) => {
-                        const newPrevCount = parseInt(e.target.value) || 0;
-                        setFormData(prev => ({
-                          ...prev,
-                          previousPackagePageCount: newPrevCount,
-                          startingPageNumber: newPrevCount + 1
-                        }))
-                      }}
-                    />
-                    <p className="text-xs text-muted-foreground italic">
-                      Enter the last page number of the document you are endorsing.
-                    </p>
-                  </div>
-
-                  <div className="p-3 bg-secondary/5 rounded-lg border border-secondary/10">
-                    <p className="text-sm text-foreground font-medium">
-                      Endorsement starts on page <span className="font-bold text-lg text-primary">{formData.startingPageNumber}</span>
-                    </p>
-                  </div>
-                </div>
-
-                {/* Identifier Sequencing Section */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-foreground flex items-center gap-2">
-                    <span className="bg-secondary/20 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
-                    Identifier Sequencing
-                  </h4>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">Start References At Letter</Label>
-                    <Select
-                      value={formData.startingReferenceLevel}
-                      onValueChange={(val) => setFormData(prev => ({ ...prev, startingReferenceLevel: val }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 26 }, (_, i) => String.fromCharCode(97 + i)).map(char => (
-                          <SelectItem key={char} value={char}>{char}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground italic">
-                      If basic letter has refs (a) and (b), start here at (c).
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">Start Enclosures At Number</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      max="50"
-                      value={formData.startingEnclosureNumber}
-                      onChange={(e) => setFormData(prev => ({ ...prev, startingEnclosureNumber: e.target.value }))}
-                    />
-                    <p className="text-xs text-muted-foreground italic">
-                      If basic letter has encl (1), start here at (2).
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Dynamic Header Form based on Document Type */}
-      <div className="bg-card p-6 rounded-lg shadow-sm border border-border mb-6">
-        <DynamicForm
-          key={`${formData.documentType}-${formKey}`} // Force re-render when type changes or data is imported
-          documentType={DOCUMENT_TYPES[formData.documentType] || DOCUMENT_TYPES['basic']}
-          onSubmit={handleDynamicFormSubmit}
-          defaultValues={formData}
-        />
-      </div>
-
-      {/* Directive Title Input for MCO/Bulletin */}
-      {(formData.documentType === 'mco' || formData.documentType === 'bulletin') && (
-        <Card className="shadow-sm border-border mb-6 border-l-4 border-l-amber-500">
-          <CardHeader className="pb-3 bg-secondary text-secondary-foreground rounded-t-lg">
-            <CardTitle className="text-lg font-semibold font-headline tracking-wide">
-              Directive Title
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">
-                Full Directive Title <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                type="text"
-                value={formData.directiveTitle || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, directiveTitle: e.target.value }))}
-                placeholder="e.g., MARINE CORPS ORDER 5210.11F"
-                className="font-mono"
-              />
-              <p className="text-xs text-muted-foreground">
-                This title will appear underlined between the date and From line. Examples: MCO 5210.11F, NAVMC DIR 5000.1, MCBul 1020
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Legacy Sections wrapped to fit layout */}
-      {/* Hide Via for MOA/MOU */}
-      {formData.documentType !== 'moa' && formData.documentType !== 'mou' && (
-        <ViaSection vias={vias} setVias={setVias} />
-      )}
-
-      {/* Hide References for MOA/MOU */}
-      {formData.documentType !== 'moa' && formData.documentType !== 'mou' && (
-        <ReferencesSection 
-          references={references} 
-          setReferences={setReferences} 
-          formData={formData}
-          setFormData={setFormData}
-        />
-      )}
-
-      {/* Hide Enclosures for MOA/MOU */}
-      {formData.documentType !== 'moa' && formData.documentType !== 'mou' && (
-        <EnclosuresSection 
-          enclosures={enclosures} 
-          setEnclosures={setEnclosures} 
-          formData={formData}
-          setFormData={setFormData}
-        />
-      )}
-
-      {(formData.documentType === 'mco' || formData.documentType === 'bulletin') && (
-        <>
-          <DistributionStatementSection
-            distribution={formData.distribution || { type: 'none' }}
-            onUpdateDistribution={(distribution) => setFormData(prev => ({ ...prev, distribution }))}
-          />
-          <ReportsSection
-            reports={formData.reports || []}
-            onUpdateReports={(reports) => setFormData(prev => ({ ...prev, reports }))}
-          />
-        </>
-      )}
-
-      {formData.documentType !== 'page11' && (
-        <ParagraphSection 
-          paragraphs={paragraphs}
-          documentType={formData.documentType}
-          activeVoiceInput={activeVoiceInput}
-          validateParagraphNumbering={validateParagraphNumbering}
-          getUiCitation={getUiCitation}
-          moveParagraphUp={moveParagraphUp}
-          moveParagraphDown={moveParagraphDown}
-          updateParagraphContent={updateParagraphContent}
-          toggleVoiceInput={toggleVoiceInput}
-          addParagraph={addParagraph}
-          removeParagraph={removeParagraph}
-        />
-      )}
-
-      {formData.documentType !== 'page11' && formData.documentType !== 'moa' && formData.documentType !== 'mou' && (
-        <ClosingBlockSection
-          formData={formData}
-          setFormData={setFormData}
-          copyTos={copyTos}
-          setCopyTos={setCopyTos}
-        />
-      )}
-
-      {(formData.documentType === 'mco' || formData.documentType === 'bulletin') && (
-        <DistributionSection 
-          distribution={formData.distribution || { type: 'none' }}
-          onUpdateDistribution={(dist) => setFormData(prev => ({ ...prev, distribution: dist }))}
-        />
-      )}
-
-
-      {/* Digital Signature Section */}
-      <Card className="shadow-sm border-border mb-6 border-l-4 border-l-primary">
-        <CardHeader className="pb-3 bg-secondary text-secondary-foreground rounded-t-lg">
-          <CardTitle className="flex items-center text-lg font-semibold font-headline tracking-wide">
-            <FileSignature className="mr-2 h-5 w-5 text-primary-foreground" />
-            Digital Signature Field
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 pt-4">
-          <p className="text-sm text-muted-foreground">
-            Add a digital signature field to your PDF for CAC/PKI signing in Adobe Reader.
-          </p>
-          <button
-            type="button"
-            onClick={handleOpenSignaturePlacement}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            <FileSignature className="mr-2 h-4 w-4" />
-            Place Signature Field & Download PDF
-          </button>
-          <p className="text-xs text-muted-foreground italic">
-            This will generate a PDF preview where you can draw the signature box location.
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Signature Placement Modal */}
-      <SignaturePlacementModal
-        open={showSignatureModal}
-        onClose={handleSignatureCancel}
-        onConfirm={handleSignatureConfirm}
-        pdfBlob={signaturePdfBlob}
-        totalPages={signaturePdfPageCount}
+      <DocumentLayout
+        formData={formData}
+        setFormData={setFormData}
+        formKey={formKey}
+        setCurrentUnitCode={setCurrentUnitCode}
+        setCurrentUnitName={setCurrentUnitName}
+        vias={vias}
+        setVias={setVias}
+        references={references}
+        setReferences={setReferences}
+        enclosures={enclosures}
+        setEnclosures={setEnclosures}
+        copyTos={copyTos}
+        setCopyTos={setCopyTos}
+        paragraphs={paragraphs}
+        activeVoiceInput={activeVoiceInput}
+        validateParagraphNumbering={validateParagraphNumbering}
+        getUiCitation={getUiCitation}
+        moveParagraphUp={moveParagraphUp}
+        moveParagraphDown={moveParagraphDown}
+        updateParagraphContent={updateParagraphContent}
+        toggleVoiceInput={toggleVoiceInput}
+        addParagraph={addParagraph}
+        removeParagraph={removeParagraph}
+        handleOpenSignaturePlacement={handleOpenSignaturePlacement}
+        showSignatureModal={showSignatureModal}
+        handleSignatureCancel={handleSignatureCancel}
+        handleSignatureConfirm={handleSignatureConfirm}
+        signaturePdfBlob={signaturePdfBlob}
+        signaturePdfPageCount={signaturePdfPageCount}
+        handleDynamicFormSubmit={handleDynamicFormSubmit}
       />
-    </>
-  )}
-    </>
-  )}
     </ModernAppShell>
   );
 }

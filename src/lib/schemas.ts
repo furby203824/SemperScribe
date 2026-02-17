@@ -44,6 +44,44 @@ export interface SectionDefinition {
   className?: string; // Optional override for the grid layout (e.g. "grid-cols-1")
 }
 
+export type PdfPipeline = 'standard' | 'navmc10274' | 'navmc11811' | 'amhs';
+export type ExportFormat = 'pdf' | 'docx' | 'amhs-text';
+export type DocumentCategory =
+  | 'standard-letter'
+  | 'memorandums'
+  | 'directives'
+  | 'forms'
+  | 'staffing-papers'
+  | 'external-executive'
+  | 'amhs';
+
+export interface DocumentFeatures {
+  // Section visibility
+  showHeaderSettings: boolean;
+  showUnitInfo: boolean;
+  showEndorsementDetails: boolean;
+  showDirectiveTitle: boolean;
+  showVia: boolean;
+  showReferences: boolean;
+  showEnclosures: boolean;
+  showDistribution: boolean;
+  showReports: boolean;
+  showParagraphs: boolean;
+  showClosingBlock: boolean;
+  showMOAForm: boolean;
+  showSignature: boolean;
+
+  // Behavior
+  isAMHS: boolean;
+  isDirective: boolean;
+  paragraphTemplate?: 'mco' | 'bulletin' | 'moa' | 'default';
+  category: DocumentCategory;
+
+  // Export capabilities
+  exportFormats: ExportFormat[];
+  pdfPipeline: PdfPipeline;
+}
+
 export interface DocumentTypeDefinition {
   id: string;
   name: string;
@@ -51,6 +89,7 @@ export interface DocumentTypeDefinition {
   icon?: string; // Emoji or icon name
   sections: SectionDefinition[];
   schema: z.ZodObject<any>; // Zod validation schema
+  features: DocumentFeatures;
 }
 
 // --- Validation Helpers ---
@@ -134,12 +173,35 @@ export const BasicLetterSchema = z.object({
   distribution: z.any().optional(),
 });
 
+// --- Default features for standard letter types ---
+const STANDARD_LETTER_FEATURES: DocumentFeatures = {
+  showHeaderSettings: true,
+  showUnitInfo: true,
+  showEndorsementDetails: false,
+  showDirectiveTitle: false,
+  showVia: true,
+  showReferences: true,
+  showEnclosures: true,
+  showDistribution: false,
+  showReports: false,
+  showParagraphs: true,
+  showClosingBlock: true,
+  showMOAForm: false,
+  showSignature: true,
+  isAMHS: false,
+  isDirective: false,
+  category: 'standard-letter',
+  exportFormats: ['pdf', 'docx'],
+  pdfPipeline: 'standard',
+};
+
 export const BasicLetterDefinition: DocumentTypeDefinition = {
   id: 'basic',
   name: 'Basic Letter',
   description: 'Standard format for routine correspondence and official communications.',
   icon: '📄',
   schema: BasicLetterSchema,
+  features: { ...STANDARD_LETTER_FEATURES },
   sections: [
     {
       id: 'header',
@@ -216,6 +278,7 @@ export const MultipleAddressLetterDefinition: DocumentTypeDefinition = {
   description: 'Letter addressed to two or more commands/activities.',
   icon: '📨',
   schema: MultipleAddressLetterSchema,
+  features: { ...STANDARD_LETTER_FEATURES },
   sections: [
     {
       id: 'header',
@@ -249,6 +312,7 @@ export const EndorsementDefinition: DocumentTypeDefinition = {
   description: 'Forwards correspondence on a new page.',
   icon: '📝',
   schema: EndorsementSchema,
+  features: { ...STANDARD_LETTER_FEATURES, showEndorsementDetails: true },
   sections: [
     // Endorsement-specific fields are handled in page.tsx custom section
     // Only include basic letter sections here
@@ -274,6 +338,13 @@ export const AAFormDefinition: DocumentTypeDefinition = {
   description: 'Administrative Action Form for personnel requests.',
   icon: '📋',
   schema: AAFormSchema,
+  features: {
+    ...STANDARD_LETTER_FEATURES,
+    showHeaderSettings: false,
+    category: 'forms',
+    pdfPipeline: 'navmc10274',
+    exportFormats: ['pdf'],
+  },
   sections: [
     {
       id: 'aa-header',
@@ -385,6 +456,15 @@ export const MCODefinition: DocumentTypeDefinition = {
   description: 'Permanent directives that establish policy or procedures.',
   icon: '📜',
   schema: MCOSchema,
+  features: {
+    ...STANDARD_LETTER_FEATURES,
+    showDirectiveTitle: true,
+    showDistribution: true,
+    showReports: true,
+    isDirective: true,
+    paragraphTemplate: 'mco',
+    category: 'directives',
+  },
   sections: [
     {
       id: 'header',
@@ -518,6 +598,15 @@ export const BulletinDefinition: DocumentTypeDefinition = {
   description: 'Directives of a temporary nature (expire after 12 months).',
   icon: '📢',
   schema: BulletinSchema,
+  features: {
+    ...STANDARD_LETTER_FEATURES,
+    showDirectiveTitle: true,
+    showDistribution: true,
+    showReports: true,
+    isDirective: true,
+    paragraphTemplate: 'bulletin',
+    category: 'directives',
+  },
   sections: [
     {
       id: 'header',
@@ -620,6 +709,19 @@ export const Page11Definition: DocumentTypeDefinition = {
   description: 'Administrative Remarks for service record entries.',
   icon: '🗂️',
   schema: Page11Schema,
+  features: {
+    ...STANDARD_LETTER_FEATURES,
+    showHeaderSettings: false,
+    showUnitInfo: false,
+    showVia: false,
+    showReferences: false,
+    showEnclosures: false,
+    showParagraphs: false,
+    showClosingBlock: false,
+    category: 'forms',
+    pdfPipeline: 'navmc11811',
+    exportFormats: ['pdf'],
+  },
   sections: [
     {
       id: 'header',
@@ -695,6 +797,26 @@ export const AMHSDefinition: DocumentTypeDefinition = {
   description: 'Automated Message Handling System (GENADMIN/MARADMIN)',
   icon: '📡',
   schema: AMHSSchema,
+  features: {
+    showHeaderSettings: false,
+    showUnitInfo: false,
+    showEndorsementDetails: false,
+    showDirectiveTitle: false,
+    showVia: false,
+    showReferences: false,
+    showEnclosures: false,
+    showDistribution: false,
+    showReports: false,
+    showParagraphs: false,
+    showClosingBlock: false,
+    showMOAForm: false,
+    showSignature: false,
+    isAMHS: true,
+    isDirective: false,
+    category: 'amhs',
+    exportFormats: ['amhs-text'],
+    pdfPipeline: 'amhs',
+  },
   sections: [
     {
       id: 'classification',
@@ -787,6 +909,11 @@ export const MFRDefinition: DocumentTypeDefinition = {
   description: 'Internal document to record events or decisions. No "To" line.',
   icon: '📝',
   schema: MFRSchema,
+  features: {
+    ...STANDARD_LETTER_FEATURES,
+    showUnitInfo: false,
+    category: 'memorandums',
+  },
   sections: [
     {
       id: 'header',
@@ -814,6 +941,12 @@ export const FromToMemoDefinition: DocumentTypeDefinition = {
   description: 'Informal internal correspondence on plain paper.',
   icon: '📨',
   schema: FromToMemoSchema,
+  features: {
+    ...STANDARD_LETTER_FEATURES,
+    showHeaderSettings: false,
+    showUnitInfo: false,
+    category: 'memorandums',
+  },
   sections: [
     {
       id: 'header',
@@ -867,6 +1000,7 @@ export const LetterheadMemoDefinition: DocumentTypeDefinition = {
   description: 'Formal memorandum used for correspondence within the activity or with other federal agencies.',
   icon: '🏛️',
   schema: LetterheadMemoSchema,
+  features: { ...STANDARD_LETTER_FEATURES, category: 'memorandums' },
   sections: [
     ...BasicLetterDefinition.sections
   ]
@@ -898,6 +1032,19 @@ export const CoordinationPageDefinition: DocumentTypeDefinition = {
   description: 'Mandatory staffing table for routing packages. Tracks concurrence/non-concurrence per MCO 5216.20B.',
   icon: '🔄',
   schema: CoordinationPageSchema,
+  features: {
+    ...STANDARD_LETTER_FEATURES,
+    showHeaderSettings: false,
+    showUnitInfo: false,
+    showVia: false,
+    showReferences: false,
+    showEnclosures: false,
+    showParagraphs: false,
+    showClosingBlock: false,
+    showSignature: false,
+    category: 'staffing-papers',
+    exportFormats: ['pdf'],
+  },
   sections: [
     {
       id: 'action',
@@ -1016,6 +1163,18 @@ export const MOADefinition: DocumentTypeDefinition = {
   description: 'Agreement between two or more parties (Conditional).',
   icon: '🤝',
   schema: MOASchema,
+  features: {
+    ...STANDARD_LETTER_FEATURES,
+    showHeaderSettings: false,
+    showVia: false,
+    showReferences: false,
+    showEnclosures: false,
+    showClosingBlock: false,
+    showSignature: false,
+    showMOAForm: true,
+    paragraphTemplate: 'moa',
+    category: 'memorandums',
+  },
   sections: [
     {
       id: 'moa-header',
@@ -1047,6 +1206,7 @@ export const MOUDefinition: DocumentTypeDefinition = {
   name: 'Memorandum of Understanding',
   description: 'General understanding between two or more parties (Non-binding).',
   schema: MOUSchema,
+  features: { ...MOADefinition.features },
 };
 
 // 15. Staffing Papers (Position, Information, Decision Paper)
@@ -1191,12 +1351,24 @@ const StaffingPaperFooterFields: FieldDefinition[] = [
   }
 ];
 
+const STAFFING_PAPER_FEATURES: DocumentFeatures = {
+  ...STANDARD_LETTER_FEATURES,
+  showUnitInfo: false,
+  showVia: false,
+  showEnclosures: false,
+  showClosingBlock: false,
+  showSignature: false,
+  category: 'staffing-papers',
+  exportFormats: ['pdf'],
+};
+
 export const PositionPaperDefinition: DocumentTypeDefinition = {
   id: 'position-paper',
   name: 'Position/Decision Paper',
   description: 'Advocates a specific position or solution.',
   icon: '📍',
   schema: StaffingPaperSchema,
+  features: { ...STAFFING_PAPER_FEATURES },
   sections: [
     { id: 'header', title: 'Paper Details', fields: StaffingPaperFields },
     { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
@@ -1209,6 +1381,7 @@ export const InformationPaperDefinition: DocumentTypeDefinition = {
   description: 'Provides factual information in concise terms.',
   icon: 'ℹ️',
   schema: StaffingPaperSchema,
+  features: { ...STAFFING_PAPER_FEATURES },
   sections: [
     { id: 'header', title: 'Paper Details', fields: StaffingPaperFields },
     { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
@@ -1221,6 +1394,7 @@ export const DecisionPaperDefinition: DocumentTypeDefinition = {
   description: 'Requests a decision from a senior official.',
   icon: '❓',
   schema: StaffingPaperSchema,
+  features: { ...STAFFING_PAPER_FEATURES },
   sections: [
     { id: 'header', title: 'Paper Details', fields: StaffingPaperFields },
     { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
@@ -1262,6 +1436,7 @@ export const BusinessLetterDefinition: DocumentTypeDefinition = {
   description: 'Correspondence with non-DoD entities or personal approach.',
   icon: '💼',
   schema: BusinessLetterSchema,
+  features: { ...STANDARD_LETTER_FEATURES, category: 'external-executive' },
   sections: [
     {
       id: 'header',
@@ -1464,6 +1639,7 @@ export const ExecutiveCorrespondenceDefinition: DocumentTypeDefinition = {
   description: 'Letters and memorandums for HqDON, Congress, OSD, and senior officials.',
   icon: '🏛️',
   schema: ExecutiveCorrespondenceSchema,
+  features: { ...STANDARD_LETTER_FEATURES, category: 'external-executive' },
   sections: [
     {
       id: 'format',
@@ -1696,6 +1872,11 @@ export const ChangeTransmittalDefinition: DocumentTypeDefinition = {
   description: 'Transmits amendments (page replacements) to an existing order per MCO 5215.1K para 40-44.',
   icon: '📝',
   schema: ChangeTransmittalSchema,
+  features: {
+    ...STANDARD_LETTER_FEATURES,
+    isDirective: true,
+    category: 'directives',
+  },
   sections: [
     {
       id: 'header',
