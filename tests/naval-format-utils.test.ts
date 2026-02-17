@@ -156,29 +156,38 @@ describe('formatCancellationDate', () => {
 
 describe('Standard paragraph templates', () => {
   describe('getMCOParagraphs', () => {
-    it('returns 5-paragraph SMEAC structure', () => {
+    it('returns SMEAC structure with mandatory level-1 paragraphs', () => {
       const paras = getMCOParagraphs();
-      expect(paras).toHaveLength(5);
-      expect(paras[0].title).toBe('Situation');
-      expect(paras[1].title).toBe('Mission');
-      expect(paras[2].title).toBe('Execution');
-      expect(paras[3].title).toBe('Administration and Logistics');
-      expect(paras[4].title).toBe('Command and Signal');
+      // MCO uses SMEAC with sub-paragraphs under Execution and Command & Signal
+      expect(paras.length).toBeGreaterThanOrEqual(5);
+      const level1Titles = paras.filter(p => p.level === 1).map(p => p.title);
+      expect(level1Titles).toContain('Situation');
+      expect(level1Titles).toContain('Mission');
+      expect(level1Titles).toContain('Execution');
+      expect(level1Titles).toContain('Administration and Logistics');
+      expect(level1Titles).toContain('Command and Signal');
     });
 
-    it('sets all paragraphs to level 1', () => {
-      getMCOParagraphs().forEach(p => {
-        expect(p.level).toBe(1);
-      });
+    it('has mandatory flags on SMEAC paragraphs', () => {
+      const paras = getMCOParagraphs();
+      const mandatoryTitles = paras.filter(p => p.isMandatory).map(p => p.title);
+      expect(mandatoryTitles).toContain('Situation');
+      expect(mandatoryTitles).toContain('Mission');
+      expect(mandatoryTitles).toContain('Execution');
+      expect(mandatoryTitles).toContain('Administration and Logistics');
+      expect(mandatoryTitles).toContain('Command and Signal');
     });
   });
 
   describe('getMCBulParagraphs', () => {
-    it('returns 5 standard bulletin paragraphs', () => {
+    it('returns standard bulletin paragraphs', () => {
       const paras = getMCBulParagraphs();
-      expect(paras).toHaveLength(5);
+      expect(paras.length).toBeGreaterThanOrEqual(5);
       expect(paras[0].title).toBe('Purpose');
-      expect(paras[4].title).toBe('Cancellation');
+      const titles = paras.map(p => p.title);
+      expect(titles).toContain('Purpose');
+      expect(titles).toContain('Cancellation');
+      expect(titles).toContain('Reserve Applicability');
     });
   });
 

@@ -96,12 +96,30 @@ export function DynamicForm({ documentType, onSubmit, defaultValues, children }:
   // Sanitize default values to only include fields relevant to this form
   const sanitizedDefaultValues = React.useMemo(() => {
       if (!defaultValues) return { documentType: documentType.id };
-      
+
       const sanitized: any = {};
       Object.keys(defaultValues).forEach(key => {
           if (allowedTopLevelKeys.has(key)) {
               sanitized[key] = defaultValues[key];
           }
+      });
+      // Apply field-level defaultValues for any fields not already set
+      documentType.sections.forEach(section => {
+        section.fields.forEach(field => {
+          const topLevel = field.name.split('.')[0];
+          if (field.defaultValue !== undefined && (sanitized[topLevel] === undefined || sanitized[topLevel] === '')) {
+            if (field.name.includes('.')) {
+              // Nested field (e.g., 'distribution.pcn')
+              const parts = field.name.split('.');
+              if (!sanitized[parts[0]]) sanitized[parts[0]] = {};
+              if (sanitized[parts[0]][parts[1]] === undefined) {
+                sanitized[parts[0]][parts[1]] = field.defaultValue;
+              }
+            } else {
+              sanitized[field.name] = field.defaultValue;
+            }
+          }
+        });
       });
       // Ensure documentType is set
       sanitized.documentType = documentType.id;
@@ -154,6 +172,11 @@ export function DynamicForm({ documentType, onSubmit, defaultValues, children }:
           render={() => <></>}
         />
       );
+    }
+
+    // Skip field types rendered externally (not by DynamicForm)
+    if (field.type === 'decision-grid' || field.type === 'radio') {
+      return null;
     }
 
     return (
