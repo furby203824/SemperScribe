@@ -280,7 +280,7 @@ export const MultipleAddressLetterDefinition: DocumentTypeDefinition = {
   description: 'Letter addressed to two or more commands/activities.',
   icon: '📨',
   schema: MultipleAddressLetterSchema,
-  features: { ...STANDARD_LETTER_FEATURES, showEndorsementDetails: true, showMultipleTo: true },
+  features: { ...STANDARD_LETTER_FEATURES, showMultipleTo: true },
   sections: [
     {
       id: 'header',
