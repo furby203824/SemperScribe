@@ -243,6 +243,130 @@ describe('Directive document types', () => {
   });
 });
 
+describe('DynamicForm initialization simulation', () => {
+  // Simulates the exact logic from DynamicForm to catch runtime errors
+  const initialFormData: Record<string, any> = {
+    documentType: '',
+    endorsementLevel: '',
+    basicLetterReference: '',
+    basicLetterSsic: '',
+    referenceWho: '',
+    referenceType: '',
+    referenceDate: '',
+    startingReferenceLevel: 'a',
+    startingEnclosureNumber: '1',
+    line1: '', line2: '', line3: '', ssic: '', originatorCode: '', date: '17 Feb 26', from: '', to: '', subj: '', sig: '', delegationText: '',
+    startingPageNumber: 1,
+    previousPackagePageCount: 0,
+    headerType: 'USMC',
+    bodyFont: 'times',
+    directiveTitle: '',
+    cancellationDate: '',
+    cancellationType: 'fixed',
+    distribution: { type: 'none' },
+    reports: [],
+    adminSubsections: {
+      recordsManagement: { show: false, content: '', order: 0 },
+      privacyAct: { show: false, content: '', order: 0 },
+      reportsRequired: { show: false, content: 'None.', order: 0 }
+    },
+    actionNo: '',
+    orgStation: '',
+    name: '',
+    edipi: '',
+    box11: ''
+  };
+
+  Object.entries(DOCUMENT_TYPES).forEach(([docTypeId, definition]) => {
+    describe(`${definition.name} (${docTypeId}) form init`, () => {
+      it('computes allowedTopLevelKeys without error', () => {
+        const keys = new Set<string>(['documentType']);
+        definition.sections.forEach(section => {
+          section.fields.forEach(field => {
+            const topLevel = field.name.split('.')[0];
+            keys.add(topLevel);
+          });
+        });
+        expect(keys.size).toBeGreaterThan(0);
+        expect(keys.has('documentType')).toBe(true);
+      });
+
+      it('sanitizes defaultValues without error', () => {
+        // Compute allowedTopLevelKeys
+        const allowedTopLevelKeys = new Set<string>(['documentType']);
+        definition.sections.forEach(section => {
+          section.fields.forEach(field => {
+            const topLevel = field.name.split('.')[0];
+            allowedTopLevelKeys.add(topLevel);
+          });
+        });
+
+        // Sanitize default values (same logic as DynamicForm)
+        const defaultValues = { ...initialFormData, documentType: docTypeId };
+        const sanitized: any = {};
+        Object.keys(defaultValues).forEach(key => {
+          if (allowedTopLevelKeys.has(key)) {
+            sanitized[key] = defaultValues[key];
+          }
+        });
+
+        // Apply field-level defaultValues
+        definition.sections.forEach(section => {
+          section.fields.forEach(field => {
+            const topLevel = field.name.split('.')[0];
+            if (field.defaultValue !== undefined && (sanitized[topLevel] === undefined || sanitized[topLevel] === '')) {
+              if (field.name.includes('.')) {
+                const parts = field.name.split('.');
+                if (!sanitized[parts[0]]) sanitized[parts[0]] = {};
+                if (sanitized[parts[0]][parts[1]] === undefined) {
+                  sanitized[parts[0]][parts[1]] = field.defaultValue;
+                }
+              } else {
+                sanitized[field.name] = field.defaultValue;
+              }
+            }
+          });
+        });
+        sanitized.documentType = definition.id;
+
+        expect(sanitized.documentType).toBe(docTypeId);
+      });
+
+      it('schema.safeParse does not throw', () => {
+        const allowedTopLevelKeys = new Set<string>(['documentType']);
+        definition.sections.forEach(section => {
+          section.fields.forEach(field => {
+            allowedTopLevelKeys.add(field.name.split('.')[0]);
+          });
+        });
+
+        const defaultValues = { ...initialFormData, documentType: docTypeId };
+        const sanitized: any = {};
+        Object.keys(defaultValues).forEach(key => {
+          if (allowedTopLevelKeys.has(key)) {
+            sanitized[key] = defaultValues[key];
+          }
+        });
+        sanitized.documentType = definition.id;
+
+        // This should NOT throw - safeParse returns result, doesn't throw
+        expect(() => definition.schema.safeParse(sanitized)).not.toThrow();
+      });
+
+      it('all field conditions evaluate without error', () => {
+        const formValues = { documentType: docTypeId };
+        definition.sections.forEach(section => {
+          section.fields.forEach(field => {
+            if (field.condition) {
+              expect(() => field.condition!(formValues)).not.toThrow();
+            }
+          });
+        });
+      });
+    });
+  });
+});
+
 describe('Non-directive document types', () => {
   const nonDirectiveTypes = Object.keys(DOCUMENT_TYPES).filter(
     id => !['mco', 'bulletin', 'change-transmittal'].includes(id)

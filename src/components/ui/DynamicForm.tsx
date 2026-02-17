@@ -217,13 +217,15 @@ export function DynamicForm({ documentType, onSubmit, defaultValues, children }:
                 </Select>
               ) : field.type === 'checkbox' ? (
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    checked={formField.value} 
-                    onCheckedChange={formField.onChange} 
+                  <Checkbox
+                    checked={formField.value}
+                    onCheckedChange={formField.onChange}
                   />
                   <span className="text-sm font-medium">{field.placeholder}</span>
                 </div>
-              ) : null}
+              ) : (
+                <Input placeholder={field.placeholder} {...formField} value={formField.value ?? ''} />
+              )}
             </FormControl>
             {field.description && <FormDescription>{field.description}</FormDescription>}
             <FormMessage />
