@@ -321,15 +321,6 @@ export const MCOSchema = BasicLetterSchema.extend({
   line3: z.string().optional(),
   sig: z.string().optional(),
   directiveTitle: z.string().optional(),
-  // Classified directive prefix per MCO 5215.1K para 9
-  classificationPrefix: z.enum(['', 'C', 'S']).optional(),
-  // Reserve designation per MCO 5215.1K para 22
-  isReserveOnly: z.boolean().optional(),
-  // Revision tracking per MCO 5215.1K para 21e
-  revisionLetter: z.string().optional().refine(
-    val => !val || (/^[A-Z]$/.test(val) && !['I', 'O', 'Q'].includes(val)),
-    { message: "Revision must be a single capital letter (A-Z, excluding I, O, Q)" }
-  ),
   // FOUO designation per MCO 5215.1K para 10
   fouoDesignation: z.enum(['', 'full', 'partial']).optional(),
   // 4-digit paragraph numbering per MCO 5215.1K para 34
@@ -381,9 +372,11 @@ export const MCODefinition: DocumentTypeDefinition = {
       id: 'header',
       title: 'Order Information',
       fields: [
-         // MCOs use standard letter fields but "To" is usually fixed
+         // MCOs use standard letter fields but override SSIC to text (accepts full identifier)
+         // and fix "To" to Distribution List
          ...BasicLetterDefinition.sections[0].fields.map(f =>
-           f.name === 'to' ? { ...f, defaultValue: 'Distribution List', placeholder: 'Distribution List' } : f
+           f.name === 'to' ? { ...f, defaultValue: 'Distribution List', placeholder: 'Distribution List' } :
+           f.name === 'ssic' ? { ...f, type: 'text', placeholder: 'e.g. C5216R.3K w/ ch 1', description: 'Full SSIC with optional classification prefix, R (reserve), point number, revision letter, and change (e.g., 5216.3K, C5216R.3K w/ ch 1)' } : f
          ),
          {
            name: 'directiveTitle',
@@ -422,36 +415,8 @@ export const MCODefinition: DocumentTypeDefinition = {
     {
       id: 'directive-options',
       title: 'Directive Options',
-      description: 'Classification, revision, and reserve designation per MCO 5215.1K',
+      description: 'FOUO, numbering, and structural page options per MCO 5215.1K',
       fields: [
-        {
-          name: 'classificationPrefix',
-          label: 'Classification Prefix',
-          type: 'select',
-          options: [
-            { label: 'None (Unclassified)', value: '' },
-            { label: 'C (Confidential)', value: 'C' },
-            { label: 'S (Secret)', value: 'S' }
-          ],
-          defaultValue: '',
-          className: 'md:col-span-1',
-          description: 'Prefixes SSIC per MCO 5215.1K para 9 (e.g., MCO C5215.1)'
-        },
-        {
-          name: 'revisionLetter',
-          label: 'Revision Letter',
-          type: 'text',
-          placeholder: 'e.g. A, B, K',
-          className: 'md:col-span-1',
-          description: 'Capital letter suffix (A-Z, skip I/O/Q) per MCO 5215.1K para 21e'
-        },
-        {
-          name: 'isReserveOnly',
-          label: 'Reserve Only',
-          type: 'checkbox',
-          className: 'md:col-span-1',
-          description: 'Adds "R" after SSIC per MCO 5215.1K para 22 (e.g., MCO 5215R.15)'
-        },
         {
           name: 'fouoDesignation',
           label: 'FOUO Designation',
@@ -524,10 +489,6 @@ export const BulletinSchema = BasicLetterSchema.extend({
     statementDate: z.string().optional(),
     statementAuthority: z.string().optional(),
   }).optional(),
-  // Classified directive prefix per MCO 5215.1K para 9
-  classificationPrefix: z.enum(['', 'C', 'S']).optional(),
-  // Reserve designation per MCO 5215.1K para 22
-  isReserveOnly: z.boolean().optional(),
   // FOUO designation per MCO 5215.1K para 10
   fouoDesignation: z.enum(['', 'full', 'partial']).optional(),
 });
@@ -544,7 +505,8 @@ export const BulletinDefinition: DocumentTypeDefinition = {
       title: 'Bulletin Information',
       fields: [
         ...BasicLetterDefinition.sections[0].fields.map(f =>
-            f.name === 'to' ? { ...f, defaultValue: 'Distribution List', placeholder: 'Distribution List' } : f
+            f.name === 'to' ? { ...f, defaultValue: 'Distribution List', placeholder: 'Distribution List' } :
+            f.name === 'ssic' ? { ...f, type: 'text', placeholder: 'e.g. 1500', description: 'Full SSIC with optional classification prefix, R (reserve), point number, and revision letter' } : f
         ),
         {
           name: 'directiveTitle',
@@ -602,28 +564,8 @@ export const BulletinDefinition: DocumentTypeDefinition = {
     {
       id: 'directive-options',
       title: 'Directive Options',
-      description: 'Classification and reserve designation per MCO 5215.1K',
+      description: 'FOUO designation per MCO 5215.1K',
       fields: [
-        {
-          name: 'classificationPrefix',
-          label: 'Classification Prefix',
-          type: 'select',
-          options: [
-            { label: 'None (Unclassified)', value: '' },
-            { label: 'C (Confidential)', value: 'C' },
-            { label: 'S (Secret)', value: 'S' }
-          ],
-          defaultValue: '',
-          className: 'md:col-span-1',
-          description: 'Prefixes SSIC per MCO 5215.1K para 9 (e.g., MCBul C5215)'
-        },
-        {
-          name: 'isReserveOnly',
-          label: 'Reserve Only',
-          type: 'checkbox',
-          className: 'md:col-span-1',
-          description: 'Adds "R" after SSIC per MCO 5215.1K para 22 (e.g., MCBul 5215R)'
-        },
         {
           name: 'fouoDesignation',
           label: 'FOUO Designation',
@@ -1709,10 +1651,6 @@ export const ChangeTransmittalSchema = BasicLetterSchema.extend({
   parentDirectiveTitle: z.string().min(1, "Parent directive title is required (e.g., MCO 5215.1K)"),
   // Change number (Ch 1, Ch 2, etc.)
   changeNumber: z.number().min(1, "Change number is required"),
-  // Classification prefix (inherited from parent directive)
-  classificationPrefix: z.enum(['', 'C', 'S']).optional(),
-  // Reserve designation
-  isReserveOnly: z.boolean().optional(),
   // FOUO designation
   fouoDesignation: z.enum(['', 'full', 'partial']).optional(),
   // Distribution statement
@@ -1768,19 +1706,6 @@ export const ChangeTransmittalDefinition: DocumentTypeDefinition = {
           required: true,
           className: 'md:col-span-1',
           description: 'Sequential change number (Ch 1, Ch 2, etc.)'
-        },
-        {
-          name: 'classificationPrefix',
-          label: 'Classification Prefix',
-          type: 'select',
-          options: [
-            { label: 'None (Unclassified)', value: '' },
-            { label: 'C (Confidential)', value: 'C' },
-            { label: 'S (Secret)', value: 'S' }
-          ],
-          defaultValue: '',
-          className: 'md:col-span-1',
-          description: 'Inherited from parent directive'
         },
         {
           name: 'fouoDesignation',
