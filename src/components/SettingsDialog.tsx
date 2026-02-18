@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -15,9 +17,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Search, User, Paintbrush, FileText, Radio, Database, Trash2 } from 'lucide-react';
+import { Search, User, Paintbrush, FileText, Database, Trash2, ShieldAlert, AlertTriangle, Scale, MessageSquare, ExternalLink } from 'lucide-react';
 import { UserProfile, resolveUnit } from '@/hooks/useUserProfile';
 import { UNITS } from '@/lib/units';
+import { DISCLAIMERS } from '@/lib/security-utils';
 import { useTheme } from 'next-themes';
 
 interface SettingsDialogProps {
@@ -42,6 +45,7 @@ export function SettingsDialog({
   const { theme, setTheme } = useTheme();
   const [unitSearchOpen, setUnitSearchOpen] = useState(false);
   const [unitSearchQuery, setUnitSearchQuery] = useState('');
+  const [disclaimerOpen, setDisclaimerOpen] = useState(false);
 
   const selectedUnit = profile.unitRuc
     ? UNITS.find(u => u.ruc === profile.unitRuc)
@@ -386,22 +390,53 @@ export function SettingsDialog({
               <Separator />
 
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Disclaimer</h3>
+                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Disclaimers & Warnings</h3>
                 <div className="flex items-center justify-between rounded-md border border-border p-3">
                   <div>
-                    <p className="text-sm text-foreground">Disclaimer notice</p>
-                    <p className="text-xs text-muted-foreground">Show the disclaimer dialog again on next load</p>
+                    <p className="text-sm text-foreground">Security, privacy & legal info</p>
+                    <p className="text-xs text-muted-foreground">Review application disclaimers and warnings</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDisclaimerOpen(true)}
+                    >
+                      <ShieldAlert className="w-3 h-3 mr-1" />
+                      View
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        localStorage.removeItem('hasSeenDisclaimer');
+                        onOpenChange(false);
+                        window.location.reload();
+                      }}
+                    >
+                      Re-show on Load
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Feedback</h3>
+                <div className="flex items-center justify-between rounded-md border border-border p-3">
+                  <div>
+                    <p className="text-sm text-foreground">Report issues or suggest features</p>
+                    <p className="text-xs text-muted-foreground">Opens in a new tab</p>
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      localStorage.removeItem('hasSeenDisclaimer');
-                      onOpenChange(false);
-                      window.location.reload();
-                    }}
+                    onClick={() => window.open('https://semperadmin.github.io/Sentinel/#detail/naval-letter-formatter/todo', '_blank')}
                   >
-                    Re-show
+                    <MessageSquare className="w-3 h-3 mr-1" />
+                    Send Feedback
+                    <ExternalLink className="w-3 h-3 ml-1" />
                   </Button>
                 </div>
               </div>
@@ -433,6 +468,88 @@ export function SettingsDialog({
           </ScrollArea>
         </Tabs>
       </DialogContent>
+
+      {/* Disclaimer Sub-Dialog */}
+      <Dialog open={disclaimerOpen} onOpenChange={setDisclaimerOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col bg-card text-card-foreground">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold flex items-center">
+              <ShieldAlert className="w-6 h-6 mr-2 text-amber-500" />
+              Application Disclaimers
+            </DialogTitle>
+            <DialogDescription>
+              Please review the following security, privacy, and legal information.
+            </DialogDescription>
+          </DialogHeader>
+
+          <ScrollArea className="h-[60vh] pr-4 mt-4 border rounded-md p-4 bg-muted/20">
+            <div className="space-y-6 text-sm">
+              <section>
+                <h3 className="text-lg font-semibold mb-2 flex items-center text-foreground">
+                  <AlertTriangle className="w-5 h-5 mr-2 text-amber-500" />
+                  1. Privacy & Data Handling (PII/PHI)
+                </h3>
+                <div className="space-y-2">
+                  <p className="text-muted-foreground"><strong>Context:</strong> Displayed when the application detects Personally Identifiable Information (SSN, EDIPI) or Protected Health Information (Medical keywords) in a document.</p>
+                  <div className="bg-amber-500/10 p-3 rounded border-l-4 border-amber-500">
+                    <p className="font-bold text-amber-600 dark:text-amber-400">Sensitive Data Detected!</p>
+                    <p className="text-amber-600/80 dark:text-amber-400/80 text-xs mt-1">{DISCLAIMERS.PII_WARNING.message}</p>
+                  </div>
+
+                  <p className="text-muted-foreground mt-4"><strong>Context:</strong> Displayed at the bottom of administrative forms.</p>
+                  <div className="bg-destructive/10 p-3 rounded border border-destructive/20">
+                    <p className="font-bold text-destructive text-xs">{DISCLAIMERS.FOUO_FOOTER.line1}</p>
+                    <p className="text-destructive/80 text-xs mb-2">{DISCLAIMERS.FOUO_FOOTER.text1}</p>
+                    <p className="font-bold text-destructive text-xs">{DISCLAIMERS.FOUO_FOOTER.line2}</p>
+                    <p className="text-destructive/80 text-xs">{DISCLAIMERS.FOUO_FOOTER.text2}</p>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-lg font-semibold mb-2 flex items-center text-foreground">
+                  <ShieldAlert className="w-5 h-5 mr-2 text-amber-500" />
+                  2. Security & Classification
+                </h3>
+                <p className="text-muted-foreground"><strong>Context:</strong> Displayed when a user selects a classification level other than &quot;Unclassified&quot;.</p>
+                <div className="bg-amber-500/10 p-3 rounded border-l-4 border-amber-500">
+                  <p className="font-bold text-amber-600 dark:text-amber-400">{DISCLAIMERS.CLASSIFIED_WARNING.title}</p>
+                  <p className="text-amber-600/80 dark:text-amber-400/80 text-xs mt-1">{DISCLAIMERS.CLASSIFIED_WARNING.message}</p>
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-lg font-semibold mb-2 flex items-center text-foreground">
+                  <Scale className="w-5 h-5 mr-2 text-primary" />
+                  3. Legal & Warranty (MIT License)
+                </h3>
+                <p className="text-muted-foreground"><strong>Context:</strong> General software license covering the application codebase.</p>
+                <div className="bg-muted p-3 rounded font-mono text-xs text-muted-foreground">
+                  <p className="font-bold mb-1">No Warranty</p>
+                  <p>{DISCLAIMERS.LEGAL_WARRANTY}</p>
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-lg font-semibold mb-2 text-foreground">4. Operational Security (OPSEC)</h3>
+                <p className="text-muted-foreground"><strong>Context:</strong> Implicit in the design of the &quot;Local-First&quot; architecture.</p>
+                <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+                  <li>
+                    <strong>Local Processing:</strong> {DISCLAIMERS.OPSEC.localProcessing}
+                  </li>
+                  <li>
+                    <strong>User Responsibility:</strong> {DISCLAIMERS.OPSEC.userResponsibility}
+                  </li>
+                </ul>
+              </section>
+            </div>
+          </ScrollArea>
+
+          <DialogFooter className="mt-4">
+            <Button onClick={() => setDisclaimerOpen(false)}>I Understand</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
