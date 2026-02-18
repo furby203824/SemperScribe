@@ -1355,6 +1355,7 @@ const StaffingPaperFooterFields: FieldDefinition[] = [
 
 const STAFFING_PAPER_FEATURES: DocumentFeatures = {
   ...STANDARD_LETTER_FEATURES,
+  showHeaderSettings: false,
   showUnitInfo: false,
   showVia: false,
   showEnclosures: false,
