@@ -21,7 +21,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from './ThemeToggle';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -198,7 +197,6 @@ export function HeaderActions({
 
   return (
     <div className="flex items-center space-x-2">
-      <ThemeToggle />
       {onSettings && (
         <Button variant="ghost" size="sm" className={buttonClass("hidden sm:flex")} onClick={onSettings} title="Settings">
           <Settings className={cn("w-4 h-4", iconClass)} />
