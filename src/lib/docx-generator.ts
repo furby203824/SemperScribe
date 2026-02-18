@@ -875,12 +875,12 @@ export async function generateDocxBlob(
         formData.decisionMode === 'MULTIPLE_RECS' && 
         (index === 3 || (p.title && p.title.toLowerCase().includes('recommendation')))) {
 
-        // 1. Header: 4. RECOMMENDATION.
+        // 1. Header: 4. Recommendation.
         const { citation } = generateCitation(p, index, paragraphsWithContent);
         bodyParagraphs.push(new Paragraph({
              children: [
                  new TextRun({ text: citation + "\t", font, size: FONT_SIZE_BODY }),
-                 new TextRun({ text: (p.title || 'RECOMMENDATION').toUpperCase() + ".", font, size: FONT_SIZE_BODY, bold: true })
+                 new TextRun({ text: (p.title || 'Recommendation') + ".", font, size: FONT_SIZE_BODY })
              ],
              tabStops: [{ type: TabStopType.LEFT, position: 720 }],
              spacing: { after: 120 }
