@@ -955,8 +955,8 @@ export async function generateDocxBlob(
     // 1. Citation generation (1., a., (1), etc.)
     // 2. Tab stops and indentation per SECNAV M-5216.5
     // 3. Bold/Italic parsing
-    const shouldBoldTitle = !['moa', 'mou'].includes(formData.documentType);
-    const shouldUppercaseTitle = !['moa', 'mou'].includes(formData.documentType);
+    const shouldBoldTitle = !['moa', 'mou', 'information-paper', 'position-paper'].includes(formData.documentType);
+    const shouldUppercaseTitle = !['moa', 'mou', 'information-paper', 'position-paper'].includes(formData.documentType);
     bodyParagraphs.push(createFormattedParagraph(p, index, paragraphsWithContent, font, "000000", isDirective, shouldBoldTitle, shouldUppercaseTitle, isCivilianStyle, formData.isShortLetter));
     
     // Add spacing after paragraph
