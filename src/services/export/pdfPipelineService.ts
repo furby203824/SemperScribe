@@ -13,6 +13,7 @@ interface PdfBuildContext {
   enclosures: string[];
   copyTos: string[];
   paragraphs: ParagraphData[];
+  distList?: string[];
 }
 
 function buildNavmc10274Data(ctx: PdfBuildContext) {
@@ -51,7 +52,8 @@ async function generateStandardPdf(ctx: PdfBuildContext): Promise<Blob> {
     ctx.references,
     ctx.enclosures,
     ctx.copyTos,
-    paragraphsToRender
+    paragraphsToRender,
+    ctx.distList || []
   );
 }
 

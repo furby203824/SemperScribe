@@ -112,6 +112,7 @@ export function useBatchGenerate() {
           enclosures,
           copyTos,
           paragraphs: mergedParagraphs,
+          distList,
         });
 
         // Determine filename
