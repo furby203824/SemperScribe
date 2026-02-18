@@ -417,8 +417,8 @@ function generateCitation(
 }
 
 /**
- * Paragraph rendering - text wraps to LEFT MARGIN (citation position)
- * NOT indented to align with first word after citation
+ * Paragraph rendering - uses hanging indent so wrapped text aligns
+ * with the start of body text (after citation), matching DOCX output.
  */
 function ParagraphItem({
   paragraph,
@@ -527,10 +527,11 @@ function ParagraphItem({
     );
   }
 
-  // Times New Roman - citation on same line, text wraps to citation position (left margin)
-  // Use a single Text block so wrapping goes to the left edge of the container
+  // Times New Roman - hanging indent: wrapped text aligns with text position (after citation)
+  // marginLeft = text position, textIndent pulls citation back to citation position
+  const hangingIndent = tabs.text - tabs.citation;
   return (
-    <View style={{ marginLeft: leftMargin, marginBottom: PDF_SPACING.paragraph }}>
+    <View style={{ marginLeft: tabs.text, marginBottom: PDF_SPACING.paragraph, textIndent: -hangingIndent }}>
       <Text>
         {isUnderlined ? (
           <>
@@ -1239,7 +1240,8 @@ export function NavalLetterPDF({
               return (
                 <View key={i} style={styles.refEnclLine}>
                   <Text style={styles.refEnclLabel}>{i === 0 ? 'Ref:' : ''}</Text>
-                  <Text>({refLetter}) {ref}</Text>
+                  <Text style={{ width: 18 }}>({refLetter})</Text>
+                  <Text style={{ flex: 1 }}>{ref}</Text>
                 </View>
               );
             })}
@@ -1282,7 +1284,8 @@ export function NavalLetterPDF({
               return (
                 <View key={i} style={styles.refEnclLine}>
                   <Text style={styles.refEnclLabel}>{i === 0 ? enclLabel : ''}</Text>
-                  <Text>{enclIndicator} {encl}</Text>
+                  <Text style={{ width: 18 }}>{enclIndicator}</Text>
+                  <Text style={{ flex: 1 }}>{encl}</Text>
                 </View>
               );
             })}
