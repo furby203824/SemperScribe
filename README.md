@@ -1,68 +1,138 @@
 # Semper Scribe
 
-A professional-grade web application for creating, formatting, and exporting USMC correspondence and administrative documents. Built with Next.js, Semper Scribe helps Marines produce properly formatted documents compliant with SECNAV M-5216.5 and MCO 5215.1K.
+A professional-grade, local-first web application for creating, formatting, and exporting USMC correspondence and administrative documents. Built with Next.js, Semper Scribe helps Marines produce properly formatted documents compliant with SECNAV M-5216.5 and MCO 5215.1K — entirely in the browser with no server-side processing.
 
-**Live Demo:** [https://furby203824.github.io/SemperScribe](https://furby203824.github.io/SemperScribe)
+**Live App:** [https://furby203824.github.io/SemperScribe](https://furby203824.github.io/SemperScribe)
 
-## Features
+## Document Types
 
-### Document Types
+Semper Scribe supports 20 document types organized into seven categories:
+
+### Standard Letters
 
 | Type | Description |
 |------|-------------|
-| **Basic Letter** | Standard naval correspondence format |
-| **Endorsement** | First through fourth endorsements with automatic routing |
-| **MCO (Marine Corps Order)** | Directives with distribution statements and reports required |
-| **Bulletin** | Time-limited directives (MCBul format) |
-| **AMHS Message** | GENADMIN/MARADMIN messages with DTG, references, and POC sections |
-| **AA Form (NAVMC 10274)** | Administrative Action form |
-| **Page 11** | Administrative Remarks (NAVMC 118-11) |
+| **Basic Letter** | Standard format for routine correspondence and official communications |
+| **Multiple-Address Letter** | Letter addressed to two or more commands/activities |
+| **Endorsement** | Forwards correspondence on a new page with automatic routing |
 
-### Core Capabilities
+### Memorandums
 
-- **Live Preview** - Real-time document preview as you type (desktop) or via modal (mobile)
-- **PDF Export** - Generate print-ready PDFs with proper formatting
-- **DOCX Export** - Export to Microsoft Word format
-- **AMHS Text Export** - Plain text export for AMHS message systems
-- **Shareable Links** - Generate links that encode the full document state for sharing/collaboration
-- **Templates** - Pre-built templates for common document types
-- **Draft Saving** - Auto-save drafts to browser local storage
-- **NLDP Import/Export** - Naval Letter Data Package format for portable document data
+| Type | Description |
+|------|-------------|
+| **Memorandum for the Record** | Internal document to record events or decisions (no "To" line) |
+| **From-To Memorandum** | Informal internal correspondence on plain paper |
+| **Letterhead Memorandum** | Formal memo for correspondence within the activity or with other federal agencies |
+| **Memorandum of Agreement** | Agreement between two or more parties (conditional) |
+| **Memorandum of Understanding** | General understanding between two or more parties (non-binding) |
+
+### Staffing Papers
+
+| Type | Description |
+|------|-------------|
+| **Information Paper** | Provides factual information in concise terms |
+| **Position Paper** | Advocates a specific position or solution |
+| **Decision Paper** | Requests a decision from a senior official |
+| **Coordination Page** | Mandatory staffing table for routing packages per MCO 5216.20B |
+
+### External & Executive
+
+| Type | Description |
+|------|-------------|
+| **Business Letter** | Correspondence with non-DoD entities or personal approach |
+| **Executive Correspondence** | Letters and memorandums for HqDON, Congress, OSD, and senior officials |
+
+### Directives
+
+| Type | Description |
+|------|-------------|
+| **Marine Corps Order (MCO)** | Permanent directives that establish policy or procedures |
+| **Marine Corps Bulletin (MCBul)** | Directives of a temporary nature (expire after 12 months) |
+| **Change Transmittal** | Transmits amendments (page replacements) to an existing order per MCO 5215.1K |
+
+### Forms
+
+| Type | Description |
+|------|-------------|
+| **AA Form (NAVMC 10274)** | Administrative Action form for personnel requests |
+| **Page 11 (NAVMC 118-11)** | Administrative Remarks for service record entries |
+
+### Messages
+
+| Type | Description |
+|------|-------------|
+| **AMHS Message** | Automated Message Handling System (GENADMIN/MARADMIN/ALMAR) with DTG, references, NARR, and POC sections |
+
+## Features
+
+### Document Editing
+
+- **Dynamic Forms** — Conditional field display and validation per document type
+- **Multi-Level Paragraphs** — Supports 1., 1.a., 1.a.(1), etc. with add, remove, and reorder
+- **Voice Input** — Browser Speech Recognition API for dictating paragraph content
+- **Spell Check** — Client-side spell checking with military-specific dictionary and acronym detection
+- **References & Enclosures** — Lettered references and numbered enclosures with structured input
+- **Via Chain** — Routing through intermediate commands
+- **Distribution** — Copy-to and distribution statement management
+
+### Export & Output
+
+- **PDF Export** — Multi-pipeline PDF generation with proper formatting per document type
+- **DOCX Export** — Microsoft Word format via the docx library
+- **AMHS Text Export** — Plain text export formatted for AMHS message systems
+- **Batch Generation (Mail Merge)** — Import a CSV, substitute `{{TOKEN}}` fields, generate a ZIP of PDFs
+- **Signature Placement** — Interactive signature field positioning on generated PDF pages
+- **NLDP Import/Export** — Naval Letter Data Package format for portable document data
+- **Shareable Links** — Encode the full document state into a compressed URL
+
+### Preview & Proofread
+
+- **Live Preview** — Real-time PDF rendering as you type (desktop side panel or mobile modal)
+- **Proofread Checklist** — Four-category compliance check per SECNAV M-5216.5, Ch 2, Para 19:
+  - Format, Framework, Typography & Grammar, Content
+  - Pass/Fail/Warn/Manual check statuses with category summaries
+
+### Settings & Profile
+
+- **User Profile** — Store your unit (searchable RUC database), signature name, from title, originator code, rank, and title
+- **Auto-Fill** — Profile fields automatically populate new documents; identity fields fill when empty, formatting fields always track the profile
+- **Formatting Defaults** — Header type (USMC/DON), body font, header color, AMHS classification and precedence
+- **Appearance** — Light, dark, and system theme support
+- **Data Management** — Clear saved drafts, view disclaimers, reset profile, send feedback
+
+### Templates & Drafts
+
+- **Template Browser** — Pre-built global and unit-specific document templates
+- **Draft Saving** — Auto-save to browser localStorage with load/manage from the File menu
 
 ### AMHS Message Features
 
-- Auto-generated Date-Time Group (DTG) in Zulu time with refresh button
-- Reference management with letter designators (a), (b), (c)...
+- Auto-generated Date-Time Group (DTG) in Zulu time with refresh
+- Reference management with letter designators
 - NARR (Narrative) auto-generation from references
 - POC (Point of Contact) manager with email and phone fields
-- Smart paragraph insertion with proper numbering
 - Message validation before export
 - Terminal-style preview (green text on black background)
 
-### Mobile Support
+### Responsive Design
 
-- Responsive design for all screen sizes
-- Mobile preview modal (slide-up sheet)
-- Touch-friendly form controls
+- Desktop three-pane layout (sidebar, editor, preview)
+- Mobile-friendly forms with slide-up preview modal
+- Touch-friendly controls and collapsible navigation
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
-- npm or yarn
+- Node.js 20+
+- npm
 
 ### Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/furby203824/SemperScribe.git
 cd SemperScribe
-
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
 ```
 
@@ -72,106 +142,82 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ```bash
 npm run build
-npm run start
 ```
+
+Static output is written to the `out/` directory, ready for deployment to any static hosting provider.
 
 ### Deploy to GitHub Pages
 
-```bash
-npm run deploy
-```
+The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that automatically builds and deploys to GitHub Pages on pushes to `main`. Manual deployment is also available via `workflow_dispatch`.
 
 ## Project Structure
 
 ```
 src/
-├── app/                    # Next.js app router pages
+├── app/                        # Next.js App Router pages
+│   ├── page.tsx                # Main application entry point
+│   └── dynamic-forms/          # Dynamic form route
 ├── components/
-│   ├── amhs/              # AMHS message components
-│   ├── layout/            # App shell, sidebar, header
-│   ├── letter/            # Letter section components
-│   ├── pdf/               # PDF generation components
-│   └── ui/                # Reusable UI components (shadcn/ui)
-├── hooks/                 # React hooks
-├── lib/                   # Utilities and helpers
-│   ├── schemas.ts         # Document type definitions
-│   ├── pdf-generator.ts   # PDF generation logic
-│   ├── docx-generator.ts  # DOCX generation logic
-│   ├── url-state.ts       # Shareable link encoding
+│   ├── ui/                     # Base UI library (shadcn/ui + Radix)
+│   ├── layout/                 # App shell, sidebar, header, preview, theme
+│   ├── letter/                 # Letter section components (references, enclosures, etc.)
+│   ├── document/               # Document layout, header settings, signature fields
+│   ├── amhs/                   # AMHS editor, preview, POC manager
+│   ├── pdf/                    # PDF rendering components
+│   ├── wizard/                 # Multi-step document type wizard
+│   ├── SettingsDialog.tsx       # User profile and app settings
+│   ├── BatchGenerateModal.tsx   # Mail merge / batch generation
+│   ├── ProofreadModal.tsx       # Proofreading checklist
+│   └── DisclaimerModal.tsx      # Security and legal disclaimers
+├── hooks/                      # React hooks
+│   ├── useUserProfile.ts       # Profile persistence and form defaults
+│   ├── useParagraphs.ts        # Paragraph CRUD and citation generation
+│   ├── useVoiceInput.ts        # Speech-to-text integration
+│   ├── useImportExport.ts      # Document import/export and sharing
+│   ├── useBatchGenerate.ts     # Mail merge engine
+│   ├── useSpellCheck.ts        # Military dictionary spell check
+│   ├── useTemplates.ts         # Template loading and search
+│   └── ...
+├── lib/                        # Utilities and configuration
+│   ├── schemas.ts              # Document type definitions and field schemas
+│   ├── units.ts                # USMC unit database (RUC/MCC lookup)
+│   ├── merge-utils.ts          # Mail merge token detection and substitution
+│   ├── url-state.ts            # Shareable link encoding/decoding
+│   ├── security-utils.ts       # Disclaimer constants
 │   └── ...
 ├── services/
-│   ├── amhs/              # AMHS formatter service
-│   └── pdf/               # PDF generation services
-└── types/                 # TypeScript type definitions
+│   ├── export/
+│   │   └── pdfPipelineService.ts  # Central PDF orchestrator (routes to correct generator)
+│   ├── pdf/                       # Per-document-type PDF generators
+│   └── amhs/                      # AMHS message formatting
+└── types/                      # TypeScript type definitions
 ```
-
-## Document Sections
-
-### Standard Letters
-
-- **Unit Information** - SSIC, originator code, date, from/to lines
-- **Subject Line** - Auto-capitalized subject
-- **References** - Lettered reference list with structured input
-- **Enclosures** - Numbered enclosure list
-- **Via Chain** - Routing through intermediate commands
-- **Body Paragraphs** - Multi-level paragraph support (1., 1.a., 1.a.(1), etc.)
-- **Closing Block** - Signature, name, title, copy-to distribution
-
-### Directives (MCO/Bulletin)
-
-All standard letter sections plus:
-- **Distribution Statement** - A through F with descriptions
-- **Administrative Subsections** - Auto-injected Records Management, Privacy Act, and Reports Required sections
-- **Reports Required** - Report tracking with RCS symbols
-- **Cancellation Date** - For bulletins
-
-### AMHS Messages
-
-- **Message Type & Classification** - GENADMIN, MARADMIN, etc.
-- **Date-Time Group** - Auto-generated with manual override
-- **Header** - FROM, SUBJ fields
-- **References** - With document identifiers
-- **Narrative (NARR)** - Auto-generated or manual
-- **Message Body** - With smart paragraph insertion
-- **Point of Contact** - Name, phone, email
-
-## NAVMC 10274 (AA Form) Setup
-
-To use the AA Form feature, you must provide the official PDF templates:
-
-1. Obtain the NAVMC 10274 PDF
-2. Split it into three files:
-   - `page1.pdf` - Cover/instruction sheet
-   - `page2.pdf` - Main form page
-   - `page3.pdf` - Continuation sheet
-3. Place files in `public/templates/navmc10274/`
 
 ## Security & Privacy
 
-- **Client-Side Processing** - All document processing happens locally in your browser
-- **No Server Storage** - No data is transmitted to external servers
-- **Local Drafts** - Saved drafts are stored in browser localStorage only
-- **Shareable Links** - Document data is compressed and encoded in the URL itself
-
-## Disclaimers
-
-> **UNCLASSIFIED USE ONLY:** This tool is strictly for processing UNCLASSIFIED information. Do not input, process, or store Classified, CUI, or PII data.
-
-> **VERIFICATION REQUIRED:** While Semper Scribe automates formatting, the final content is the responsibility of the originator. Always verify references and administrative details against current directives.
+- **Local-First Architecture** — All document processing happens entirely in the browser. No data is transmitted to external servers.
+- **No Backend** — Static site deployment. No server-side code, no database, no API calls.
+- **Local Storage Only** — Drafts and user profiles are stored in browser localStorage.
+- **UNCLASSIFIED Use Only** — This tool is strictly for processing UNCLASSIFIED information. Do not input, process, or store Classified, CUI, or PII data.
+- **Verification Required** — While Semper Scribe automates formatting, the final content is the responsibility of the originator. Always verify references and administrative details against current directives.
 
 ## Tech Stack
 
-- **Framework:** Next.js 15 (App Router)
-- **UI:** React 19, Tailwind CSS, shadcn/ui
-- **PDF Generation:** @react-pdf/renderer, pdf-lib
-- **DOCX Generation:** docx
-- **Form Validation:** Zod, React Hook Form
-- **State Management:** React useState/useCallback
-- **Compression:** lz-string (for shareable links)
+| Category | Technology |
+|----------|------------|
+| **Framework** | Next.js 16, React 18, TypeScript 5 |
+| **UI** | Tailwind CSS, shadcn/ui, Radix UI, Lucide icons |
+| **Forms** | React Hook Form, Zod validation |
+| **State** | React hooks, Zustand |
+| **PDF** | @react-pdf/renderer, pdf-lib |
+| **DOCX** | docx |
+| **Theming** | next-themes (light/dark/system) |
+| **Compression** | lz-string |
+| **Testing** | Vitest, Testing Library |
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit issues and pull requests.
+Contributions are welcome. Please submit issues and pull requests on GitHub.
 
 ## License
 
