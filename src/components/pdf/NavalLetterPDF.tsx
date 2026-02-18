@@ -485,10 +485,11 @@ function ParagraphItem({
         const totalLeftMargin = baseIndent + textOffset; // Where text starts
         
         return (
-          <View style={{ marginLeft: totalLeftMargin, marginBottom: PDF_SPACING.paragraph, textIndent: -textOffset }}>
-             <Text style={isShortLetter ? { lineHeight: 2.0 } : {}}>
-                {citation}
-                {'\u00A0'}
+          <View style={{ flexDirection: 'row', marginLeft: baseIndent, marginBottom: PDF_SPACING.paragraph }}>
+             <View style={{ width: textOffset }}>
+                <Text style={isShortLetter ? { lineHeight: 2.0 } : {}}>{citation}</Text>
+             </View>
+             <Text style={{ flex: 1, ...(isShortLetter ? { lineHeight: 2.0 } : {}) }}>
                 {paragraph.title && (
                     <Text style={{ fontWeight: shouldBoldTitle ? 'bold' : 'normal' }}>
                         {titleText}{paragraph.content ? '.' : ''}{paragraph.content ? '\u00A0\u00A0' : ''}
@@ -502,11 +503,15 @@ function ParagraphItem({
   }
 
   if (bodyFont === 'courier') {
+    // Courier uses character-based spacing: 4 non-breaking spaces per indent level
+    // This matches DOCX which uses '\u00A0'.repeat((level - 1) * 4)
+    const leadingSpaces = '\u00A0'.repeat((level - 1) * 4);
     const spacesAfterCitation = (citation.endsWith('.') || documentType === 'information-paper') ? '\u00A0\u00A0' : '\u00A0';
 
     return (
-      <View style={{ marginLeft: leftMargin, marginBottom: PDF_SPACING.paragraph }}>
+      <View style={{ marginBottom: PDF_SPACING.paragraph }}>
         <Text>
+          {leadingSpaces}
           {isUnderlined ? (
             <>
               <Text style={{ textDecoration: 'underline' }}>
@@ -527,24 +532,27 @@ function ParagraphItem({
     );
   }
 
-  // Times New Roman - hanging indent: wrapped text aligns with text position (after citation)
-  // marginLeft = text position, textIndent pulls citation back to citation position
+  // Times New Roman - row layout: citation in fixed-width column, text in flex column
+  // This matches DOCX tab-stop behavior where text starts at an exact position
   const hangingIndent = tabs.text - tabs.citation;
   return (
-    <View style={{ marginLeft: tabs.text, marginBottom: PDF_SPACING.paragraph, textIndent: -hangingIndent }}>
-      <Text>
-        {isUnderlined ? (
-          <>
-            {citation.includes('(') && '('}
-            <Text style={{ textDecoration: 'underline' }}>
-              {citation.replace(/[().]/g, '')}
-            </Text>
-            {citation.includes(')') ? ')' : '.'}
-          </>
-        ) : (
-          citation
-        )}
-        {documentType === 'information-paper' ? '\u00A0\u00A0' : '\u00A0\u00A0'}
+    <View style={{ flexDirection: 'row', marginLeft: tabs.citation, marginBottom: PDF_SPACING.paragraph }}>
+      <View style={{ width: hangingIndent }}>
+        <Text>
+          {isUnderlined ? (
+            <>
+              {citation.includes('(') && '('}
+              <Text style={{ textDecoration: 'underline' }}>
+                {citation.replace(/[().]/g, '')}
+              </Text>
+              {citation.includes(')') ? ')' : '.'}
+            </>
+          ) : (
+            citation
+          )}
+        </Text>
+      </View>
+      <Text style={{ flex: 1 }}>
         {paragraph.title && (
             <Text style={{
               fontWeight: shouldBoldTitle ? 'bold' : 'normal',
@@ -1502,6 +1510,7 @@ export function NavalLetterPDF({
         {/* Signature block - Standard (Hide for MOA/MOU, Staffing Papers, Business/Exec Letter) */}
         {!isMoaOrMou && !isStaffingPaper && !isCivilianStyle && formData.sig && (
           <View style={styles.signatureBlock}>
+            <View style={styles.emptyLine} />
             <View style={styles.emptyLine} />
             <View style={styles.emptyLine} />
             <Text style={[styles.signatureLine, { textAlign: 'left' }]}>{formData.sig.toUpperCase()}</Text>
