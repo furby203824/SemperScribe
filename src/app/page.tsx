@@ -314,7 +314,7 @@ function NavalLetterGeneratorInner() {
         return;
       }
 
-      const blob = await generatePdfForDocType({ formData, vias, references, enclosures, copyTos, paragraphs });
+      const blob = await generatePdfForDocType({ formData, vias, references, enclosures, copyTos, paragraphs, distList });
 
       const url = URL.createObjectURL(blob);
       setPreviewUrl(prev => {
@@ -326,7 +326,7 @@ function NavalLetterGeneratorInner() {
     } finally {
       setIsGeneratingPreview(false);
     }
-  }, [formData, vias, references, enclosures, copyTos, paragraphs]);
+  }, [formData, vias, references, enclosures, copyTos, paragraphs, distList]);
 
   // Initial Preview Generation
   useEffect(() => {
@@ -428,7 +428,7 @@ function NavalLetterGeneratorInner() {
   // Signature placement workflow handlers
   const handleOpenSignaturePlacement = async () => {
     try {
-      const blob = await generatePdfForDocType({ formData, vias, references, enclosures, copyTos, paragraphs });
+      const blob = await generatePdfForDocType({ formData, vias, references, enclosures, copyTos, paragraphs, distList });
       const pageCount = await getPDFPageCount(blob);
       setSignaturePdfBlob(blob);
       setSignaturePdfPageCount(pageCount);
@@ -443,7 +443,7 @@ function NavalLetterGeneratorInner() {
     try {
       setShowSignatureModal(false);
 
-      const baseBlob = await generatePdfForDocType({ formData, vias, references, enclosures, copyTos, paragraphs });
+      const baseBlob = await generatePdfForDocType({ formData, vias, references, enclosures, copyTos, paragraphs, distList });
 
       const manualPositions: ManualSignaturePosition[] = positions.map(pos => ({
         page: pos.page,
@@ -482,14 +482,14 @@ function NavalLetterGeneratorInner() {
       let blob: Blob;
 
       if (format === 'pdf') {
-        blob = await generatePdfForDocType({ formData, vias, references, enclosures, copyTos, paragraphs });
+        blob = await generatePdfForDocType({ formData, vias, references, enclosures, copyTos, paragraphs, distList });
       } else {
         const features = DOCUMENT_TYPES[formData.documentType]?.features;
         const paragraphsToRender = features?.isDirective
           ? mergeAdminSubsections(paragraphs, formData.adminSubsections)
           : paragraphs;
 
-        blob = await generateDocxBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender);
+        blob = await generateDocxBlob(formData, vias, references, enclosures, copyTos, paragraphsToRender, distList);
       }
 
       const url = window.URL.createObjectURL(blob);
