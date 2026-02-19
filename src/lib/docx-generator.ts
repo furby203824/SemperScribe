@@ -1429,21 +1429,26 @@ export async function generateDocxBlob(
           if (recipientsWithContent.length > 0) {
               distributionParagraphs.push(createEmptyLine(font));
 
-              distributionParagraphs.push(new Paragraph({
-                  children: [new TextRun({ text: "Distribution:", font, size: FONT_SIZE_BODY })],
-                  alignment: AlignmentType.LEFT,
-                  spacing: { after: 0 }
-              }));
-
-              recipientsWithContent.forEach((recipient: string) => {
+              if (recipientsWithContent.length === 1) {
                   distributionParagraphs.push(new Paragraph({
-                      children: [
-                          new TextRun({ text: recipient, font, size: FONT_SIZE_BODY }),
-                      ],
+                      children: [new TextRun({ text: `Distribution:  ${recipientsWithContent[0]}`, font, size: FONT_SIZE_BODY })],
                       alignment: AlignmentType.LEFT,
                       spacing: { after: 0 }
                   }));
-              });
+              } else {
+                  distributionParagraphs.push(new Paragraph({
+                      children: [new TextRun({ text: "Distribution:", font, size: FONT_SIZE_BODY })],
+                      alignment: AlignmentType.LEFT,
+                      spacing: { after: 0 }
+                  }));
+                  recipientsWithContent.forEach((recipient: string) => {
+                      distributionParagraphs.push(new Paragraph({
+                          children: [new TextRun({ text: recipient, font, size: FONT_SIZE_BODY })],
+                          alignment: AlignmentType.LEFT,
+                          spacing: { after: 0 }
+                      }));
+                  });
+              }
           }
       }
 
@@ -1452,21 +1457,27 @@ export async function generateDocxBlob(
 
       if (manualDistWithContent.length > 0 && !isDocToDistribution) {
           distributionParagraphs.push(createEmptyLine(font));
-          distributionParagraphs.push(new Paragraph({
-              children: [new TextRun({ text: "Distribution:", font, size: FONT_SIZE_BODY })],
-              alignment: AlignmentType.LEFT,
-              spacing: { after: 0 }
-          }));
-          
-          manualDistWithContent.forEach(dist => {
+
+          if (manualDistWithContent.length === 1) {
               distributionParagraphs.push(new Paragraph({
-                  children: [
-                      new TextRun({ text: dist, font, size: FONT_SIZE_BODY }),
-                  ],
+                  children: [new TextRun({ text: `Distribution:  ${manualDistWithContent[0]}`, font, size: FONT_SIZE_BODY })],
                   alignment: AlignmentType.LEFT,
                   spacing: { after: 0 }
               }));
-          });
+          } else {
+              distributionParagraphs.push(new Paragraph({
+                  children: [new TextRun({ text: "Distribution:", font, size: FONT_SIZE_BODY })],
+                  alignment: AlignmentType.LEFT,
+                  spacing: { after: 0 }
+              }));
+              manualDistWithContent.forEach(dist => {
+                  distributionParagraphs.push(new Paragraph({
+                      children: [new TextRun({ text: dist, font, size: FONT_SIZE_BODY })],
+                      alignment: AlignmentType.LEFT,
+                      spacing: { after: 0 }
+                  }));
+              });
+          }
       }
 
       // Standard Letter Copy To

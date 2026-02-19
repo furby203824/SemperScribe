@@ -1647,31 +1647,49 @@ export function NavalLetterPDF({
 
 
         {/* Distribution List for Multiple-Address Letter (when "To Distribution" toggle is on) */}
-        {isToDistribution && (
-            <View style={styles.copyToSection}>
+        {isToDistribution && (() => {
+            const filtered = formData.distribution?.recipients?.filter((r: string) => r && r.trim()) || [];
+            if (filtered.length === 0) return null;
+            return (
+              <View style={styles.copyToSection}>
                 <View style={styles.emptyLine} />
-                <Text style={styles.copyToLabel}>
-                  {formData.bodyFont === 'courier' ? 'Distribution:  ' : 'Distribution:'}
-                </Text>
-                {formData.distribution?.recipients?.filter((r: string) => r && r.trim()).map((r: string, i: number) => (
-                    <Text key={i} style={styles.copyToLine}>
-                        {r}
+                {filtered.length === 1 ? (
+                  <Text style={styles.copyToLabel}>
+                    {formData.bodyFont === 'courier' ? `Distribution:\u00A0\u00A0${filtered[0]}` : `Distribution:  ${filtered[0]}`}
+                  </Text>
+                ) : (
+                  <>
+                    <Text style={styles.copyToLabel}>
+                      {formData.bodyFont === 'courier' ? 'Distribution:' : 'Distribution:'}
                     </Text>
-                ))}
-            </View>
-        )}
+                    {filtered.map((r: string, i: number) => (
+                      <Text key={i} style={styles.copyToLine}>{r}</Text>
+                    ))}
+                  </>
+                )}
+              </View>
+            );
+        })()}
 
         {/* Manual Distribution List (Standard Letter, not when toDistribution already rendered) */}
         {!isDirective && !isToDistribution && distListWithContent.length > 0 && (
           <View style={styles.copyToSection}>
-            <Text style={styles.copyToLabel}>
-              {formData.bodyFont === 'courier' ? 'Distribution:  ' : 'Distribution:'}
-            </Text>
-            {distListWithContent.map((dist, i) => (
-              <Text key={i} style={styles.copyToLine}>
-                {dist}
+            {distListWithContent.length === 1 ? (
+              <Text style={styles.copyToLabel}>
+                {formData.bodyFont === 'courier' ? `Distribution:\u00A0\u00A0${distListWithContent[0]}` : `Distribution:  ${distListWithContent[0]}`}
               </Text>
-            ))}
+            ) : (
+              <>
+                <Text style={styles.copyToLabel}>
+                  {formData.bodyFont === 'courier' ? 'Distribution:' : 'Distribution:'}
+                </Text>
+                {distListWithContent.map((dist, i) => (
+                  <Text key={i} style={styles.copyToLine}>
+                    {dist}
+                  </Text>
+                ))}
+              </>
+            )}
           </View>
         )}
 
