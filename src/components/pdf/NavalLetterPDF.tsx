@@ -1165,14 +1165,14 @@ export function NavalLetterPDF({
                           ))}
                         </>
                      ) : (
-                        <View style={styles.fromToLine}>
-                           <Text style={styles.fromToLabel}>To:</Text>
-                           <View style={{ flex: 1 }}>
-                              {recipientsWithContent.map((r: string, i: number) => (
-                                 <Text key={i} style={{ marginBottom: 0 }}>{r}</Text>
-                              ))}
-                           </View>
-                        </View>
+                        <>
+                          {recipientsWithContent.map((r: string, i: number) => (
+                             <View key={i} style={styles.fromToLine}>
+                                <Text style={styles.fromToLabel}>{i === 0 ? 'To:' : ''}</Text>
+                                <Text>{r}</Text>
+                             </View>
+                          ))}
+                        </>
                      );
                 }
              })()
