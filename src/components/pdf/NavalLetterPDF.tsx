@@ -621,8 +621,9 @@ export function NavalLetterPDF({
   
   // Logic to determine if we are in "Multiple Address" mode with MANY recipients (automatic list)
   // If true, we use the automatic list and HIDE the manual list to avoid duplication.
-  const isMultipleAddressMany = formData.documentType === 'multiple-address' && 
+  const isMultipleAddressMany = formData.documentType === 'multiple-address' &&
                                (formData.distribution?.recipients?.filter((r: string) => r && r.trim()).length || 0) > 1;
+  const isToDistribution = formData.documentType === 'multiple-address' && !!formData.distribution?.toDistribution;
 
   const getFromToSpacing = (label: string): string => {
     if (formData.bodyFont === 'courier') {
@@ -1142,18 +1143,18 @@ export function NavalLetterPDF({
                 const recipientsWithContent = recipients.filter((r: string) => r && r.trim());
                 if (recipientsWithContent.length === 0) recipientsWithContent.push("Addressee");
 
-                if (recipientsWithContent.length > 1) {
-                    // > 1 Recipients: "See Distribution"
+                if (isToDistribution) {
+                    // "To Distribution" toggle is ON: To line says "Distribution"
                     return formData.bodyFont === 'courier' ? (
-                         <Text style={styles.addressLine}>{getFromToSpacing('To')}See Distribution</Text>
+                         <Text style={styles.addressLine}>{getFromToSpacing('To')}Distribution</Text>
                     ) : (
                          <View style={styles.fromToLine}>
                             <Text style={styles.fromToLabel}>To:</Text>
-                            <Text>See Distribution</Text>
+                            <Text>Distribution</Text>
                          </View>
                     );
                 } else {
-                    // 1 Recipient: Stacked (which is just one)
+                    // Toggle OFF: list recipients directly under To
                     return formData.bodyFont === 'courier' ? (
                         <>
                           {recipientsWithContent.map((r: string, i: number) => (
@@ -1650,11 +1651,13 @@ export function NavalLetterPDF({
 
 
 
-        {/* Distribution List for Multiple-Address Letter (Automatic) */}
-        {isMultipleAddressMany && (
+        {/* Distribution List for Multiple-Address Letter (when "To Distribution" toggle is on) */}
+        {isToDistribution && (
             <View style={styles.copyToSection}>
                 <View style={styles.emptyLine} />
-                <Text style={styles.copyToLabel}>Distribution:</Text>
+                <Text style={styles.copyToLabel}>
+                  {formData.bodyFont === 'courier' ? 'Distribution:  ' : 'Distribution:'}
+                </Text>
                 {formData.distribution?.recipients?.filter((r: string) => r && r.trim()).map((r: string, i: number) => (
                     <Text key={i} style={styles.copyToLine}>
                         {r}
@@ -1663,8 +1666,8 @@ export function NavalLetterPDF({
             </View>
         )}
 
-        {/* Manual Distribution List (Standard Letter or Multiple-Address with <= 1 recipient) */}
-        {!isDirective && !isMultipleAddressMany && distListWithContent.length > 0 && (
+        {/* Manual Distribution List (Standard Letter, not when toDistribution already rendered) */}
+        {!isDirective && !isToDistribution && distListWithContent.length > 0 && (
           <View style={styles.copyToSection}>
             <Text style={styles.copyToLabel}>
               {formData.bodyFont === 'courier' ? 'Distribution:  ' : 'Distribution:'}
@@ -1681,7 +1684,7 @@ export function NavalLetterPDF({
         {!isDirective && !isCivilianStyle && !isStaffingPaper && copiesWithContent.length > 0 && (
           <View style={styles.copyToSection}>
             {/* Add full space if any distribution list was rendered above */}
-            {(isMultipleAddressMany || (distListWithContent.length > 0)) && (
+            {(isToDistribution || (distListWithContent.length > 0)) && (
                <View style={styles.emptyLine} />
             )}
             <Text style={styles.copyToLabel}>

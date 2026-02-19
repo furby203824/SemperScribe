@@ -5,13 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Users, Plus, Trash2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 interface MultipleToSectionProps {
   recipients: string[];
   setRecipients: (recipients: string[]) => void;
+  toDistribution?: boolean;
+  setToDistribution?: (value: boolean) => void;
 }
 
-export function MultipleToSection({ recipients, setRecipients }: MultipleToSectionProps) {
+export function MultipleToSection({ recipients, setRecipients, toDistribution, setToDistribution }: MultipleToSectionProps) {
   // Ensure we always have at least one input if empty
   useEffect(() => {
     if (recipients.length === 0) {
@@ -25,7 +28,7 @@ export function MultipleToSection({ recipients, setRecipients }: MultipleToSecti
     // If removing the last one, ensure we still have an empty string
     setRecipients(newRecipients.length > 0 ? newRecipients : ['']);
   }, [recipients, setRecipients]);
-  
+
   const updateItem = useCallback((index: number, value: string) => {
     setRecipients(recipients.map((item, i) => i === index ? value : item));
   }, [recipients, setRecipients]);
@@ -39,6 +42,23 @@ export function MultipleToSection({ recipients, setRecipients }: MultipleToSecti
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
+        {setToDistribution && (
+          <div className="flex items-center gap-3">
+            <Switch
+              id="to-distribution"
+              checked={!!toDistribution}
+              onCheckedChange={setToDistribution}
+            />
+            <Label htmlFor="to-distribution" className="cursor-pointer font-medium">
+              To Distribution
+            </Label>
+            <span className="text-xs text-muted-foreground">
+              {toDistribution
+                ? 'To: line will show "Distribution" and addressees listed under Distribution section'
+                : 'Addressees listed directly under the To: line'}
+            </span>
+          </div>
+        )}
         <div className="space-y-3">
           <Label className="block font-semibold mb-2">
             Enter Addressees:
