@@ -1154,26 +1154,21 @@ export function NavalLetterPDF({
                          </View>
                     );
                 } else {
-                    // Toggle OFF: list recipients directly under To
-                    return formData.bodyFont === 'courier' ? (
-                        <>
-                          {recipientsWithContent.map((r: string, i: number) => (
-                             <Text key={i} style={styles.addressLine}>
-                               {i === 0 ? getFromToSpacing('To') : '       '}
-                               {r}
-                             </Text>
-                          ))}
-                        </>
-                     ) : (
-                        <>
-                          {recipientsWithContent.map((r: string, i: number) => (
-                             <View key={i} style={styles.fromToLine}>
-                                <Text style={styles.fromToLabel}>{i === 0 ? 'To:' : '\u00A0'}</Text>
-                                <Text>{r}</Text>
-                             </View>
-                          ))}
-                        </>
-                     );
+                    // Toggle OFF: list recipients directly under To, aligned at same position
+                    return recipientsWithContent.map((r: string, i: number) => (
+                      formData.bodyFont === 'courier' ? (
+                        <Text key={i} style={styles.addressLine}>
+                          {i === 0
+                            ? `To:\u00A0\u00A0\u00A0\u00A0${r}`
+                            : `\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0${r}`}
+                        </Text>
+                      ) : (
+                        <View key={i} style={styles.fromToLine}>
+                          <Text style={{ width: PDF_INDENTS.tabStop1, minWidth: PDF_INDENTS.tabStop1 }}>{i === 0 ? 'To:' : '\u00A0'}</Text>
+                          <Text>{r}</Text>
+                        </View>
+                      )
+                    ));
                 }
              })()
           ) : (
