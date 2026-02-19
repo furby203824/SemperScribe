@@ -1187,8 +1187,8 @@ export function NavalLetterPDF({
              )
           )}
 
-          {/* Via Lines - Only if NOT multiple-address */}
-          {formData.documentType !== 'multiple-address' && viasWithContent.map((via, i) => (
+          {/* Via Lines */}
+          {viasWithContent.map((via, i) => (
             formData.bodyFont === 'courier' ? (
               <Text key={i} style={styles.addressLine}>
                 {getViaSpacing(i, viasWithContent.length)}{via}

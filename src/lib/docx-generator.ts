@@ -710,8 +710,10 @@ export async function generateDocxBlob(
           indent: isDirective ? addressIndent : undefined,
           spacing: { after: addressSpacing },
         }));
+    }
 
-        // Via (Only for non-multiple-address)
+    // Via
+    {
         const viasWithContent = vias.filter(v => v.trim());
         if (viasWithContent.length > 0) {
           viasWithContent.forEach((via, index) => {
@@ -735,7 +737,7 @@ export async function generateDocxBlob(
                        tabs = [{ type: TabStopType.LEFT, position: 720 }];
                    }
               }
-              
+
               addressParagraphs.push(new Paragraph({
                   children,
                   tabStops: tabs.length > 0 ? tabs : [{ type: TabStopType.LEFT, position: tabPosition }],
