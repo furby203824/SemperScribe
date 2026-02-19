@@ -1168,7 +1168,7 @@ export function NavalLetterPDF({
                         <>
                           {recipientsWithContent.map((r: string, i: number) => (
                              <View key={i} style={styles.fromToLine}>
-                                <Text style={styles.fromToLabel}>{i === 0 ? 'To:' : ''}</Text>
+                                <Text style={styles.fromToLabel}>{i === 0 ? 'To:' : '\u00A0'}</Text>
                                 <Text>{r}</Text>
                              </View>
                           ))}
