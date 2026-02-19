@@ -167,6 +167,11 @@ export function DocumentLayout({
                 ...prev,
                 distribution: { ...prev.distribution, recipients }
               }))}
+              toDistribution={!!formData.distribution?.toDistribution}
+              setToDistribution={(value) => setFormData(prev => ({
+                ...prev,
+                distribution: { ...prev.distribution, toDistribution: value }
+              }))}
             />
           )}
 

@@ -650,27 +650,27 @@ export async function generateDocxBlob(
     }));
 
     // To & Via Logic (Handles Multiple-Address vs Standard)
+    const isToDistribution = formData.documentType === 'multiple-address' && !!formData.distribution?.toDistribution;
     if (formData.documentType === 'multiple-address') {
-       // Multiple Address: To line lists all recipients, NO Via section
        const recipients = formData.distribution?.recipients || (formData.to ? [formData.to] : ["Addressee"]);
        const recipientsWithContent = recipients.filter((r: string) => r && r.trim());
 
        if (recipientsWithContent.length === 0) recipientsWithContent.push("Addressee");
 
-       if (recipientsWithContent.length > 1) {
-          // If > 1 recipient, use "See Distribution"
+       if (isToDistribution) {
+          // "To Distribution" toggle ON: To line says "Distribution"
           const toLabel = getFromToSpacing('To', formData.bodyFont as 'times' | 'courier');
           addressParagraphs.push(new Paragraph({
              children: [
                 new TextRun({ text: toLabel, font, size: FONT_SIZE_BODY }),
-                new TextRun({ text: "See Distribution", font, size: FONT_SIZE_BODY }),
+                new TextRun({ text: "Distribution", font, size: FONT_SIZE_BODY }),
              ],
              tabStops: [{ type: TabStopType.LEFT, position: tabPosition }],
              indent: isDirective ? addressIndent : undefined,
              spacing: { after: addressSpacing },
           }));
        } else {
-          // If 1 recipient, list it in the To block
+          // Toggle OFF: list recipients directly under To
           recipientsWithContent.forEach((recipient: string, index: number) => {
               let children: TextRun[] = [];
 
@@ -688,7 +688,7 @@ export async function generateDocxBlob(
                     new TextRun({ text: prefix + recipient, font, size: FONT_SIZE_BODY }),
                  ];
               }
-              
+
               addressParagraphs.push(new Paragraph({
                   children,
                   tabStops: [{ type: TabStopType.LEFT, position: tabPosition }],
@@ -1420,14 +1420,15 @@ export async function generateDocxBlob(
           }));
       }
   } else if (!isStaffingPaper) {
-      // 1. Multiple-Address Distribution List (> 1 recipient)
-      if (formData.documentType === 'multiple-address') {
+      // 1. Multiple-Address Distribution List (when "To Distribution" toggle is on)
+      const isDocToDistribution = formData.documentType === 'multiple-address' && !!formData.distribution?.toDistribution;
+      if (isDocToDistribution) {
           const recipients = formData.distribution?.recipients || [];
           const recipientsWithContent = recipients.filter((r: string) => r && r.trim());
 
-          if (recipientsWithContent.length > 1) {
+          if (recipientsWithContent.length > 0) {
               distributionParagraphs.push(createEmptyLine(font));
-              
+
               distributionParagraphs.push(new Paragraph({
                   children: [new TextRun({ text: "Distribution:", font, size: FONT_SIZE_BODY })],
                   alignment: AlignmentType.LEFT,
@@ -1435,33 +1436,21 @@ export async function generateDocxBlob(
               }));
 
               recipientsWithContent.forEach((recipient: string) => {
-                  if (formData.bodyFont === 'courier') {
-                      distributionParagraphs.push(new Paragraph({
-                          children: [
-                              new TextRun({ text: recipient, font, size: FONT_SIZE_BODY }),
-                          ],
-                          alignment: AlignmentType.LEFT,
-                          spacing: { after: 0 }
-                      }));
-                  } else {
-                      distributionParagraphs.push(new Paragraph({
-                          children: [
-                              new TextRun({ text: recipient, font, size: FONT_SIZE_BODY }),
-                          ],
-                          alignment: AlignmentType.LEFT,
-                          spacing: { after: 0 }
-                      }));
-                  }
+                  distributionParagraphs.push(new Paragraph({
+                      children: [
+                          new TextRun({ text: recipient, font, size: FONT_SIZE_BODY }),
+                      ],
+                      alignment: AlignmentType.LEFT,
+                      spacing: { after: 0 }
+                  }));
               });
           }
       }
 
       // Manual Distribution List
       const manualDistWithContent = distList ? distList.filter(d => d.trim()) : [];
-      const isMultipleAddressMany = formData.documentType === 'multiple-address' && 
-                                   (formData.distribution?.recipients?.filter((r: string) => r && r.trim()).length || 0) > 1;
 
-      if (manualDistWithContent.length > 0 && !isMultipleAddressMany) {
+      if (manualDistWithContent.length > 0 && !isDocToDistribution) {
           distributionParagraphs.push(createEmptyLine(font));
           distributionParagraphs.push(new Paragraph({
               children: [new TextRun({ text: "Distribution:", font, size: FONT_SIZE_BODY })],
