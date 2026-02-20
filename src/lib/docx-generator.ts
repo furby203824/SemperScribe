@@ -337,11 +337,8 @@ export async function generateDocxBlob(
       }));
     });
     
-    // Add extra space after subject block
-    moaHeaderParagraphs.push(new Paragraph({
-      text: "",
-      spacing: { after: 240 }
-    }));
+    // Empty line after subject - same as standard letter
+    moaHeaderParagraphs.push(createEmptyLine(font));
   }
 
   // --- Staffing Paper Header ---

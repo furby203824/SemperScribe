@@ -1009,14 +1009,14 @@ export function NavalLetterPDF({
 
         {/* MOA/MOU Header */}
         {isMoaOrMou && (
-            <View>
+            <>
               {/* Side-by-Side Activity Header */}
-              <View style={{ 
-                flexDirection: 'row', 
-                marginBottom: 14, 
+              <View style={{
+                flexDirection: 'row',
+                marginBottom: 14,
                 marginTop: 12,
                 fontFamily: fontFamily,
-                fontSize: PDF_FONT_SIZES.body 
+                fontSize: PDF_FONT_SIZES.body
               }}>
                  {/* Left Side: Activity B (Junior) - Starts at left margin */}
                  <View style={{ width: '50%' }}>
@@ -1046,32 +1046,33 @@ export function NavalLetterPDF({
                 <Text style={styles.moaAnd}>AND</Text>
                 <Text style={styles.moaActivity}>{(moaData.activityB || '').toUpperCase()}</Text>
               </View>
-              
-              {/* Subj line for MOA/MOU - Standard format instead of REGARDING */}
-              <View style={[styles.subjectSection, { marginTop: 8 }]}>
-                {formData.bodyFont === 'courier' ? (
-                  <>
-                    <Text style={styles.subjectLine}>
-                      {'Subj:\u00A0\u00A0\u00A0' + formattedSubjLines[0]}
-                    </Text>
-                    {formattedSubjLines.slice(1).map((line, i) => (
-                      <Text key={i} style={styles.subjectLine}>
-                        {'       ' + line}
-                      </Text>
-                    ))}
-                  </>
-                ) : (
-                  <View style={styles.subjectLine}>
-                    <Text style={styles.subjectLabel}>Subj:</Text>
-                    <View style={{ flex: 1 }}>
-                      {formattedSubjLines.map((line, i) => (
-                        <Text key={i}>{line}</Text>
-                      ))}
-                    </View>
-                  </View>
-                )}
-              </View>
-            </View>
+            </>
+        )}
+
+        {/* Subj line for MOA/MOU - uses same subjectSection style as standard letter */}
+        {isMoaOrMou && (
+          <View style={styles.subjectSection}>
+            {formData.bodyFont === 'courier' ? (
+              <>
+                <Text>Subj:  {formattedSubjLines[0]}</Text>
+                {formattedSubjLines.slice(1).map((line, i) => (
+                  <Text key={i} style={styles.subjectContinuation}>
+                    {'       '}{line}
+                  </Text>
+                ))}
+              </>
+            ) : (
+              <>
+                <View style={styles.subjectLine}>
+                  <Text style={styles.subjectLabel}>Subj:</Text>
+                  <Text>{formattedSubjLines[0] || ''}</Text>
+                </View>
+                {formattedSubjLines.slice(1).map((line, i) => (
+                  <Text key={i} style={{ marginLeft: PDF_INDENTS.tabStop1 }}>{line}</Text>
+                ))}
+              </>
+            )}
+          </View>
         )}
 
         {/* Staffing Paper Header */}
