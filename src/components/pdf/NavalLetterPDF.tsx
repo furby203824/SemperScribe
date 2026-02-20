@@ -621,9 +621,10 @@ export function NavalLetterPDF({
   
   // Logic to determine if we are in "Multiple Address" mode with MANY recipients (automatic list)
   // If true, we use the automatic list and HIDE the manual list to avoid duplication.
-  const isMultipleAddressMany = formData.documentType === 'multiple-address' &&
+  const hasMultipleTo = formData.documentType === 'multiple-address' || formData.documentType === 'from-to-memo';
+  const isMultipleAddressMany = hasMultipleTo &&
                                (formData.distribution?.recipients?.filter((r: string) => r && r.trim()).length || 0) > 1;
-  const isToDistribution = formData.documentType === 'multiple-address' && !!formData.distribution?.toDistribution;
+  const isToDistribution = hasMultipleTo && !!formData.distribution?.toDistribution;
 
   const getFromToSpacing = (label: string): string => {
     if (formData.bodyFont === 'courier') {
@@ -1136,7 +1137,7 @@ export function NavalLetterPDF({
           )}
 
           {/* To Line(s) */}
-          {formData.documentType === 'multiple-address' ? (
+          {hasMultipleTo ? (
              // Multiple Address Logic
              (() => {
                 const recipients = formData.distribution?.recipients || (formData.to ? [formData.to] : ["Addressee"]);
