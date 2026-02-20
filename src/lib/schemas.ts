@@ -1004,7 +1004,7 @@ export const LetterheadMemoDefinition: DocumentTypeDefinition = {
   description: 'Formal memorandum used for correspondence within the activity or with other federal agencies.',
   icon: '🏛️',
   schema: LetterheadMemoSchema,
-  features: { ...STANDARD_LETTER_FEATURES, category: 'memorandums' },
+  features: { ...STANDARD_LETTER_FEATURES, showVia: false, category: 'memorandums' },
   sections: [
     ...BasicLetterDefinition.sections
   ]
