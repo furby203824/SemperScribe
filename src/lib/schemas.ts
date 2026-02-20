@@ -936,6 +936,7 @@ export const FromToMemoSchema = BasicLetterSchema.extend({
   documentType: z.literal('from-to-memo'),
   ssic: ssicFieldOptional(),
   originatorCode: z.string().optional(),
+  to: z.string().optional(), // 'to' is optional because we use distribution.recipients
 });
 
 export const FromToMemoDefinition: DocumentTypeDefinition = {
@@ -949,6 +950,7 @@ export const FromToMemoDefinition: DocumentTypeDefinition = {
     showHeaderSettings: false,
     showUnitInfo: false,
     showVia: false,
+    showMultipleTo: true,
     category: 'memorandums',
   },
   sections: [
@@ -972,14 +974,7 @@ export const FromToMemoDefinition: DocumentTypeDefinition = {
           required: true,
           className: 'col-span-full'
         },
-        {
-          name: 'to',
-          label: 'To',
-          type: 'text',
-          placeholder: 'Commanding Officer...',
-          required: true,
-          className: 'col-span-full'
-        },
+        // 'to' excluded because we handle it with MultipleToSection
         {
           name: 'subj',
           label: 'Subject',
