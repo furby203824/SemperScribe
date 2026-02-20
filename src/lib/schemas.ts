@@ -914,6 +914,7 @@ export const MFRDefinition: DocumentTypeDefinition = {
   features: {
     ...STANDARD_LETTER_FEATURES,
     showUnitInfo: false,
+    showVia: false,
     category: 'memorandums',
   },
   sections: [
