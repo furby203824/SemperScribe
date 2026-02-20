@@ -649,9 +649,10 @@ export async function generateDocxBlob(
       spacing: { after: addressSpacing },
     }));
 
-    // To & Via Logic (Handles Multiple-Address vs Standard)
-    const isToDistribution = formData.documentType === 'multiple-address' && !!formData.distribution?.toDistribution;
-    if (formData.documentType === 'multiple-address') {
+    // To & Via Logic (Handles Multiple-Address and From-To Memo vs Standard)
+    const hasMultipleTo = formData.documentType === 'multiple-address' || formData.documentType === 'from-to-memo';
+    const isToDistribution = hasMultipleTo && !!formData.distribution?.toDistribution;
+    if (hasMultipleTo) {
        const recipients = formData.distribution?.recipients || (formData.to ? [formData.to] : ["Addressee"]);
        const recipientsWithContent = recipients.filter((r: string) => r && r.trim());
 
