@@ -76,6 +76,7 @@ export interface DocumentFeatures {
   isDirective: boolean;
   paragraphTemplate?: 'mco' | 'bulletin' | 'moa' | 'default';
   showMultipleTo: boolean;
+  showToDistribution: boolean;
   category: DocumentCategory;
 
   // Export capabilities
@@ -192,6 +193,7 @@ const STANDARD_LETTER_FEATURES: DocumentFeatures = {
   isAMHS: false,
   isDirective: false,
   showMultipleTo: false,
+  showToDistribution: true,
   category: 'standard-letter',
   exportFormats: ['pdf', 'docx'],
   pdfPipeline: 'standard',
@@ -951,6 +953,7 @@ export const FromToMemoDefinition: DocumentTypeDefinition = {
     showUnitInfo: false,
     showVia: false,
     showMultipleTo: true,
+    showToDistribution: false,
     category: 'memorandums',
   },
   sections: [
