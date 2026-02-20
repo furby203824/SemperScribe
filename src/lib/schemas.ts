@@ -948,6 +948,7 @@ export const FromToMemoDefinition: DocumentTypeDefinition = {
     ...STANDARD_LETTER_FEATURES,
     showHeaderSettings: false,
     showUnitInfo: false,
+    showVia: false,
     category: 'memorandums',
   },
   sections: [
