@@ -32,41 +32,41 @@ export const DecisionPaperTemplate: DocumentTemplate = {
     paragraphs: [
       {
         id: 1,
-        level: 0,
-        content: '1. BLUF. Request the Commanding General approve COA 2, which realigns BLT composition to include an organic unmanned systems platoon, increasing ISR capacity by 40% with minimal impact to current end strength.',
+        level: 1,
+        content: 'Request the Commanding General approve COA 2, which realigns BLT composition to include an organic unmanned systems platoon, increasing ISR capacity by 40% with minimal impact to current end strength.',
         title: 'BLUF'
       },
       {
         id: 2,
-        level: 0,
-        content: '2. Background. Current BLT composition does not account for the integration of unmanned aerial and ground systems that have become essential to expeditionary operations. Recent exercises and deployments have identified a critical gap in organic ISR capability at the BLT level.',
+        level: 1,
+        content: 'Current BLT composition does not account for the integration of unmanned aerial and ground systems that have become essential to expeditionary operations. Recent exercises and deployments have identified a critical gap in organic ISR capability at the BLT level.',
         title: 'Background'
       },
       {
         id: 3,
-        level: 0,
-        content: '3. Discussion. Three courses of action were developed and evaluated against the criteria of operational effectiveness, cost, and implementation timeline.',
+        level: 1,
+        content: 'Three courses of action were developed and evaluated against the criteria of operational effectiveness, cost, and implementation timeline.',
         title: 'Discussion'
       },
       {
         id: 4,
-        level: 1,
-        content: 'a. COA 1: Establish a separate UAS company at the regimental level. Provides centralized capability but reduces BLT commander organic control.',
+        level: 2,
+        content: 'COA 1: Establish a separate UAS company at the regimental level. Provides centralized capability but reduces BLT commander organic control.',
       },
       {
         id: 5,
-        level: 1,
-        content: 'b. COA 2: Integrate an unmanned systems platoon into each BLT by realigning billets from the weapons company. Provides organic capability to BLT commanders with minimal end-strength impact.',
+        level: 2,
+        content: 'COA 2: Integrate an unmanned systems platoon into each BLT by realigning billets from the weapons company. Provides organic capability to BLT commanders with minimal end-strength impact.',
       },
       {
         id: 6,
-        level: 1,
-        content: 'c. COA 3: Maintain status quo and rely on MEF-level UAS support. Lowest cost but perpetuates identified capability gap.',
+        level: 2,
+        content: 'COA 3: Maintain status quo and rely on MEF-level UAS support. Lowest cost but perpetuates identified capability gap.',
       },
       {
         id: 7,
-        level: 0,
-        content: '4. Recommendation. Approve COA 2 with implementation beginning Q1 FY27. This provides organic ISR capability to BLT commanders while leveraging existing billets and equipment procurement timelines.',
+        level: 1,
+        content: 'Approve COA 2 with implementation beginning Q1 FY27. This provides organic ISR capability to BLT commanders while leveraging existing billets and equipment procurement timelines.',
         title: 'Recommendation'
       }
     ],

@@ -32,51 +32,51 @@ export const PositionPaperTemplate: DocumentTemplate = {
     paragraphs: [
       {
         id: 1,
-        level: 0,
-        content: '1. BLUF. Recommend consolidating administrative support functions across I MEF major subordinate commands to reduce redundancy and improve efficiency. This consolidation will save an estimated $2.1M annually and free 45 billets for reallocation to operational units.',
+        level: 1,
+        content: 'Recommend consolidating administrative support functions across I MEF major subordinate commands to reduce redundancy and improve efficiency. This consolidation will save an estimated $2.1M annually and free 45 billets for reallocation to operational units.',
         title: 'BLUF'
       },
       {
         id: 2,
-        level: 0,
-        content: '2. Background. Each MSC currently maintains independent administrative support sections performing overlapping functions including personnel administration, supply management, and financial processing.',
+        level: 1,
+        content: 'Each MSC currently maintains independent administrative support sections performing overlapping functions including personnel administration, supply management, and financial processing.',
         title: 'Background'
       },
       {
         id: 3,
-        level: 0,
-        content: '3. Discussion. Three courses of action were evaluated against the criteria of cost savings, operational impact, and implementation feasibility.',
+        level: 1,
+        content: 'Three courses of action were evaluated against the criteria of cost savings, operational impact, and implementation feasibility.',
         title: 'Discussion'
       },
       {
         id: 4,
-        level: 1,
-        content: 'a. COA 1: Full consolidation into a single I MEF administrative center. Highest savings but greatest operational risk during transition.',
+        level: 2,
+        content: 'COA 1: Full consolidation into a single I MEF administrative center. Highest savings but greatest operational risk during transition.',
       },
       {
         id: 5,
-        level: 1,
-        content: 'b. COA 2: Partial consolidation of financial and supply functions while retaining distributed personnel administration. Moderate savings with lower risk.',
+        level: 2,
+        content: 'COA 2: Partial consolidation of financial and supply functions while retaining distributed personnel administration. Moderate savings with lower risk.',
       },
       {
         id: 6,
-        level: 2,
-        content: '(1) Financial processing consolidation alone would save an estimated $800K annually.',
+        level: 3,
+        content: 'Financial processing consolidation alone would save an estimated $800K annually.',
       },
       {
         id: 7,
-        level: 2,
-        content: '(2) Supply chain consolidation would reduce duplicate inventory by approximately 30%.',
+        level: 3,
+        content: 'Supply chain consolidation would reduce duplicate inventory by approximately 30%.',
       },
       {
         id: 8,
-        level: 1,
-        content: 'c. COA 3: Status quo with improved coordination mechanisms. Lowest risk but minimal savings.',
+        level: 2,
+        content: 'COA 3: Status quo with improved coordination mechanisms. Lowest risk but minimal savings.',
       },
       {
         id: 9,
-        level: 0,
-        content: '4. Recommendation. Adopt COA 2 (partial consolidation) with a phased implementation beginning Q3 FY26. This balances cost savings against operational risk and can serve as a proof of concept for future full consolidation.',
+        level: 1,
+        content: 'Adopt COA 2 (partial consolidation) with a phased implementation beginning Q3 FY26. This balances cost savings against operational risk and can serve as a proof of concept for future full consolidation.',
         title: 'Recommendation'
       }
     ],
@@ -176,13 +176,13 @@ export const InformationPaperTemplate: DocumentTemplate = {
         {
           id: 1,
           level: 1,
-          content: 'Purpose. To provide the Commanding General an overview of FY26 Q2 training readiness across I MEF major subordinate commands.',
+          content: 'To provide the Commanding General an overview of FY26 Q2 training readiness across I MEF major subordinate commands.',
           title: 'Purpose'
         },
         {
           id: 2,
           level: 1,
-          content: 'Key Points.',
+          content: '',
           title: 'Key Points'
         },
         {
@@ -213,7 +213,7 @@ export const InformationPaperTemplate: DocumentTemplate = {
         {
           id: 8,
           level: 1,
-          content: 'Coordination. This paper was coordinated with G-3/5 Training, G-1, and all MSC S-3 sections.',
+          content: 'This paper was coordinated with G-3/5 Training, G-1, and all MSC S-3 sections.',
           title: 'Coordination'
         }
       ],
