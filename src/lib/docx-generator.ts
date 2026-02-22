@@ -114,7 +114,7 @@ export async function generateDocxBlob(
   // Note: Seal is placed in the Section Header (headers.first), text is in the Body
   const letterheadParagraphs: Paragraph[] = [];
 
-  if (!isFromToMemo && !isMfr) {
+  if (!isFromToMemo && !isMfr && !isStaffingPaper) {
       // Department Header Text
       const headerText = formData.headerType === 'USMC'
         ? 'UNITED STATES MARINE CORPS'
@@ -1599,7 +1599,7 @@ export async function generateDocxBlob(
   // --- Header for First Page (Seal) ---
   let firstPageHeader: Header;
   
-  if (sealBuffer && !isFromToMemo && !isMfr) {
+  if (sealBuffer && !isFromToMemo && !isMfr && !isStaffingPaper) {
       firstPageHeader = new Header({
           children: [
               new Paragraph({

@@ -18,6 +18,7 @@ import { DistributionStatementSection } from '@/components/letter/DistributionSt
 import { DistributionSection } from '@/components/letter/DistributionSection';
 import { SignaturePlacementModal } from '@/components/SignaturePlacementModal';
 import { HeaderSettingsSection } from './HeaderSettingsSection';
+import { FontSelectorSection } from './FontSelectorSection';
 import { EndorsementDetailsSection } from './EndorsementDetailsSection';
 import { DirectiveTitleSection } from './DirectiveTitleSection';
 import { SignatureFieldSection } from './SignatureFieldSection';
@@ -131,6 +132,10 @@ export function DocumentLayout({
         <>
           {features.showHeaderSettings && (
             <HeaderSettingsSection formData={formData} setFormData={setFormData} />
+          )}
+
+          {!features.showHeaderSettings && features.showFontSelector && (
+            <FontSelectorSection formData={formData} setFormData={setFormData} />
           )}
 
           {features.showUnitInfo && (
