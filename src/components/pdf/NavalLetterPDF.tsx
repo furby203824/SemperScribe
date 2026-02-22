@@ -608,8 +608,8 @@ export function NavalLetterPDF({
   const isStaffingPaper = ['position-paper', 'information-paper', 'decision-paper'].includes(formData.documentType);
 
   // Determine if standard header (Seal + Letterhead) should be shown
-  // HIDDEN for MFR and From-To Memo only
-  const showStandardHeader = !isFromToMemo && !isMfr;
+  // HIDDEN for MFR, From-To Memo, and Staffing Papers (per MCO 5216.20B)
+  const showStandardHeader = !isFromToMemo && !isMfr && !isStaffingPaper;
 
   const moaData = formData.moaData || {
     activityA: '',

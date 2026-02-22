@@ -58,6 +58,7 @@ export type DocumentCategory =
 export interface DocumentFeatures {
   // Section visibility
   showHeaderSettings: boolean;
+  showFontSelector: boolean;
   showUnitInfo: boolean;
   showEndorsementDetails: boolean;
   showDirectiveTitle: boolean;
@@ -178,6 +179,7 @@ export const BasicLetterSchema = z.object({
 // --- Default features for standard letter types ---
 const STANDARD_LETTER_FEATURES: DocumentFeatures = {
   showHeaderSettings: true,
+  showFontSelector: false,
   showUnitInfo: true,
   showEndorsementDetails: false,
   showDirectiveTitle: false,
@@ -1036,8 +1038,9 @@ export const CoordinationPageDefinition: DocumentTypeDefinition = {
   schema: CoordinationPageSchema,
   features: {
     ...STANDARD_LETTER_FEATURES,
-    showHeaderSettings: true,
-    showUnitInfo: true,
+    showHeaderSettings: false,
+    showFontSelector: true,
+    showUnitInfo: false,
     showVia: false,
     showReferences: false,
     showEnclosures: false,
@@ -1355,8 +1358,9 @@ const StaffingPaperFooterFields: FieldDefinition[] = [
 
 const STAFFING_PAPER_FEATURES: DocumentFeatures = {
   ...STANDARD_LETTER_FEATURES,
-  showHeaderSettings: true,
-  showUnitInfo: true,
+  showHeaderSettings: false,
+  showFontSelector: true,
+  showUnitInfo: false,
   showVia: false,
   showEnclosures: false,
   showClosingBlock: false,
