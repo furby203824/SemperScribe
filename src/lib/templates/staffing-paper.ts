@@ -4,7 +4,7 @@ import { PositionPaperDefinition, InformationPaperDefinition } from '@/lib/schem
 export const PositionPaperTemplate: DocumentTemplate = {
   id: 'position-paper-default',
   typeId: 'position-paper',
-  name: 'Position/Decision Paper',
+  name: 'Position Paper',
   description: 'Used to advocate for a specific position or decision.',
   definition: PositionPaperDefinition,
   defaultData: {

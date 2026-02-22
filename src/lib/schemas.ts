@@ -1229,7 +1229,7 @@ export const StaffingPaperSchema = z.object({
 });
 
 const StaffingPaperFields: FieldDefinition[] = [
-  // Decision Grid Fields (Position/Decision Paper)
+  // Decision Grid Fields (Position/Decision Papers)
   {
     name: 'decisionGrid',
     label: 'Decision Grid',
@@ -1328,7 +1328,7 @@ const StaffingPaperFooterFields: FieldDefinition[] = [
     type: 'text',
     placeholder: 'Col I. M. Boss',
     className: 'md:col-span-1',
-    description: 'Required for Position/Decision Paper'
+    description: 'Required for Position/Decision Papers'
   },
   {
     name: 'approverRank',
@@ -1336,7 +1336,7 @@ const StaffingPaperFooterFields: FieldDefinition[] = [
     type: 'text',
     placeholder: 'Col',
     className: 'md:col-span-1',
-    description: 'Required for Position/Decision Paper'
+    description: 'Required for Position/Decision Papers'
   },
   {
     name: 'approverOfficeCode',
@@ -1344,7 +1344,7 @@ const StaffingPaperFooterFields: FieldDefinition[] = [
     type: 'text',
     placeholder: 'G-3',
     className: 'md:col-span-1',
-    description: 'Required for Position/Decision Paper'
+    description: 'Required for Position/Decision Papers'
   },
   {
     name: 'approverPhone',
@@ -1352,7 +1352,7 @@ const StaffingPaperFooterFields: FieldDefinition[] = [
     type: 'text',
     placeholder: '555-5678',
     className: 'md:col-span-1',
-    description: 'Required for Position/Decision Paper'
+    description: 'Required for Position/Decision Papers'
   }
 ];
 
@@ -1371,7 +1371,7 @@ const STAFFING_PAPER_FEATURES: DocumentFeatures = {
 
 export const PositionPaperDefinition: DocumentTypeDefinition = {
   id: 'position-paper',
-  name: 'Position/Decision Paper',
+  name: 'Position Paper',
   description: 'Advocates a specific position or solution.',
   icon: '📍',
   schema: StaffingPaperSchema,

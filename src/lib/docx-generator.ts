@@ -345,7 +345,7 @@ export async function generateDocxBlob(
   // --- Staffing Paper Header ---
   const staffingHeaderParagraphs: Paragraph[] = [];
   if (isStaffingPaper) {
-      const title = isPositionPaper ? 'POSITION/DECISION PAPER'
+      const title = isPositionPaper ? 'POSITION PAPER'
         : isDecisionPaper ? 'DECISION PAPER'
         : 'INFORMATION PAPER';
 
