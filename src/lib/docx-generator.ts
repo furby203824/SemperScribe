@@ -76,6 +76,7 @@ export async function generateDocxBlob(
   const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin';
   const isStaffingPaper = ['position-paper', 'information-paper', 'decision-paper'].includes(formData.documentType);
   const isPositionPaper = formData.documentType === 'position-paper';
+  const isDecisionPaper = formData.documentType === 'decision-paper';
   const isFromToMemo = formData.documentType === 'from-to-memo';
   const isMfr = formData.documentType === 'mfr';
   const isMoaOrMou = formData.documentType === 'moa' || formData.documentType === 'mou';
@@ -344,13 +345,14 @@ export async function generateDocxBlob(
   // --- Staffing Paper Header ---
   const staffingHeaderParagraphs: Paragraph[] = [];
   if (isStaffingPaper) {
-      const title = formData.documentType.split('-').map(w => w.toUpperCase()).join(' ');
-      const isPositionPaper = formData.documentType === 'position-paper';
-      
+      const title = isPositionPaper ? 'POSITION/DECISION PAPER'
+        : isDecisionPaper ? 'DECISION PAPER'
+        : 'INFORMATION PAPER';
+
       staffingHeaderParagraphs.push(new Paragraph({
-          children: [new TextRun({ 
-              text: title, 
-              font, 
+          children: [new TextRun({
+              text: title,
+              font,
               bold: !isPositionPaper,
               size: FONT_SIZE_BODY,
               underline: { type: UnderlineType.SINGLE }
@@ -376,7 +378,7 @@ export async function generateDocxBlob(
       // Actually, looking at the user image, "Subj:" is left-aligned.
       // My previous code was CENTER aligning it.
       
-      if (isPositionPaper) {
+      if (isPositionPaper || isDecisionPaper) {
          staffingHeaderParagraphs.push(new Paragraph({
             children: [
                 new TextRun({ text: "Subj: ", font, size: FONT_SIZE_BODY }),
@@ -870,9 +872,9 @@ export async function generateDocxBlob(
   const paragraphsWithContent = paragraphs.filter(p => p.content.trim() || p.title);
 
   paragraphsWithContent.forEach((p, index) => {
-    // Custom handling for Position Paper Multiple Recs - Paragraph 4
-    if (isPositionPaper && 
-        formData.decisionMode === 'MULTIPLE_RECS' && 
+    // Custom handling for Position/Decision Paper Multiple Recs - Paragraph 4
+    if ((isPositionPaper || isDecisionPaper) &&
+        formData.decisionMode === 'MULTIPLE_RECS' &&
         (index === 3 || (p.title && p.title.toLowerCase().includes('recommendation')))) {
 
         // 1. Header: 4. Recommendation.
@@ -966,8 +968,8 @@ export async function generateDocxBlob(
     }));
   });
 
-  // Position Paper Decision Grid (Single & Multiple Choice) - Bottom
-  if (isPositionPaper && formData.decisionGrid && formData.decisionMode !== 'MULTIPLE_RECS') {
+  // Position/Decision Paper Decision Grid (Single & Multiple Choice) - Bottom
+  if ((isPositionPaper || isDecisionPaper) && formData.decisionGrid && formData.decisionMode !== 'MULTIPLE_RECS') {
       bodyParagraphs.push(createEmptyLine(font));
       
       if (formData.decisionMode === 'MULTIPLE_CHOICE') {
@@ -1511,11 +1513,11 @@ export async function generateDocxBlob(
 
   if (isStaffingPaper) {
       const footerLines: Paragraph[] = [];
-      const isPositionPaper = formData.documentType === 'position-paper';
+      const isPositionOrDecision = formData.documentType === 'position-paper' || formData.documentType === 'decision-paper';
       const isInformationPaper = formData.documentType === 'information-paper';
 
-      if (isPositionPaper) {
-        // Position Paper Footer: Prepared By & Approved By (Left Aligned), Classification (Center)
+      if (isPositionOrDecision) {
+        // Position/Decision Paper Footer: Prepared By & Approved By (Left Aligned), Classification (Center)
         
         // Prepared By
         footerLines.push(new Paragraph({
