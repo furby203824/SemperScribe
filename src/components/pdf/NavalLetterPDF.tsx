@@ -1434,17 +1434,9 @@ export function NavalLetterPDF({
                                               </Text>
                                               <View style={{ flexDirection: 'column', alignItems: 'flex-end' }}>
                                                   {(() => {
-                                                       const finalOptions = (formData.decisionMode === 'MULTIPLE_CHOICE' && formData.decisionGrid.recommenders.length > 0)
-                                                          ? formData.decisionGrid.recommenders[0].options
-                                                          : formData.decisionGrid.finalDecision.options;
-                          
+                                                       const finalOptions = formData.decisionGrid.finalDecision.options;
+
                                                        return finalOptions.map((opt: string, j: number) => {
-                                                           let displayOpt = opt;
-                                                           if (formData.decisionMode === 'SINGLE') {
-                                                               if (opt === 'Approved') displayOpt = 'Approved';
-                                                               if (opt === 'Disapproved') displayOpt = 'Disapproved';
-                                                           }
-                                                           
                                                            return (
                                                               <View key={j} style={{ flexDirection: 'row', marginBottom: 8, alignItems: 'flex-end', justifyContent: 'flex-end' }}>
                                                                   <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, marginRight: 8 }}>
