@@ -1556,14 +1556,14 @@ export async function generateDocxBlob(
 
       } else if (isInformationPaper) {
           // Information Paper Footer: Prepared By (Left) with Service/Agency
-          
+
           footerLines.push(new Paragraph({
             children: [
                 new TextRun({ text: "Prepared by: ", font, size: FONT_SIZE_BODY, bold: true }),
-                new TextRun({ 
-                    text: `${formData.drafterName || ''}, ${formData.drafterRank || ''}, ${formData.drafterService || 'USMC'}`, 
-                    font, 
-                    size: FONT_SIZE_BODY 
+                new TextRun({
+                    text: `${formData.drafterName || ''}, ${formData.drafterRank || ''}, ${formData.drafterService || 'USMC'}`,
+                    font,
+                    size: FONT_SIZE_BODY
                 })
             ],
             alignment: AlignmentType.LEFT,
@@ -1572,15 +1572,31 @@ export async function generateDocxBlob(
 
         footerLines.push(new Paragraph({
             children: [
-                new TextRun({ 
-                    text: `             ${formData.drafterAgency ? formData.drafterAgency + ', ' : ''}${formData.drafterOfficeCode || ''}, ${formData.drafterPhone || ''}`, 
-                    font, 
-                    size: FONT_SIZE_BODY 
+                new TextRun({
+                    text: `             ${formData.drafterAgency ? formData.drafterAgency + ', ' : ''}${formData.drafterOfficeCode || ''}, ${formData.drafterPhone || ''}`,
+                    font,
+                    size: FONT_SIZE_BODY
                 })
             ],
             alignment: AlignmentType.LEFT,
-            spacing: { after: 240 }
+            spacing: { after: (formData.approverName || formData.approverRank) ? 120 : 240 }
         }));
+
+        // Approved By (if approver info is provided)
+        if (formData.approverName || formData.approverRank) {
+            footerLines.push(new Paragraph({
+                children: [
+                    new TextRun({ text: "Approved by: ", font, size: FONT_SIZE_BODY, bold: true }),
+                    new TextRun({
+                        text: `${formData.approverRank || ''} ${formData.approverName || ''}, ${formData.approverOfficeCode || ''}, ${formData.approverPhone || ''}`,
+                        font,
+                        size: FONT_SIZE_BODY
+                    })
+                ],
+                alignment: AlignmentType.LEFT,
+                spacing: { after: 240 }
+            }));
+        }
 
          // Classification (Center Bottom)
          footerLines.push(new Paragraph({

@@ -1759,16 +1759,26 @@ export function NavalLetterPDF({
         {isStaffingPaper && (
           isInformationPaper ? (
             <View style={styles.infoPaperFooterContainer}>
-                 <View style={{ flexDirection: 'row' }}>
-                    <Text style={styles.infoPaperFooterLeft}>Prepared by: </Text>
-                    <View>
-                        <Text style={styles.infoPaperFooterLeft}>
-                            {formData.drafterName}, {formData.drafterRank}, {formData.drafterService || 'USMC'}
-                        </Text>
-                        <Text style={styles.infoPaperFooterLeft}>
-                            {formData.drafterAgency ? `${formData.drafterAgency}, ` : ''}{formData.drafterOfficeCode}, {formData.drafterPhone}
-                        </Text>
+                 <View style={{ gap: 12 }}>
+                    <View style={{ flexDirection: 'row' }}>
+                        <Text style={styles.infoPaperFooterLeft}>Prepared by: </Text>
+                        <View>
+                            <Text style={styles.infoPaperFooterLeft}>
+                                {formData.drafterName}, {formData.drafterRank}, {formData.drafterService || 'USMC'}
+                            </Text>
+                            <Text style={styles.infoPaperFooterLeft}>
+                                {formData.drafterAgency ? `${formData.drafterAgency}, ` : ''}{formData.drafterOfficeCode}, {formData.drafterPhone}
+                            </Text>
+                        </View>
                     </View>
+                    {(formData.approverName || formData.approverRank) && (
+                        <View style={{ flexDirection: 'row' }}>
+                            <Text style={styles.infoPaperFooterLeft}>Approved by: </Text>
+                            <Text style={styles.infoPaperFooterLeft}>
+                                {formData.approverRank} {formData.approverName}, {formData.approverOfficeCode}, {formData.approverPhone}
+                            </Text>
+                        </View>
+                    )}
                  </View>
                  <Text style={styles.infoPaperFooterCenter}>
                     {formData.classification || 'UNCLASSIFIED'}
