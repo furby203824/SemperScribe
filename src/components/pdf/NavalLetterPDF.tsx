@@ -604,6 +604,7 @@ export function NavalLetterPDF({
   const isInformationPaper = formData.documentType === 'information-paper';
   // const isBusinessLetter defined above
   const isPositionPaper = formData.documentType === 'position-paper';
+  const isDecisionPaper = formData.documentType === 'decision-paper';
   const isStaffingPaper = ['position-paper', 'information-paper', 'decision-paper'].includes(formData.documentType);
 
   // Determine if standard header (Seal + Letterhead) should be shown
@@ -847,10 +848,10 @@ export function NavalLetterPDF({
           )}
         />
         
-        {/* Seal - Only on first page, skip for Staffing Papers */}
+        {/* Seal - Only on first page */}
         {showStandardHeader && <Image src={sealDataUrl} style={styles.seal} />}
 
-        {/* Letterhead - Only on first page, skip for Staffing Papers */}
+        {/* Letterhead - Only on first page */}
         {showStandardHeader && (
         <View style={styles.letterhead}>
           <Text style={styles.headerTitle}>
@@ -1091,7 +1092,7 @@ export function NavalLetterPDF({
 
               {/* Title */}
               <Text style={styles.infoPaperTitle}>
-                  {isPositionPaper ? 'POSITION/DECISION PAPER' : 'INFORMATION PAPER'}
+                  {isPositionPaper ? 'POSITION/DECISION PAPER' : isDecisionPaper ? 'DECISION PAPER' : 'INFORMATION PAPER'}
               </Text>
               
               {/* Subject for Position Paper/Info Paper */}
@@ -1303,10 +1304,10 @@ export function NavalLetterPDF({
         {/* Body paragraphs - text wraps to left margin */}
         <View style={styles.bodySection}>
           {paragraphsWithContent.map((p, i) => {
-             // Custom handling for Position Paper - Paragraph 4 (Recommendation)
+             // Custom handling for Position/Decision Paper - Paragraph 4 (Recommendation)
              // We wrap this paragraph AND the Decision Grid together to prevent orphans
              // STRICTLY check for 'Recommendation' title to avoid hijacking other paragraphs (like 2b)
-             if (formData.documentType === 'position-paper' &&
+             if ((formData.documentType === 'position-paper' || formData.documentType === 'decision-paper') &&
                  p.title && p.title.toLowerCase().includes('recommendation')) {
          
                  return (
@@ -1773,7 +1774,7 @@ export function NavalLetterPDF({
                     {formData.classification || 'UNCLASSIFIED'}
                  </Text>
             </View>
-          ) : formData.documentType === 'position-paper' ? (
+          ) : (isPositionPaper || isDecisionPaper) ? (
              <View style={styles.infoPaperFooterContainer}>
                  <View style={{ gap: 12 }}>
                     <View style={{ flexDirection: 'row' }}>
