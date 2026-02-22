@@ -1092,7 +1092,7 @@ export function NavalLetterPDF({
 
               {/* Title */}
               <Text style={styles.infoPaperTitle}>
-                  {isPositionPaper ? 'POSITION/DECISION PAPER' : isDecisionPaper ? 'DECISION PAPER' : 'INFORMATION PAPER'}
+                  {isPositionPaper ? 'POSITION PAPER' : isDecisionPaper ? 'DECISION PAPER' : 'INFORMATION PAPER'}
               </Text>
               
               {/* Subject for Position Paper/Info Paper */}
