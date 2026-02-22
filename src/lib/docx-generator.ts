@@ -74,7 +74,7 @@ export async function generateDocxBlob(
   const headerColor = getHeaderColor(formData.accentColor);
   const sealBuffer = await getDoDSealBuffer(formData.headerType === 'DON' ? 'navy' : 'marine-corps');
   const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin';
-  const isStaffingPaper = ['position-paper', 'information-paper'].includes(formData.documentType);
+  const isStaffingPaper = ['position-paper', 'information-paper', 'decision-paper'].includes(formData.documentType);
   const isPositionPaper = formData.documentType === 'position-paper';
   const isFromToMemo = formData.documentType === 'from-to-memo';
   const isMfr = formData.documentType === 'mfr';
@@ -113,10 +113,10 @@ export async function generateDocxBlob(
   // Note: Seal is placed in the Section Header (headers.first), text is in the Body
   const letterheadParagraphs: Paragraph[] = [];
 
-  if (!isFromToMemo && !isMfr && !isStaffingPaper) {
+  if (!isFromToMemo && !isMfr) {
       // Department Header Text
-      const headerText = formData.headerType === 'USMC' 
-        ? 'UNITED STATES MARINE CORPS' 
+      const headerText = formData.headerType === 'USMC'
+        ? 'UNITED STATES MARINE CORPS'
         : 'DEPARTMENT OF THE NAVY';
         
       letterheadParagraphs.push(new Paragraph({
@@ -1597,7 +1597,7 @@ export async function generateDocxBlob(
   // --- Header for First Page (Seal) ---
   let firstPageHeader: Header;
   
-  if (sealBuffer && !isFromToMemo && !isMfr && !isStaffingPaper) {
+  if (sealBuffer && !isFromToMemo && !isMfr) {
       firstPageHeader = new Header({
           children: [
               new Paragraph({

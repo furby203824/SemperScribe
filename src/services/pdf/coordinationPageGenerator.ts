@@ -1,4 +1,5 @@
 import { PDFDocument, rgb, StandardFonts, PDFPage, PDFFont } from 'pdf-lib';
+import { DOD_SEAL_DETAILED, NAVY_SEAL_BLUE } from '@/lib/dod-seal-data';
 
 interface CoordinatingOffice {
   office: string;
@@ -19,6 +20,11 @@ export interface CoordinationPageData {
   actionOfficerPhone?: string;
   coordinatingOffices?: CoordinatingOffice[];
   remarks?: string;
+  headerType?: 'USMC' | 'DON';
+  bodyFont?: 'times' | 'courier';
+  line1?: string;
+  line2?: string;
+  line3?: string;
   [key: string]: unknown;
 }
 
@@ -42,12 +48,23 @@ function wrapText(text: string, font: PDFFont, fontSize: number, maxWidth: numbe
   return lines.length > 0 ? lines : [''];
 }
 
+function getSealBase64(headerType: 'USMC' | 'DON' = 'USMC'): string {
+  const sealData = (headerType === 'DON' && NAVY_SEAL_BLUE && !NAVY_SEAL_BLUE.includes('YOUR_NAVY_SEAL_BASE64_DATA_HERE'))
+    ? NAVY_SEAL_BLUE
+    : DOD_SEAL_DETAILED;
+  // Strip the data URL prefix to get raw base64
+  const base64Match = sealData.match(/base64,(.+)/);
+  return base64Match ? base64Match[1] : sealData;
+}
+
 export async function createCoordinationPagePdf(data: CoordinationPageData): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create();
   let page = pdfDoc.addPage([612, 792]); // Letter size
 
-  const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-  const boldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+  // Select font based on bodyFont setting
+  const isCourier = data.bodyFont === 'courier';
+  const font = await pdfDoc.embedFont(isCourier ? StandardFonts.Courier : StandardFonts.TimesRoman);
+  const boldFont = await pdfDoc.embedFont(isCourier ? StandardFonts.CourierBold : StandardFonts.TimesRomanBold);
 
   const margin = 72; // 1 inch margins
   const pageWidth = 612;
@@ -66,6 +83,51 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
     }
     return page;
   }
+
+  // === HEADER WITH SEAL ===
+  try {
+    const sealBase64 = getSealBase64(data.headerType || 'USMC');
+    const sealBytes = Uint8Array.from(atob(sealBase64), c => c.charCodeAt(0));
+    const sealImage = await pdfDoc.embedPng(sealBytes);
+    const sealSize = 72; // Match PDF_SEAL dimensions
+    page.drawImage(sealImage, {
+      x: 36,  // PDF_SEAL.offsetX
+      y: 792 - 36 - sealSize, // PDF_SEAL.offsetY from top
+      width: sealSize,
+      height: sealSize,
+    });
+  } catch {
+    // Seal embedding failed - continue without it
+  }
+
+  // Letterhead text (centered)
+  const headerTitle = data.headerType === 'DON'
+    ? 'DEPARTMENT OF THE NAVY'
+    : 'UNITED STATES MARINE CORPS';
+  const headerTitleWidth = boldFont.widthOfTextAtSize(headerTitle, 10);
+  page.drawText(headerTitle, {
+    x: (pageWidth - headerTitleWidth) / 2,
+    y,
+    font: boldFont,
+    size: 10,
+    color: black,
+  });
+  y -= 14;
+
+  // Unit info lines (centered)
+  const unitLines = [data.line1, data.line2, data.line3].filter(Boolean) as string[];
+  for (const line of unitLines) {
+    const lineWidth = font.widthOfTextAtSize(line, 10);
+    page.drawText(line, {
+      x: (pageWidth - lineWidth) / 2,
+      y,
+      font,
+      size: 10,
+      color: black,
+    });
+    y -= 12;
+  }
+  y -= 14; // Space after letterhead
 
   // === TITLE ===
   const title = 'COORDINATION PAGE';

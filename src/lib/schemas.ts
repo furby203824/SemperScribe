@@ -1036,8 +1036,8 @@ export const CoordinationPageDefinition: DocumentTypeDefinition = {
   schema: CoordinationPageSchema,
   features: {
     ...STANDARD_LETTER_FEATURES,
-    showHeaderSettings: false,
-    showUnitInfo: false,
+    showHeaderSettings: true,
+    showUnitInfo: true,
     showVia: false,
     showReferences: false,
     showEnclosures: false,
@@ -1355,8 +1355,8 @@ const StaffingPaperFooterFields: FieldDefinition[] = [
 
 const STAFFING_PAPER_FEATURES: DocumentFeatures = {
   ...STANDARD_LETTER_FEATURES,
-  showHeaderSettings: false,
-  showUnitInfo: false,
+  showHeaderSettings: true,
+  showUnitInfo: true,
   showVia: false,
   showEnclosures: false,
   showClosingBlock: false,
