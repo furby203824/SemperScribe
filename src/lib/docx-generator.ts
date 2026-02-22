@@ -905,36 +905,45 @@ export async function generateDocxBlob(
              // 3. Grid Table (Embedded)
              const tableRows: TableRow[] = [];
              
-             // Recommenders
+             // Recommenders - signature line format per MCO 5216.20B
              formData.decisionGrid?.recommenders.forEach((rec: { id: string; role: string; options: string[] }) => {
+                 const optsText = rec.options.map((opt: string) => {
+                     let display = opt;
+                     if (opt === 'Approve') display = 'Approval';
+                     if (opt === 'Disapprove') display = 'Disapproval';
+                     return `${display} _______`;
+                 }).join("    ");
                  tableRows.push(new TableRow({
                      children: [
                          new TableCell({
-                             children: [new Paragraph({ children: [new TextRun({ text: rec.role + ":", font, size: FONT_SIZE_BODY })] })],
-                             width: { size: 30, type: WidthType.PERCENTAGE },
+                             children: [new Paragraph({ children: [new TextRun({ text: rec.role + " recommends:", font, size: FONT_SIZE_BODY })] })],
+                             width: { size: 35, type: WidthType.PERCENTAGE },
                              borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
                          }),
                          new TableCell({
-                             children: [new Paragraph({ children: [new TextRun({ text: "[ ] Approve    [ ] Disapprove", font, size: FONT_SIZE_BODY })] })],
-                             width: { size: 70, type: WidthType.PERCENTAGE },
+                             children: [new Paragraph({ children: [new TextRun({ text: optsText, font, size: FONT_SIZE_BODY })] })],
+                             width: { size: 65, type: WidthType.PERCENTAGE },
                              borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
                          })
                      ]
                  }));
              });
 
-             // Final Decision
+             // Final Decision - signature line format
              if (formData.decisionGrid?.finalDecision) {
+                const finalOptsText = formData.decisionGrid.finalDecision.options.map((opt: string) => {
+                    return `${opt} _______`;
+                }).join("    ");
                 tableRows.push(new TableRow({
                     children: [
                         new TableCell({
-                            children: [new Paragraph({ children: [new TextRun({ text: formData.decisionGrid.finalDecision.role + ":", font, size: FONT_SIZE_BODY, bold: true })] })],
-                            width: { size: 30, type: WidthType.PERCENTAGE },
+                            children: [new Paragraph({ children: [new TextRun({ text: formData.decisionGrid.finalDecision.role + " decision:", font, size: FONT_SIZE_BODY, bold: true })] })],
+                            width: { size: 35, type: WidthType.PERCENTAGE },
                             borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
                         }),
                         new TableCell({
-                            children: [new Paragraph({ children: [new TextRun({ text: "[ ] Approved    [ ] Disapproved", font, size: FONT_SIZE_BODY })] })],
-                            width: { size: 70, type: WidthType.PERCENTAGE },
+                            children: [new Paragraph({ children: [new TextRun({ text: finalOptsText, font, size: FONT_SIZE_BODY })] })],
+                            width: { size: 65, type: WidthType.PERCENTAGE },
                             borders: { top: { style: BorderStyle.NONE, size: 0, color: "auto" }, bottom: { style: BorderStyle.NONE, size: 0, color: "auto" }, left: { style: BorderStyle.NONE, size: 0, color: "auto" }, right: { style: BorderStyle.NONE, size: 0, color: "auto" } }
                         })
                     ]
@@ -1012,15 +1021,11 @@ export async function generateDocxBlob(
               bodyParagraphs.push(createEmptyLine(font));
           });
 
-          // Final Decision
+          // Final Decision - use finalDecision.options directly (includes COAs + Disapprove per policy)
           if (formData.decisionGrid.finalDecision) {
               const final = formData.decisionGrid.finalDecision;
-              // Force COA options for CMC in Multiple Choice mode to match recommenders if available
-              const finalOptions = (formData.decisionMode === 'MULTIPLE_CHOICE' && formData.decisionGrid.recommenders.length > 0)
-                 ? formData.decisionGrid.recommenders[0].options
-                 : final.options;
 
-              const coaRows = finalOptions.map((opt: string) =>
+              const coaRows = final.options.map((opt: string) =>
                   new Paragraph({
                       children: [
                           new TextRun({ text: opt, font, size: FONT_SIZE_BODY }),
@@ -1057,11 +1062,16 @@ export async function generateDocxBlob(
           }
 
       } else {
-          // Mode A: Single Recommendation (Standard Horizontal)
-          // Recommenders
+          // Mode A: Single Recommendation - signature line format per MCO 5216.20B
+          // Recommenders: "Role recommends:   Approval _______ Disapproval _______"
           formData.decisionGrid.recommenders.forEach((rec: { id: string; role: string; options: string[] }) => {
-              const optionsText = rec.options.map((opt: string) => `[ ] ${opt}`).join("    ");
-              
+              const optionsText = rec.options.map((opt: string) => {
+                  let display = opt;
+                  if (opt === 'Approve') display = 'Approval';
+                  if (opt === 'Disapprove') display = 'Disapproval';
+                  return `${display} _______`;
+              }).join("    ");
+
               bodyParagraphs.push(new Paragraph({
                   children: [
                       new TextRun({ text: rec.role + " recommends:\t", font, size: FONT_SIZE_BODY }),
@@ -1073,9 +1083,11 @@ export async function generateDocxBlob(
               }));
           });
 
-          // Final Decision
+          // Final Decision: "Role decision:   Approved _______ Disapproved _______"
           if (formData.decisionGrid.finalDecision) {
-              const finalOptsText = formData.decisionGrid.finalDecision.options.map((opt: string) => `[ ] ${opt}`).join("    ");
+              const finalOptsText = formData.decisionGrid.finalDecision.options.map((opt: string) => {
+                  return `${opt} _______`;
+              }).join("    ");
               bodyParagraphs.push(new Paragraph({
                   children: [
                       new TextRun({ text: formData.decisionGrid.finalDecision.role + " decision:\t", font, size: FONT_SIZE_BODY }),
