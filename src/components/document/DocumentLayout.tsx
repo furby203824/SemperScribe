@@ -23,6 +23,7 @@ import { EndorsementDetailsSection } from './EndorsementDetailsSection';
 import { DirectiveTitleSection } from './DirectiveTitleSection';
 import { SignatureFieldSection } from './SignatureFieldSection';
 import { DecisionGridSection } from '@/components/letter/DecisionGridSection';
+import { CoordinationPageForm } from '@/components/letter/CoordinationPageForm';
 
 interface DocumentLayoutProps {
   formData: FormData;
@@ -165,6 +166,10 @@ export function DocumentLayout({
               defaultValues={formData}
             />
           </div>
+
+          {features.showCoordinationTable && (
+            <CoordinationPageForm />
+          )}
 
           {features.showMultipleTo && (
             <MultipleToSection

@@ -72,6 +72,7 @@ export interface DocumentFeatures {
   showMOAForm: boolean;
   showSignature: boolean;
   showDecisionGrid: boolean;
+  showCoordinationTable: boolean;
 
   // Behavior
   isAMHS: boolean;
@@ -194,6 +195,7 @@ const STANDARD_LETTER_FEATURES: DocumentFeatures = {
   showMOAForm: false,
   showSignature: true,
   showDecisionGrid: false,
+  showCoordinationTable: false,
   isAMHS: false,
   isDirective: false,
   showMultipleTo: false,
@@ -820,6 +822,7 @@ export const AMHSDefinition: DocumentTypeDefinition = {
     showMOAForm: false,
     showSignature: false,
     showDecisionGrid: false,
+    showCoordinationTable: false,
     isAMHS: true,
     isDirective: false,
     showFontSelector: false,
@@ -1054,6 +1057,7 @@ export const CoordinationPageDefinition: DocumentTypeDefinition = {
     showParagraphs: false,
     showClosingBlock: false,
     showSignature: false,
+    showCoordinationTable: true,
     category: 'staffing-papers',
     exportFormats: ['pdf'],
   },
@@ -1070,14 +1074,6 @@ export const CoordinationPageDefinition: DocumentTypeDefinition = {
           placeholder: 'SUBJECT OF THE ACTION BEING COORDINATED',
           className: 'col-span-full',
           description: 'Subject of the staffing action (ALL CAPS)'
-        },
-        {
-          name: 'date',
-          label: 'Date Prepared',
-          type: 'text',
-          placeholder: '10 Feb 26',
-          className: 'md:col-span-1',
-          description: 'DD Mmm YY format'
         },
       ]
     },
