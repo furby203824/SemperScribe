@@ -14,7 +14,7 @@ import {
   getMOAParagraphs,
   getExportFilename,
   mergeAdminSubsections,
-  getPositionPaperParagraphs,
+  getStaffingPaperParagraphs,
   getTripReportParagraphs,
   getInformationPaperParagraphs,
 } from '@/lib/naval-format-utils';
@@ -221,17 +221,17 @@ describe('Standard paragraph templates', () => {
         paras.forEach(p => expect(p.level).toBe(1));
     });
 
-    it('getPositionPaperParagraphs includes Purpose, Major Points, Discussion, Recommendation', () => {
-      const paras = getPositionPaperParagraphs();
-      expect(paras).toHaveLength(8);
-      const level1Titles = paras.filter(p => p.level === 1).map(p => p.title);
-      expect(level1Titles).toEqual(['Purpose', 'Major Points', 'Discussion', 'Recommendation']);
+    it('getStaffingPaperParagraphs includes Purpose, Major Points, Discussion, Recommendation', () => {
+      const paras = getStaffingPaperParagraphs();
+      expect(paras).toHaveLength(4);
+      const titles = paras.map(p => p.title);
+      expect(titles).toEqual(['Purpose', 'Main Points', 'Discussion', 'Recommendation']);
     });
 
     it('all staffing paper paragraphs are mandatory', () => {
       const allPapers = [
         ...getInformationPaperParagraphs(),
-        ...getPositionPaperParagraphs(),
+        ...getStaffingPaperParagraphs(),
       ];
       allPapers.forEach(p => expect(p.isMandatory).toBe(true));
     });

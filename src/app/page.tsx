@@ -7,7 +7,7 @@ import { DocumentLayout } from '@/components/document/DocumentLayout';
 import { useEDMSContext, isEditMode } from '@/hooks/useEDMSContext';
 import { UNITS } from '@/lib/units';
 import { getTodaysDate } from '@/lib/date-utils';
-import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getExportFilename, mergeAdminSubsections } from '@/lib/naval-format-utils';
+import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getStaffingPaperParagraphs, getExportFilename, mergeAdminSubsections } from '@/lib/naval-format-utils';
 import { validateSSIC, validateSubject, validateFromTo } from '@/lib/validation-utils';
 import { loadSavedLetters, saveLetterToStorage } from '@/lib/storage-utils';
 import { getPDFPageCount, addMultipleSignaturesToBlob, ManualSignaturePosition } from '@/lib/pdf-generator';
@@ -383,6 +383,8 @@ function NavalLetterGeneratorInner() {
       newParagraphs = getMCBulParagraphs();
     } else if (template === 'moa') {
       newParagraphs = getMOAParagraphs();
+    } else if (template === 'staffing-paper') {
+      newParagraphs = getStaffingPaperParagraphs();
     } else if (oldFeatures?.paragraphTemplate) {
       newParagraphs = [{ id: 1, level: 1, content: '', acronymError: '' }];
     } else {

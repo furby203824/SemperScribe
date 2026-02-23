@@ -7,7 +7,7 @@ import React from 'react';
 import { FormData, EndorsementLevel, ParagraphData } from '@/types';
 import { StructuredReferenceInput } from './StructuredReferenceInput';
 import { debugFormChange } from '@/lib/console-utils';
-import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getPositionPaperParagraphs, getInformationPaperParagraphs, getAssumptionOfCommandParagraphs } from '@/lib/naval-format-utils';
+import { getMCOParagraphs, getMCBulParagraphs, getMOAParagraphs, getStaffingPaperParagraphs, getInformationPaperParagraphs, getAssumptionOfCommandParagraphs } from '@/lib/naval-format-utils';
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -412,7 +412,7 @@ export function DocumentTypeSection({
               onClick={() => {
                 setFormData(prev => ({ ...prev, documentType: 'position-paper' }));
                 if (setParagraphs && formData.documentType !== 'position-paper') {
-                  setParagraphs(getPositionPaperParagraphs());
+                  setParagraphs(getStaffingPaperParagraphs());
                 }
               }}
             />
@@ -427,7 +427,7 @@ export function DocumentTypeSection({
               onClick={() => {
                   setFormData(prev => ({ ...prev, documentType: 'decision-paper' }));
                   if (setParagraphs && formData.documentType !== 'decision-paper') {
-                      // setParagraphs(getDecisionPaperParagraphs());
+                      setParagraphs(getStaffingPaperParagraphs());
                   }
               }}
             />
