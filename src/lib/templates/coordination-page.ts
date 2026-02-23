@@ -11,8 +11,6 @@ export const CoordinationPageTemplate: DocumentTemplate = {
     documentType: 'coordination-page',
 
     subj: 'CONSOLIDATION OF ADMINISTRATIVE SUPPORT FUNCTIONS ACROSS I MEF MAJOR SUBORDINATE COMMANDS',
-    date: '10 Feb 26',
-
     // Action Officer
     actionOfficerName: 'Capt J. M. Doe',
     actionOfficerRank: 'Capt',
@@ -26,40 +24,30 @@ export const CoordinationPageTemplate: DocumentTemplate = {
         concurrence: 'concur',
         aoName: 'Maj R. L. Smith',
         date: '08 Feb 26',
-        initials: 'RLS',
-        comments: '',
       },
       {
         office: 'AC/S G-3',
         concurrence: 'concur',
         aoName: 'LtCol P. J. Adams',
         date: '09 Feb 26',
-        initials: 'PJA',
-        comments: '',
       },
       {
         office: 'AC/S G-4',
         concurrence: 'nonconcur',
         aoName: 'Maj T. K. Brown',
         date: '09 Feb 26',
-        initials: 'TKB',
-        comments: 'Nonconcur with proposed timeline. Supply chain transition requires minimum 180 days, not 90 as proposed. See attached memo.',
       },
       {
         office: 'AC/S G-8',
         concurrence: 'concur',
         aoName: 'Capt M. A. Wilson',
         date: '10 Feb 26',
-        initials: 'MAW',
-        comments: '',
       },
       {
         office: 'SJA',
         concurrence: 'concur',
         aoName: 'Maj H. R. Garcia',
         date: '10 Feb 26',
-        initials: 'HRG',
-        comments: 'No legal objection.',
       },
     ],
 
