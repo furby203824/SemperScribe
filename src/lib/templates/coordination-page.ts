@@ -61,8 +61,6 @@ export const CoordinationPageTemplate: DocumentTemplate = {
       },
     ],
 
-    remarks: 'G-4 nonconcurrence has been addressed. Proponent recommends extending Phase 2 timeline from 90 to 180 days to accommodate supply chain transition requirements.',
-
     // Standard defaults (unused by this type but required by template interface)
     ssic: '',
     originatorCode: '',

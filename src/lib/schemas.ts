@@ -1032,7 +1032,6 @@ export const CoordinationPageSchema = z.object({
     concurrenceCommentText: z.string().optional(),
     noResponseDate: z.string().optional(),
   })).optional(),
-  remarks: z.string().optional(),
 });
 
 export const CoordinationPageDefinition: DocumentTypeDefinition = {
@@ -1073,20 +1072,6 @@ export const CoordinationPageDefinition: DocumentTypeDefinition = {
         },
       ]
     },
-    {
-      id: 'remarks',
-      title: 'Remarks',
-      fields: [
-        {
-          name: 'remarks',
-          label: 'Remarks',
-          type: 'textarea',
-          placeholder: 'Additional remarks or notes regarding the coordination...',
-          rows: 3,
-          className: 'col-span-full'
-        }
-      ]
-    }
   ]
 };
 

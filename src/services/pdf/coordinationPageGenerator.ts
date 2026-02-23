@@ -17,7 +17,6 @@ export interface CoordinationPageData {
   documentType: string;
   subj: string;
   coordinatingOffices?: CoordinatingOffice[];
-  remarks?: string;
   bodyFont?: 'times' | 'courier';
   [key: string]: unknown;
 }
@@ -246,20 +245,7 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
     }
   }
 
-  // === REMARKS (below table) ===
-  if (data.remarks) {
-    y -= 6;
-    ensureSpace(50);
-    page.drawText('REMARKS:', { x: margin, y, font: boldFont, size: 10, color: black });
-    y -= 14;
 
-    const remarkLines = wrapText(data.remarks, font, 10, contentWidth);
-    for (const line of remarkLines) {
-      ensureSpace(14);
-      page.drawText(line, { x: margin, y, font, size: 10, color: black });
-      y -= 14;
-    }
-  }
 
   return pdfDoc.save();
 }
