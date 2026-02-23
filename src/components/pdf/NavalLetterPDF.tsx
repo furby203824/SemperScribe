@@ -1440,7 +1440,7 @@ export function NavalLetterPDF({
                                                            return (
                                                               <View key={j} style={{ flexDirection: 'row', marginBottom: 8, alignItems: 'flex-end', justifyContent: 'flex-end' }}>
                                                                   <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, marginRight: 8 }}>
-                                                                      {displayOpt}
+                                                                      {opt}
                                                                   </Text>
                                                                   <View style={{ borderBottomWidth: 1, borderBottomColor: 'black', width: 100 }} />
                                                               </View>

@@ -329,10 +329,13 @@ function NavalLetterGeneratorInner() {
     }
   }, [formData, vias, references, enclosures, copyTos, paragraphs, distList]);
 
-  // Auto-refresh preview when document type changes
+  // Auto-refresh preview when form data changes (debounced)
   useEffect(() => {
-    handleUpdatePreview();
-  }, [formData.documentType]);
+    const timer = setTimeout(() => {
+      handleUpdatePreview();
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [handleUpdatePreview]);
 
   // Validation Handlers
   const handleValidateSSIC = (value: string) => {
