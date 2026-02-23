@@ -44,7 +44,7 @@ export interface SectionDefinition {
   className?: string; // Optional override for the grid layout (e.g. "grid-cols-1")
 }
 
-export type PdfPipeline = 'standard' | 'navmc10274' | 'navmc11811' | 'amhs';
+export type PdfPipeline = 'standard' | 'navmc10274' | 'navmc11811' | 'amhs' | 'coordination-page';
 export type ExportFormat = 'pdf' | 'docx' | 'amhs-text';
 export type DocumentCategory =
   | 'standard-letter'
@@ -1044,6 +1044,7 @@ export const CoordinationPageDefinition: DocumentTypeDefinition = {
   schema: CoordinationPageSchema,
   features: {
     ...STANDARD_LETTER_FEATURES,
+    pdfPipeline: 'coordination-page',
     showHeaderSettings: false,
     showFontSelector: true,
     showUnitInfo: false,
