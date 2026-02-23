@@ -1429,7 +1429,7 @@ export function NavalLetterPDF({
                                         {/* Final Decision */}
                                         {formData.decisionGrid.finalDecision && (
                                           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 0 }}>
-                                              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, maxWidth: '50%', fontWeight: 'bold' }}>
+                                              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, maxWidth: '50%' }}>
                                                   {formData.decisionGrid.finalDecision.role} decision:
                                               </Text>
                                               <View style={{ flexDirection: 'column', alignItems: 'flex-end' }}>
