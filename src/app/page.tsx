@@ -309,7 +309,8 @@ function NavalLetterGeneratorInner() {
     setIsGeneratingPreview(true);
     try {
       const features = DOCUMENT_TYPES[formData.documentType]?.features;
-      if (features?.pdfPipeline === 'standard' && !formData.subj && !formData.from) {
+      const isStaffingPaper = features?.category === 'staffing-papers';
+      if (features?.pdfPipeline === 'standard' && !isStaffingPaper && !formData.subj && !formData.from) {
         setIsGeneratingPreview(false);
         return;
       }
@@ -328,10 +329,10 @@ function NavalLetterGeneratorInner() {
     }
   }, [formData, vias, references, enclosures, copyTos, paragraphs, distList]);
 
-  // Initial Preview Generation
+  // Auto-refresh preview when document type changes
   useEffect(() => {
     handleUpdatePreview();
-  }, []);
+  }, [formData.documentType]);
 
   // Validation Handlers
   const handleValidateSSIC = (value: string) => {
