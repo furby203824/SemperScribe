@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { DatePicker } from '@/components/ui/date-picker';
+import { format, parse } from 'date-fns';
 import { Plus, Trash2 } from 'lucide-react';
 import { FormData } from '@/types';
 
@@ -22,6 +24,8 @@ interface CoordinatingOffice {
   aoName: string;
   date: string;
   staffingComment: string;
+  concurrenceCommentText: string;
+  noResponseDate: string;
 }
 
 interface CoordinationPageFormProps {
@@ -43,7 +47,7 @@ export function CoordinationPageForm({ formData, setFormData }: CoordinationPage
   }
 
   function addEntry(office = '') {
-    updateOffices([...offices, { office, concurrence: 'pending', aoName: '', date: '', staffingComment: '' }]);
+    updateOffices([...offices, { office, concurrence: 'pending', aoName: '', date: '', staffingComment: '', concurrenceCommentText: '', noResponseDate: '' }]);
   }
 
   function removeEntry(index: number) {
@@ -139,6 +143,30 @@ export function CoordinationPageForm({ formData, setFormData }: CoordinationPage
                 </div>
               </div>
 
+              {/* CONDITIONAL: w/comment text input */}
+              {(entry.concurrence === 'concur-comment' || entry.concurrence === 'nonconcur-comment') && (
+                <div className="space-y-2">
+                  <Label>Comment Text</Label>
+                  <Input
+                    placeholder="Enter comment text..."
+                    value={entry.concurrenceCommentText || ''}
+                    onChange={e => updateField(index, 'concurrenceCommentText', e.target.value)}
+                  />
+                </div>
+              )}
+
+              {/* CONDITIONAL: no-response date picker */}
+              {entry.concurrence === 'no-response' && (
+                <div className="space-y-2">
+                  <Label>As of Date</Label>
+                  <DatePicker
+                    date={entry.noResponseDate ? parse(entry.noResponseDate, 'dd MMM yy', new Date()) : undefined}
+                    setDate={(d) => updateField(index, 'noResponseDate', d ? format(d, 'dd MMM yy') : '')}
+                    placeholder="Select as-of date"
+                  />
+                </div>
+              )}
+
               {/* STAFFING COMMENT */}
               <div className="space-y-2">
                 <Label>Staffing Comment</Label>
@@ -170,7 +198,7 @@ export function CoordinationPageForm({ formData, setFormData }: CoordinationPage
               onClick={() => {
                 const defaults = ['AC/S G-1', 'AC/S G-3', 'AC/S G-4', 'AC/S G-8', 'SJA'];
                 const newOffices = defaults.map(office => ({
-                  office, concurrence: 'pending', aoName: '', date: '', staffingComment: '',
+                  office, concurrence: 'pending', aoName: '', date: '', staffingComment: '', concurrenceCommentText: '', noResponseDate: '',
                 }));
                 updateOffices([...offices, ...newOffices]);
               }}

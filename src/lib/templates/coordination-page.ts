@@ -20,6 +20,8 @@ export const CoordinationPageTemplate: DocumentTemplate = {
         aoName: 'Maj R. L. Smith',
         date: '08 Feb 26',
         staffingComment: 'No impact to current manpower allocations. Recommend approval.',
+        concurrenceCommentText: 'See staffing comment',
+        noResponseDate: '',
       },
       {
         office: 'AC/S G-3',
@@ -27,6 +29,8 @@ export const CoordinationPageTemplate: DocumentTemplate = {
         aoName: 'LtCol P. J. Adams',
         date: '09 Feb 26',
         staffingComment: '',
+        concurrenceCommentText: '',
+        noResponseDate: '',
       },
       {
         office: 'AC/S G-4',
@@ -34,13 +38,17 @@ export const CoordinationPageTemplate: DocumentTemplate = {
         aoName: 'Maj T. K. Brown',
         date: '09 Feb 26',
         staffingComment: 'Supply chain transition requires 180 days vice 90. Recommend extending Phase 2 timeline.',
+        concurrenceCommentText: 'See staffing comment',
+        noResponseDate: '',
       },
       {
         office: 'AC/S G-8',
         concurrence: 'no-response',
         aoName: '',
-        date: '10 Feb 26',
+        date: '',
         staffingComment: '',
+        concurrenceCommentText: '',
+        noResponseDate: '10 Feb 26',
       },
       {
         office: 'SJA',
@@ -48,6 +56,8 @@ export const CoordinationPageTemplate: DocumentTemplate = {
         aoName: 'Maj H. R. Garcia',
         date: '10 Feb 26',
         staffingComment: 'No legal objections.',
+        concurrenceCommentText: 'No legal objections',
+        noResponseDate: '',
       },
     ],
 
