@@ -69,13 +69,16 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
   // === TITLE ===
   const title = 'COORDINATION PAGE';
   const titleWidth = boldFont.widthOfTextAtSize(title, 14);
+  const titleX = (pageWidth - titleWidth) / 2;
   page.drawText(title, {
-    x: (pageWidth - titleWidth) / 2,
+    x: titleX,
     y,
     font: boldFont,
     size: 14,
     color: black,
   });
+  // Calculate x-position of the "R" in "COORDINATION PAGE" for column alignment
+  const titleRPosition = titleX + boldFont.widthOfTextAtSize('COO', 14);
   y -= 30;
 
   // === SUBJECT ===
@@ -99,10 +102,10 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
   //   3. DATE & POSITION (date + concur/nonconcur)
   const offices = data.coordinatingOffices || [];
 
-  // Column x-positions
+  // Column x-positions (NAME aligns with the "R" in COORDINATION PAGE)
   const colAgency = margin;
-  const colName = margin + 130;
-  const colDatePos = margin + 240;
+  const colName = titleRPosition;
+  const colDatePos = colName + 110;
   const rowHeight = 16;
 
   // Header text
