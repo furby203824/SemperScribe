@@ -74,11 +74,6 @@ function buildCoordinationPageData(ctx: PdfBuildContext): CoordinationPageData {
   return {
     documentType: ctx.formData.documentType,
     subj: ctx.formData.subj || '',
-    date: ctx.formData.date,
-    actionOfficerName: ctx.formData.actionOfficerName || '',
-    actionOfficerRank: ctx.formData.actionOfficerRank,
-    actionOfficerOfficeCode: ctx.formData.actionOfficerOfficeCode || '',
-    actionOfficerPhone: ctx.formData.actionOfficerPhone,
     coordinatingOffices: ctx.formData.coordinatingOffices as CoordinationPageData['coordinatingOffices'],
     remarks: ctx.formData.remarks,
     bodyFont: ctx.formData.bodyFont as CoordinationPageData['bodyFont'],

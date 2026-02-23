@@ -168,7 +168,7 @@ export function DocumentLayout({
           </div>
 
           {features.showCoordinationTable && (
-            <CoordinationPageForm />
+            <CoordinationPageForm formData={formData} setFormData={setFormData} />
           )}
 
           {features.showMultipleTo && (
