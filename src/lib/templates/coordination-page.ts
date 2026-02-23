@@ -45,7 +45,7 @@ export const CoordinationPageTemplate: DocumentTemplate = {
         office: 'AC/S G-8',
         concurrence: 'no-response',
         aoName: '',
-        date: '',
+        date: '7 Feb 26',
         staffingComment: '',
         concurrenceCommentText: '',
         noResponseDate: '10 Feb 26',

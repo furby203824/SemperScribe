@@ -104,8 +104,8 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
 
   // Table column definitions (3 columns per policy)
   const colAgency = margin;
-  const colName = margin + 170;
-  const colDatePos = margin + 330;
+  const colName = margin + 130;
+  const colDatePos = margin + 240;
   const tableRight = margin + contentWidth;
   const headerHeight = 28;
   const rowHeight = 22;
@@ -122,8 +122,7 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
 
   // Header text
   const headerFontSize = 9;
-  page.drawText('STAFF/EXTERNAL', { x: colAgency + 4, y: y - 8, font: boldFont, size: headerFontSize, color: black });
-  page.drawText('AGENCY', { x: colAgency + 4, y: y - 19, font: boldFont, size: headerFontSize, color: black });
+  page.drawText('STAFF/EXTERNAL AGENCY', { x: colAgency + 4, y: y - 14, font: boldFont, size: headerFontSize, color: black });
 
   page.drawText('NAME', { x: colName + 4, y: y - 14, font: boldFont, size: headerFontSize, color: black });
 
@@ -194,7 +193,12 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
         case 'concur-comment': positionPart = commentText ? `Concur w/comment ${commentText}` : 'Concur w/comment'; break;
         case 'nonconcur': positionPart = 'Non-concur'; break;
         case 'nonconcur-comment': positionPart = commentText ? `Non-concur w/comment ${commentText}` : 'Non-concur w/comment'; break;
-        case 'no-response': positionPart = noRespDate ? `No response as of ${noRespDate}` : 'No response'; break;
+        case 'no-response': {
+          const deliveredPart = datePart ? `Delivered ${datePart}` : '';
+          const noRespPart = noRespDate ? `No response as of ${noRespDate}` : 'No response';
+          positionPart = [deliveredPart, noRespPart].filter(Boolean).join('; ');
+          break;
+        }
       }
       // Use explicit datePosition field if provided, otherwise build from date + concurrence
       // For "no-response" the date is already embedded in the position text
