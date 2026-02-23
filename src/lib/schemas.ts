@@ -1023,18 +1023,11 @@ export const LetterheadMemoDefinition: DocumentTypeDefinition = {
 export const CoordinationPageSchema = z.object({
   documentType: z.literal('coordination-page'),
   subj: subjFieldRequired(),
-  date: z.string().optional(),
-  actionOfficerName: z.string().min(1, "Action Officer name is required."),
-  actionOfficerRank: z.string().optional(),
-  actionOfficerOfficeCode: z.string().min(1, "Office code is required."),
-  actionOfficerPhone: z.string().optional(),
   coordinatingOffices: z.array(z.object({
-    office: z.string().min(1, "Office/Agency is required."),
+    office: z.string().min(1, "Staff/External Agency is required."),
     concurrence: z.enum(['concur', 'nonconcur', 'pending']).default('pending'),
     aoName: z.string().optional(),
     date: z.string().optional(),
-    initials: z.string().optional(),
-    comments: z.string().optional(),
   })).optional(),
   remarks: z.string().optional(),
 });
@@ -1074,42 +1067,6 @@ export const CoordinationPageDefinition: DocumentTypeDefinition = {
           placeholder: 'SUBJECT OF THE ACTION BEING COORDINATED',
           className: 'col-span-full',
           description: 'Subject of the staffing action (ALL CAPS)'
-        },
-      ]
-    },
-    {
-      id: 'actionOfficer',
-      title: 'Action Officer',
-      fields: [
-        {
-          name: 'actionOfficerName',
-          label: 'Name',
-          type: 'text',
-          required: true,
-          placeholder: 'Capt J. M. Doe',
-          className: 'md:col-span-1'
-        },
-        {
-          name: 'actionOfficerRank',
-          label: 'Rank',
-          type: 'text',
-          placeholder: 'Capt',
-          className: 'md:col-span-1'
-        },
-        {
-          name: 'actionOfficerOfficeCode',
-          label: 'Office Code',
-          type: 'text',
-          required: true,
-          placeholder: 'G-3',
-          className: 'md:col-span-1'
-        },
-        {
-          name: 'actionOfficerPhone',
-          label: 'Phone',
-          type: 'text',
-          placeholder: '(703) 555-1234',
-          className: 'md:col-span-1'
         },
       ]
     },

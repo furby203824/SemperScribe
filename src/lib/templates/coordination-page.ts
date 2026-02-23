@@ -11,11 +11,6 @@ export const CoordinationPageTemplate: DocumentTemplate = {
     documentType: 'coordination-page',
 
     subj: 'CONSOLIDATION OF ADMINISTRATIVE SUPPORT FUNCTIONS ACROSS I MEF MAJOR SUBORDINATE COMMANDS',
-    // Action Officer
-    actionOfficerName: 'Capt J. M. Doe',
-    actionOfficerRank: 'Capt',
-    actionOfficerOfficeCode: 'G-3',
-    actionOfficerPhone: '(760) 555-1234',
 
     // Coordinating Offices
     coordinatingOffices: [

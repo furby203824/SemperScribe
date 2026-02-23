@@ -13,11 +13,6 @@ interface CoordinatingOffice {
 export interface CoordinationPageData {
   documentType: string;
   subj: string;
-  date?: string;
-  actionOfficerName: string;
-  actionOfficerRank?: string;
-  actionOfficerOfficeCode: string;
-  actionOfficerPhone?: string;
   coordinatingOffices?: CoordinatingOffice[];
   remarks?: string;
   bodyFont?: 'times' | 'courier';
@@ -59,7 +54,6 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
   let y = 792 - margin;
 
   const black = rgb(0, 0, 0);
-  const gray = rgb(0.4, 0.4, 0.4);
 
   // Helper to add a new page if needed
   function ensureSpace(needed: number): PDFPage {
@@ -205,36 +199,7 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
     y -= rowHeight;
   }
 
-  // === ACTION OFFICER (below table, per policy) ===
-  y -= 14;
-  ensureSpace(30);
-
-  const aoLabel = 'ACTION OFFICER:';
-  page.drawText(aoLabel, { x: margin, y, font: boldFont, size: 10, color: black });
-  const aoLabelWidth = boldFont.widthOfTextAtSize(aoLabel, 10);
-
-  let aoX = margin + aoLabelWidth + 8;
-
-  page.drawText('Name', { x: aoX, y, font, size: 9, color: gray });
-  aoX += font.widthOfTextAtSize('Name', 9) + 4;
-  const aoName = data.actionOfficerName || '';
-  page.drawText(aoName, { x: aoX, y, font: boldFont, size: 10, color: black });
-  aoX += Math.max(boldFont.widthOfTextAtSize(aoName, 10), 60) + 12;
-
-  page.drawText('Office Code', { x: aoX, y, font, size: 9, color: gray });
-  aoX += font.widthOfTextAtSize('Office Code', 9) + 4;
-  const aoOffice = data.actionOfficerOfficeCode || '';
-  page.drawText(aoOffice, { x: aoX, y, font: boldFont, size: 10, color: black });
-  aoX += Math.max(boldFont.widthOfTextAtSize(aoOffice, 10), 30) + 12;
-
-  page.drawText('Phone', { x: aoX, y, font, size: 9, color: gray });
-  aoX += font.widthOfTextAtSize('Phone', 9) + 4;
-  const aoPhone = data.actionOfficerPhone || '';
-  page.drawText(aoPhone, { x: aoX, y, font: boldFont, size: 10, color: black });
-
-  y -= 20;
-
-  // === REMARKS (below Action Officer, per policy) ===
+  // === REMARKS (below table) ===
   if (data.remarks) {
     y -= 6;
     ensureSpace(50);
