@@ -92,123 +92,66 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
   }
   y -= subjLines.length * 14 + 10;
 
-  // === COORDINATION TABLE ===
-  // Per MCO 5216.20B: 3 columns
+  // === COORDINATION LIST ===
+  // Per MCO 5216.20B: 3 columns (no borders, plain list)
   //   1. STAFF/EXTERNAL AGENCY
   //   2. NAME (grade & name, or "None Obtained")
   //   3. DATE & POSITION (date + concur/nonconcur)
   const offices = data.coordinatingOffices || [];
-  const MIN_TABLE_ROWS = 12;
-  const totalRows = Math.max(offices.length, MIN_TABLE_ROWS);
 
-  // Table column definitions (3 columns per policy)
+  // Column x-positions
   const colAgency = margin;
   const colName = margin + 130;
   const colDatePos = margin + 240;
-  const tableRight = margin + contentWidth;
-  const headerHeight = 28;
-  const rowHeight = 22;
-
-  const colXPositions = [colAgency, colName, colDatePos, tableRight];
-
-  // Draw header top border
-  page.drawLine({
-    start: { x: colAgency, y: y + 4 },
-    end: { x: tableRight, y: y + 4 },
-    thickness: 1,
-    color: black,
-  });
+  const rowHeight = 16;
 
   // Header text
   const headerFontSize = 9;
-  page.drawText('STAFF/EXTERNAL AGENCY', { x: colAgency + 4, y: y - 14, font: boldFont, size: headerFontSize, color: black });
+  page.drawText('STAFF/EXTERNAL AGENCY', { x: colAgency, y, font: boldFont, size: headerFontSize, color: black });
+  page.drawText('NAME', { x: colName, y, font: boldFont, size: headerFontSize, color: black });
+  page.drawText('DATE & POSITION', { x: colDatePos, y, font: boldFont, size: headerFontSize, color: black });
+  y -= rowHeight + 4;
 
-  page.drawText('NAME', { x: colName + 4, y: y - 14, font: boldFont, size: headerFontSize, color: black });
+  // Data rows
+  for (const office of offices) {
+    ensureSpace(rowHeight + 20);
 
-  page.drawText('DATE & POSITION', { x: colDatePos + 4, y: y - 14, font: boldFont, size: headerFontSize, color: black });
-
-  // Header bottom border
-  y -= headerHeight;
-  page.drawLine({
-    start: { x: colAgency, y: y + 4 },
-    end: { x: tableRight, y: y + 4 },
-    thickness: 1,
-    color: black,
-  });
-
-  // Vertical lines for the header
-  for (const cx of colXPositions) {
-    page.drawLine({
-      start: { x: cx, y: y + headerHeight + 4 },
-      end: { x: cx, y: y + 4 },
-      thickness: 0.5,
-      color: black,
-    });
-  }
-
-  // Data rows + empty rows to fill table
-  for (let i = 0; i < totalRows; i++) {
-    const office = i < offices.length ? offices[i] : null;
-
-    ensureSpace(rowHeight + 30);
-
-    // Row bottom border
-    page.drawLine({
-      start: { x: colAgency, y: y - rowHeight + 4 },
-      end: { x: tableRight, y: y - rowHeight + 4 },
-      thickness: 0.5,
-      color: black,
+    // STAFF/EXTERNAL AGENCY
+    page.drawText(office.office || '', {
+      x: colAgency, y, font, size: 9, color: black,
     });
 
-    // Vertical lines for row
-    for (const cx of colXPositions) {
-      page.drawLine({
-        start: { x: cx, y: y + 4 },
-        end: { x: cx, y: y - rowHeight + 4 },
-        thickness: 0.5,
-        color: black,
-      });
-    }
+    // NAME — grade and name, or "None Obtained"
+    const nameText = office.aoName || 'None Obtained';
+    page.drawText(nameText, {
+      x: colName, y, font, size: 9, color: black,
+    });
 
-    if (office) {
-      // STAFF/EXTERNAL AGENCY
-      page.drawText(office.office || '', {
-        x: colAgency + 4, y: y - 10, font, size: 9, color: black,
-      });
-
-      // NAME — grade and name, or "None Obtained"
-      const nameText = office.aoName || 'None Obtained';
-      page.drawText(nameText, {
-        x: colName + 4, y: y - 10, font, size: 9, color: black,
-      });
-
-      // DATE & POSITION — combine date and concurrence position
-      const datePart = office.date || '';
-      const commentText = office.concurrenceCommentText?.trim();
-      const noRespDate = office.noResponseDate || datePart;
-      let positionPart = '';
-      switch (office.concurrence) {
-        case 'concur': positionPart = 'Concur'; break;
-        case 'concur-comment': positionPart = commentText ? `Concur w/comment ${commentText}` : 'Concur w/comment'; break;
-        case 'nonconcur': positionPart = 'Non-concur'; break;
-        case 'nonconcur-comment': positionPart = commentText ? `Non-concur w/comment ${commentText}` : 'Non-concur w/comment'; break;
-        case 'no-response': {
-          const deliveredPart = datePart ? `Delivered ${datePart}` : '';
-          const noRespPart = noRespDate ? `No response as of ${noRespDate}` : 'No response';
-          positionPart = [deliveredPart, noRespPart].filter(Boolean).join('; ');
-          break;
-        }
+    // DATE & POSITION — combine date and concurrence position
+    const datePart = office.date || '';
+    const commentText = office.concurrenceCommentText?.trim();
+    const noRespDate = office.noResponseDate || datePart;
+    let positionPart = '';
+    switch (office.concurrence) {
+      case 'concur': positionPart = 'Concur'; break;
+      case 'concur-comment': positionPart = commentText ? `Concur w/comment ${commentText}` : 'Concur w/comment'; break;
+      case 'nonconcur': positionPart = 'Non-concur'; break;
+      case 'nonconcur-comment': positionPart = commentText ? `Non-concur w/comment ${commentText}` : 'Non-concur w/comment'; break;
+      case 'no-response': {
+        const deliveredPart = datePart ? `Delivered ${datePart}` : '';
+        const noRespPart = noRespDate ? `No response as of ${noRespDate}` : 'No response';
+        positionPart = [deliveredPart, noRespPart].filter(Boolean).join('; ');
+        break;
       }
-      // Use explicit datePosition field if provided, otherwise build from date + concurrence
-      // For "no-response" the date is already embedded in the position text
-      const datePositionText = office.datePosition
-        || (office.concurrence === 'no-response'
-          ? positionPart
-          : [datePart, positionPart].filter(Boolean).join('; '));
-      page.drawText(datePositionText, {
-        x: colDatePos + 4, y: y - 10, font, size: 9, color: black,
-      });
     }
+    // Use explicit datePosition field if provided, otherwise build from date + concurrence
+    const datePositionText = office.datePosition
+      || (office.concurrence === 'no-response'
+        ? positionPart
+        : [datePart, positionPart].filter(Boolean).join('; '));
+    page.drawText(datePositionText, {
+      x: colDatePos, y, font, size: 9, color: black,
+    });
 
     y -= rowHeight;
   }
