@@ -1029,6 +1029,8 @@ export const CoordinationPageSchema = z.object({
     aoName: z.string().optional(),
     date: z.string().optional(),
     staffingComment: z.string().optional(),
+    concurrenceCommentText: z.string().optional(),
+    noResponseDate: z.string().optional(),
   })).optional(),
   remarks: z.string().optional(),
 });

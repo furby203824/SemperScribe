@@ -9,6 +9,8 @@ interface CoordinatingOffice {
   comments?: string;
   datePosition?: string;
   staffingComment?: string;
+  concurrenceCommentText?: string;
+  noResponseDate?: string;
 }
 
 export interface CoordinationPageData {
@@ -184,20 +186,22 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
 
       // DATE & POSITION — combine date and concurrence position
       const datePart = office.date || '';
+      const commentText = office.concurrenceCommentText?.trim();
+      const noRespDate = office.noResponseDate || datePart;
       let positionPart = '';
       switch (office.concurrence) {
         case 'concur': positionPart = 'Concur'; break;
-        case 'concur-comment': positionPart = 'Concur w/comment'; break;
+        case 'concur-comment': positionPart = commentText ? `Concur w/comment ${commentText}` : 'Concur w/comment'; break;
         case 'nonconcur': positionPart = 'Non-concur'; break;
-        case 'nonconcur-comment': positionPart = 'Non-concur w/comment'; break;
-        case 'no-response': positionPart = datePart ? `No response as of ${datePart}` : 'No response'; break;
+        case 'nonconcur-comment': positionPart = commentText ? `Non-concur w/comment ${commentText}` : 'Non-concur w/comment'; break;
+        case 'no-response': positionPart = noRespDate ? `No response as of ${noRespDate}` : 'No response'; break;
       }
       // Use explicit datePosition field if provided, otherwise build from date + concurrence
       // For "no-response" the date is already embedded in the position text
       const datePositionText = office.datePosition
         || (office.concurrence === 'no-response'
           ? positionPart
-          : [datePart, positionPart].filter(Boolean).join(' / '));
+          : [datePart, positionPart].filter(Boolean).join('; '));
       page.drawText(datePositionText, {
         x: colDatePos + 4, y: y - 10, font, size: 9, color: black,
       });
