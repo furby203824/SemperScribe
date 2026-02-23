@@ -22,6 +22,7 @@ import { FontSelectorSection } from './FontSelectorSection';
 import { EndorsementDetailsSection } from './EndorsementDetailsSection';
 import { DirectiveTitleSection } from './DirectiveTitleSection';
 import { SignatureFieldSection } from './SignatureFieldSection';
+import { DecisionGridSection } from '@/components/letter/DecisionGridSection';
 
 interface DocumentLayoutProps {
   formData: FormData;
@@ -234,6 +235,20 @@ export function DocumentLayout({
               toggleVoiceInput={toggleVoiceInput}
               addParagraph={addParagraph}
               removeParagraph={removeParagraph}
+            />
+          )}
+
+          {features.showDecisionGrid && (
+            <DecisionGridSection
+              data={formData.decisionGrid || {
+                recommenders: [],
+                finalDecision: { role: '', options: ['Approved', 'Disapproved'] },
+                coas: [],
+                recommendationItems: []
+              }}
+              mode={formData.decisionMode || 'SINGLE'}
+              onDataChange={(data) => setFormData(prev => ({ ...prev, decisionGrid: data }))}
+              onModeChange={(mode) => setFormData(prev => ({ ...prev, decisionMode: mode }))}
             />
           )}
 

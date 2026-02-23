@@ -71,6 +71,7 @@ export interface DocumentFeatures {
   showClosingBlock: boolean;
   showMOAForm: boolean;
   showSignature: boolean;
+  showDecisionGrid: boolean;
 
   // Behavior
   isAMHS: boolean;
@@ -192,6 +193,7 @@ const STANDARD_LETTER_FEATURES: DocumentFeatures = {
   showClosingBlock: true,
   showMOAForm: false,
   showSignature: true,
+  showDecisionGrid: false,
   isAMHS: false,
   isDirective: false,
   showMultipleTo: false,
@@ -817,8 +819,12 @@ export const AMHSDefinition: DocumentTypeDefinition = {
     showClosingBlock: false,
     showMOAForm: false,
     showSignature: false,
+    showDecisionGrid: false,
     isAMHS: true,
     isDirective: false,
+    showFontSelector: false,
+    showMultipleTo: false,
+    showToDistribution: false,
     category: 'amhs',
     exportFormats: ['amhs-text'],
     pdfPipeline: 'amhs',
@@ -1375,7 +1381,7 @@ export const PositionPaperDefinition: DocumentTypeDefinition = {
   description: 'Advocates a specific position or solution.',
   icon: '📍',
   schema: StaffingPaperSchema,
-  features: { ...STAFFING_PAPER_FEATURES },
+  features: { ...STAFFING_PAPER_FEATURES, showDecisionGrid: true },
   sections: [
     { id: 'header', title: 'Paper Details', fields: StaffingPaperFields },
     { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
@@ -1401,7 +1407,7 @@ export const DecisionPaperDefinition: DocumentTypeDefinition = {
   description: 'Requests a decision from a senior official.',
   icon: '❓',
   schema: StaffingPaperSchema,
-  features: { ...STAFFING_PAPER_FEATURES },
+  features: { ...STAFFING_PAPER_FEATURES, showDecisionGrid: true },
   sections: [
     { id: 'header', title: 'Paper Details', fields: StaffingPaperFields },
     { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
