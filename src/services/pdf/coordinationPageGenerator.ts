@@ -82,7 +82,7 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
   y -= 30;
 
   // === SUBJECT ===
-  page.drawText('Subj:', { x: margin, y, font: boldFont, size: 11, color: black });
+  page.drawText('Subj:', { x: margin, y, font, size: 11, color: black });
   const subjLines = wrapText(data.subj || '', font, 11, contentWidth - 40);
   for (let i = 0; i < subjLines.length; i++) {
     page.drawText(subjLines[i], {
@@ -109,7 +109,7 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
   const rowHeight = 16;
 
   // Header text
-  const headerFontSize = 9;
+  const headerFontSize = 11;
   page.drawText('STAFF/EXTERNAL AGENCY', { x: colAgency, y, font: boldFont, size: headerFontSize, color: black });
   page.drawText('NAME', { x: colName, y, font: boldFont, size: headerFontSize, color: black });
   page.drawText('DATE & POSITION', { x: colDatePos, y, font: boldFont, size: headerFontSize, color: black });
@@ -121,13 +121,13 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
 
     // STAFF/EXTERNAL AGENCY
     page.drawText(office.office || '', {
-      x: colAgency, y, font, size: 9, color: black,
+      x: colAgency, y, font, size: 11, color: black,
     });
 
     // NAME — grade and name, or "None Obtained"
     const nameText = office.aoName || 'None Obtained';
     page.drawText(nameText, {
-      x: colName, y, font, size: 9, color: black,
+      x: colName, y, font, size: 11, color: black,
     });
 
     // DATE & POSITION — combine date and concurrence position
@@ -138,7 +138,7 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
     if (office.datePosition) {
       // Explicit datePosition overrides everything
       page.drawText(office.datePosition, {
-        x: colDatePos, y, font, size: 9, color: black,
+        x: colDatePos, y, font, size: 11, color: black,
       });
       y -= rowHeight;
     } else if ((office.concurrence === 'concur-comment' || office.concurrence === 'nonconcur-comment') && commentText) {
@@ -146,12 +146,12 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
       const label = office.concurrence === 'concur-comment' ? 'Concur w/comment' : 'Non-concur w/comment';
       const firstLine = [datePart, label].filter(Boolean).join('; ');
       page.drawText(firstLine, {
-        x: colDatePos, y, font, size: 9, color: black,
+        x: colDatePos, y, font, size: 11, color: black,
       });
       y -= rowHeight;
       ensureSpace(rowHeight + 20);
       page.drawText(commentText, {
-        x: colDatePos, y, font, size: 9, color: black,
+        x: colDatePos, y, font, size: 11, color: black,
       });
       y -= rowHeight;
     } else if (office.concurrence === 'no-response') {
@@ -160,17 +160,17 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
       const noRespPart = noRespDate ? `No response as of ${noRespDate}` : 'No response';
       if (deliveredPart) {
         page.drawText(deliveredPart, {
-          x: colDatePos, y, font, size: 9, color: black,
+          x: colDatePos, y, font, size: 11, color: black,
         });
         y -= rowHeight;
         ensureSpace(rowHeight + 20);
         page.drawText(noRespPart, {
-          x: colDatePos, y, font, size: 9, color: black,
+          x: colDatePos, y, font, size: 11, color: black,
         });
         y -= rowHeight;
       } else {
         page.drawText(noRespPart, {
-          x: colDatePos, y, font, size: 9, color: black,
+          x: colDatePos, y, font, size: 11, color: black,
         });
         y -= rowHeight;
       }
@@ -185,7 +185,7 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
       }
       const datePositionText = [datePart, positionPart].filter(Boolean).join('; ');
       page.drawText(datePositionText, {
-        x: colDatePos, y, font, size: 9, color: black,
+        x: colDatePos, y, font, size: 11, color: black,
       });
       y -= rowHeight;
     }
@@ -210,24 +210,24 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
     y -= 10;
 
     page = ensureSpace(14);
-    page.drawText('Staffing Comments:', { x: margin, y, font, size: 10, color: black });
+    page.drawText('Staffing Comments:', { x: margin, y, font, size: 11, color: black });
     y -= 16;
 
     for (const sc of staffingComments) {
       const prefix = `${sc.office}: `;
-      const prefixWidth = font.widthOfTextAtSize(prefix, 10);
-      const commentLines = wrapText(sc.comment, font, 10, contentWidth - prefixWidth);
+      const prefixWidth = font.widthOfTextAtSize(prefix, 11);
+      const commentLines = wrapText(sc.comment, font, 11, contentWidth - prefixWidth);
 
       // First line: office label + comment text
       page = ensureSpace(14);
-      page.drawText(prefix, { x: margin, y, font, size: 10, color: black });
-      page.drawText(commentLines[0], { x: margin + prefixWidth, y, font, size: 10, color: black });
+      page.drawText(prefix, { x: margin, y, font, size: 11, color: black });
+      page.drawText(commentLines[0], { x: margin + prefixWidth, y, font, size: 11, color: black });
       y -= 14;
 
       // Continuation lines indented to align with first line text
       for (let i = 1; i < commentLines.length; i++) {
         page = ensureSpace(14);
-        page.drawText(commentLines[i], { x: margin + prefixWidth, y, font, size: 10, color: black });
+        page.drawText(commentLines[i], { x: margin + prefixWidth, y, font, size: 11, color: black });
         y -= 14;
       }
     }
