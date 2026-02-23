@@ -7,6 +7,7 @@ interface CoordinatingOffice {
   date?: string;
   initials?: string;
   comments?: string;
+  datePosition?: string;
 }
 
 export interface CoordinationPageData {
@@ -96,58 +97,51 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
   y -= subjLines.length * 14 + 10;
 
   // === COORDINATION TABLE ===
-  // Per MCO 5216.20B Fig 13-8: 6 columns, table directly after subject
+  // Per MCO 5216.20B: 3 columns
+  //   1. STAFF/EXTERNAL AGENCY
+  //   2. NAME (grade & name, or "None Obtained")
+  //   3. DATE & POSITION (date + concur/nonconcur)
   const offices = data.coordinatingOffices || [];
   const MIN_TABLE_ROWS = 12;
   const totalRows = Math.max(offices.length, MIN_TABLE_ROWS);
 
-  // Table column definitions (6 columns per policy)
-  const colOffice = margin;
-  const colConcur = margin + 110;
-  const colName = margin + 210;
-  const colDate = margin + 290;
-  const colInitials = margin + 345;
-  const colComments = margin + 390;
+  // Table column definitions (3 columns per policy)
+  const colAgency = margin;
+  const colName = margin + 170;
+  const colDatePos = margin + 330;
   const tableRight = margin + contentWidth;
   const headerHeight = 28;
   const rowHeight = 22;
 
+  const colXPositions = [colAgency, colName, colDatePos, tableRight];
+
   // Draw header top border
   page.drawLine({
-    start: { x: colOffice, y: y + 4 },
+    start: { x: colAgency, y: y + 4 },
     end: { x: tableRight, y: y + 4 },
     thickness: 1,
     color: black,
   });
 
-  // Header text (two-line headers where needed)
-  const headerFontSize = 8;
-  page.drawText('Office/Staff', { x: colOffice + 3, y: y - 8, font: boldFont, size: headerFontSize, color: black });
-  page.drawText('Agency', { x: colOffice + 3, y: y - 18, font: boldFont, size: headerFontSize, color: black });
+  // Header text
+  const headerFontSize = 9;
+  page.drawText('STAFF/EXTERNAL', { x: colAgency + 4, y: y - 8, font: boldFont, size: headerFontSize, color: black });
+  page.drawText('AGENCY', { x: colAgency + 4, y: y - 19, font: boldFont, size: headerFontSize, color: black });
 
-  page.drawText('Concur/', { x: colConcur + 3, y: y - 8, font: boldFont, size: headerFontSize, color: black });
-  page.drawText('Nonconcur', { x: colConcur + 3, y: y - 18, font: boldFont, size: headerFontSize, color: black });
+  page.drawText('NAME', { x: colName + 4, y: y - 14, font: boldFont, size: headerFontSize, color: black });
 
-  page.drawText('Name', { x: colName + 3, y: y - 13, font: boldFont, size: headerFontSize, color: black });
-
-  page.drawText('Date', { x: colDate + 3, y: y - 13, font: boldFont, size: headerFontSize, color: black });
-
-  page.drawText('Initials', { x: colInitials + 3, y: y - 13, font: boldFont, size: headerFontSize, color: black });
-
-  page.drawText('Comments/Reasons', { x: colComments + 3, y: y - 8, font: boldFont, size: headerFontSize, color: black });
-  page.drawText('for Nonconcurrence', { x: colComments + 3, y: y - 18, font: boldFont, size: headerFontSize, color: black });
+  page.drawText('DATE & POSITION', { x: colDatePos + 4, y: y - 14, font: boldFont, size: headerFontSize, color: black });
 
   // Header bottom border
   y -= headerHeight;
   page.drawLine({
-    start: { x: colOffice, y: y + 4 },
+    start: { x: colAgency, y: y + 4 },
     end: { x: tableRight, y: y + 4 },
     thickness: 1,
     color: black,
   });
 
-  // Draw vertical lines for the header
-  const colXPositions = [colOffice, colConcur, colName, colDate, colInitials, colComments, tableRight];
+  // Vertical lines for the header
   for (const cx of colXPositions) {
     page.drawLine({
       start: { x: cx, y: y + headerHeight + 4 },
@@ -165,7 +159,7 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
 
     // Row bottom border
     page.drawLine({
-      start: { x: colOffice, y: y - rowHeight + 4 },
+      start: { x: colAgency, y: y - rowHeight + 4 },
       end: { x: tableRight, y: y - rowHeight + 4 },
       thickness: 0.5,
       color: black,
@@ -182,53 +176,36 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
     }
 
     if (office) {
-      // Office/Staff Agency
+      // STAFF/EXTERNAL AGENCY
       page.drawText(office.office || '', {
-        x: colOffice + 3, y: y - 10, font, size: 9, color: black,
+        x: colAgency + 4, y: y - 10, font, size: 9, color: black,
       });
 
-      // Concur/Nonconcur
-      const concurrenceText = office.concurrence === 'concur'
-        ? 'CONCUR'
+      // NAME — grade and name, or "None Obtained"
+      const nameText = office.aoName || 'None Obtained';
+      page.drawText(nameText, {
+        x: colName + 4, y: y - 10, font, size: 9, color: black,
+      });
+
+      // DATE & POSITION — combine date and concurrence position
+      const datePart = office.date || '';
+      const positionPart = office.concurrence === 'concur'
+        ? 'Concur'
         : office.concurrence === 'nonconcur'
-          ? 'NONCONCUR'
+          ? 'Nonconcur'
           : '';
-      const concurColor = office.concurrence === 'nonconcur' ? rgb(0.7, 0, 0) : black;
-      page.drawText(concurrenceText, {
-        x: colConcur + 3, y: y - 10, font: boldFont, size: 9, color: concurColor,
+      // Use explicit datePosition field if provided, otherwise build from date + concurrence
+      const datePositionText = office.datePosition
+        || [datePart, positionPart].filter(Boolean).join(' / ');
+      page.drawText(datePositionText, {
+        x: colDatePos + 4, y: y - 10, font, size: 9, color: black,
       });
-
-      // Name
-      page.drawText(office.aoName || '', {
-        x: colName + 3, y: y - 10, font, size: 9, color: black,
-      });
-
-      // Date
-      page.drawText(office.date || '', {
-        x: colDate + 3, y: y - 10, font, size: 9, color: black,
-      });
-
-      // Initials
-      page.drawText(office.initials || '', {
-        x: colInitials + 3, y: y - 10, font, size: 9, color: black,
-      });
-
-      // Comments/Reasons for Nonconcurrence
-      if (office.comments) {
-        const commentsWidth = tableRight - colComments - 6;
-        const commentLines = wrapText(office.comments, font, 8, commentsWidth);
-        for (let ci = 0; ci < commentLines.length && ci < 2; ci++) {
-          page.drawText(commentLines[ci], {
-            x: colComments + 3, y: y - 10 - (ci * 10), font, size: 8, color: black,
-          });
-        }
-      }
     }
 
     y -= rowHeight;
   }
 
-  // === ACTION OFFICER (below table, per policy Fig 13-8) ===
+  // === ACTION OFFICER (below table, per policy) ===
   y -= 14;
   ensureSpace(30);
 
@@ -236,7 +213,6 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
   page.drawText(aoLabel, { x: margin, y, font: boldFont, size: 10, color: black });
   const aoLabelWidth = boldFont.widthOfTextAtSize(aoLabel, 10);
 
-  // Inline labeled fields: Name ___  Office Code ___  Phone ___
   let aoX = margin + aoLabelWidth + 8;
 
   page.drawText('Name', { x: aoX, y, font, size: 9, color: gray });
