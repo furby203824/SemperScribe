@@ -59,7 +59,6 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
 
   const black = rgb(0, 0, 0);
   const gray = rgb(0.4, 0.4, 0.4);
-  const lightGray = rgb(0.85, 0.85, 0.85);
 
   // Helper to add a new page if needed
   function ensureSpace(needed: number): PDFPage {
@@ -96,169 +95,175 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
   }
   y -= subjLines.length * 14 + 10;
 
-  // === DATE ===
-  if (data.date) {
-    page.drawText('Date:', { x: margin, y, font: boldFont, size: 11, color: black });
-    page.drawText(data.date, { x: margin + 40, y, font, size: 11, color: black });
-    y -= 20;
+  // === COORDINATION TABLE ===
+  // Per MCO 5216.20B Fig 13-8: 6 columns, table directly after subject
+  const offices = data.coordinatingOffices || [];
+  const MIN_TABLE_ROWS = 12;
+  const totalRows = Math.max(offices.length, MIN_TABLE_ROWS);
+
+  // Table column definitions (6 columns per policy)
+  const colOffice = margin;
+  const colConcur = margin + 110;
+  const colName = margin + 210;
+  const colDate = margin + 290;
+  const colInitials = margin + 345;
+  const colComments = margin + 390;
+  const tableRight = margin + contentWidth;
+  const headerHeight = 28;
+  const rowHeight = 22;
+
+  // Draw header top border
+  page.drawLine({
+    start: { x: colOffice, y: y + 4 },
+    end: { x: tableRight, y: y + 4 },
+    thickness: 1,
+    color: black,
+  });
+
+  // Header text (two-line headers where needed)
+  const headerFontSize = 8;
+  page.drawText('Office/Staff', { x: colOffice + 3, y: y - 8, font: boldFont, size: headerFontSize, color: black });
+  page.drawText('Agency', { x: colOffice + 3, y: y - 18, font: boldFont, size: headerFontSize, color: black });
+
+  page.drawText('Concur/', { x: colConcur + 3, y: y - 8, font: boldFont, size: headerFontSize, color: black });
+  page.drawText('Nonconcur', { x: colConcur + 3, y: y - 18, font: boldFont, size: headerFontSize, color: black });
+
+  page.drawText('Name', { x: colName + 3, y: y - 13, font: boldFont, size: headerFontSize, color: black });
+
+  page.drawText('Date', { x: colDate + 3, y: y - 13, font: boldFont, size: headerFontSize, color: black });
+
+  page.drawText('Initials', { x: colInitials + 3, y: y - 13, font: boldFont, size: headerFontSize, color: black });
+
+  page.drawText('Comments/Reasons', { x: colComments + 3, y: y - 8, font: boldFont, size: headerFontSize, color: black });
+  page.drawText('for Nonconcurrence', { x: colComments + 3, y: y - 18, font: boldFont, size: headerFontSize, color: black });
+
+  // Header bottom border
+  y -= headerHeight;
+  page.drawLine({
+    start: { x: colOffice, y: y + 4 },
+    end: { x: tableRight, y: y + 4 },
+    thickness: 1,
+    color: black,
+  });
+
+  // Draw vertical lines for the header
+  const colXPositions = [colOffice, colConcur, colName, colDate, colInitials, colComments, tableRight];
+  for (const cx of colXPositions) {
+    page.drawLine({
+      start: { x: cx, y: y + headerHeight + 4 },
+      end: { x: cx, y: y + 4 },
+      thickness: 0.5,
+      color: black,
+    });
   }
 
-  // === ACTION OFFICER INFO ===
-  y -= 5;
-  page.drawText('Action Officer:', { x: margin, y, font: boldFont, size: 11, color: black });
-  y -= 16;
+  // Data rows + empty rows to fill table
+  for (let i = 0; i < totalRows; i++) {
+    const office = i < offices.length ? offices[i] : null;
 
-  const aoInfo = [
-    data.actionOfficerName,
-    data.actionOfficerRank ? `(${data.actionOfficerRank})` : '',
-    data.actionOfficerOfficeCode,
-    data.actionOfficerPhone || '',
-  ].filter(Boolean).join('  /  ');
+    ensureSpace(rowHeight + 30);
 
-  page.drawText(aoInfo, { x: margin + 10, y, font, size: 10, color: black });
-  y -= 25;
-
-  // === COORDINATION TABLE ===
-  const offices = data.coordinatingOffices || [];
-
-  if (offices.length > 0) {
-    page.drawText('COORDINATION', { x: margin, y, font: boldFont, size: 11, color: black });
-    y -= 20;
-
-    // Table column definitions
-    const colOffice = margin;
-    const colConcur = margin + 170;
-    const colAO = margin + 280;
-    const colDate = margin + 380;
-    const colInitials = margin + 440;
-    const tableRight = margin + contentWidth;
-    const headerHeight = 18;
-    const rowHeight = 22;
-
-    // Draw header background
-    page.drawRectangle({
-      x: colOffice,
-      y: y - headerHeight + 4,
-      width: contentWidth,
-      height: headerHeight,
-      color: lightGray,
-    });
-
-    // Header text
-    const headers = [
-      { text: 'Office/Agency', x: colOffice + 4 },
-      { text: 'Concur/Nonconcur', x: colConcur + 4 },
-      { text: 'Action Officer', x: colAO + 4 },
-      { text: 'Date', x: colDate + 4 },
-      { text: 'Initials', x: colInitials + 4 },
-    ];
-
-    for (const h of headers) {
-      page.drawText(h.text, { x: h.x, y: y - 10, font: boldFont, size: 9, color: black });
-    }
-
-    // Header bottom border
-    y -= headerHeight;
+    // Row bottom border
     page.drawLine({
-      start: { x: colOffice, y: y + 4 },
-      end: { x: tableRight, y: y + 4 },
-      thickness: 1,
+      start: { x: colOffice, y: y - rowHeight + 4 },
+      end: { x: tableRight, y: y - rowHeight + 4 },
+      thickness: 0.5,
       color: black,
     });
 
-    // Draw vertical lines for the header
-    const colXPositions = [colOffice, colConcur, colAO, colDate, colInitials, tableRight];
+    // Vertical lines for row
     for (const cx of colXPositions) {
       page.drawLine({
-        start: { x: cx, y: y + headerHeight + 4 },
-        end: { x: cx, y: y + 4 },
+        start: { x: cx, y: y + 4 },
+        end: { x: cx, y: y - rowHeight + 4 },
         thickness: 0.5,
         color: black,
       });
     }
 
-    // Data rows
-    for (const office of offices) {
-      ensureSpace(rowHeight + 30);
-
-      // Row border
-      page.drawLine({
-        start: { x: colOffice, y: y - rowHeight + 8 },
-        end: { x: tableRight, y: y - rowHeight + 8 },
-        thickness: 0.5,
-        color: gray,
-      });
-
-      // Vertical lines
-      for (const cx of colXPositions) {
-        page.drawLine({
-          start: { x: cx, y: y + 4 },
-          end: { x: cx, y: y - rowHeight + 8 },
-          thickness: 0.5,
-          color: gray,
-        });
-      }
-
-      // Office
+    if (office) {
+      // Office/Staff Agency
       page.drawText(office.office || '', {
-        x: colOffice + 4, y: y - 8, font, size: 10, color: black,
+        x: colOffice + 3, y: y - 10, font, size: 9, color: black,
       });
 
-      // Concurrence - show the selected status, strike through the other
+      // Concur/Nonconcur
       const concurrenceText = office.concurrence === 'concur'
         ? 'CONCUR'
         : office.concurrence === 'nonconcur'
           ? 'NONCONCUR'
-          : '—';
+          : '';
       const concurColor = office.concurrence === 'nonconcur' ? rgb(0.7, 0, 0) : black;
       page.drawText(concurrenceText, {
-        x: colConcur + 4, y: y - 8, font: boldFont, size: 10, color: concurColor,
+        x: colConcur + 3, y: y - 10, font: boldFont, size: 9, color: concurColor,
       });
 
-      // Action Officer
+      // Name
       page.drawText(office.aoName || '', {
-        x: colAO + 4, y: y - 8, font, size: 10, color: black,
+        x: colName + 3, y: y - 10, font, size: 9, color: black,
       });
 
       // Date
       page.drawText(office.date || '', {
-        x: colDate + 4, y: y - 8, font, size: 10, color: black,
+        x: colDate + 3, y: y - 10, font, size: 9, color: black,
       });
 
       // Initials
       page.drawText(office.initials || '', {
-        x: colInitials + 4, y: y - 8, font, size: 10, color: black,
+        x: colInitials + 3, y: y - 10, font, size: 9, color: black,
       });
 
-      y -= rowHeight;
-
-      // If there are comments, add a sub-row
+      // Comments/Reasons for Nonconcurrence
       if (office.comments) {
-        const commentLines = wrapText(`Comments: ${office.comments}`, font, 9, contentWidth - 20);
-        for (const line of commentLines) {
-          ensureSpace(14);
-          page.drawText(line, {
-            x: colOffice + 10, y: y - 4, font, size: 9, color: gray,
+        const commentsWidth = tableRight - colComments - 6;
+        const commentLines = wrapText(office.comments, font, 8, commentsWidth);
+        for (let ci = 0; ci < commentLines.length && ci < 2; ci++) {
+          page.drawText(commentLines[ci], {
+            x: colComments + 3, y: y - 10 - (ci * 10), font, size: 8, color: black,
           });
-          y -= 12;
         }
-        // Bottom border for comment row
-        page.drawLine({
-          start: { x: colOffice, y: y + 2 },
-          end: { x: tableRight, y: y + 2 },
-          thickness: 0.5,
-          color: gray,
-        });
       }
     }
+
+    y -= rowHeight;
   }
 
-  // === REMARKS ===
+  // === ACTION OFFICER (below table, per policy Fig 13-8) ===
+  y -= 14;
+  ensureSpace(30);
+
+  const aoLabel = 'ACTION OFFICER:';
+  page.drawText(aoLabel, { x: margin, y, font: boldFont, size: 10, color: black });
+  const aoLabelWidth = boldFont.widthOfTextAtSize(aoLabel, 10);
+
+  // Inline labeled fields: Name ___  Office Code ___  Phone ___
+  let aoX = margin + aoLabelWidth + 8;
+
+  page.drawText('Name', { x: aoX, y, font, size: 9, color: gray });
+  aoX += font.widthOfTextAtSize('Name', 9) + 4;
+  const aoName = data.actionOfficerName || '';
+  page.drawText(aoName, { x: aoX, y, font: boldFont, size: 10, color: black });
+  aoX += Math.max(boldFont.widthOfTextAtSize(aoName, 10), 60) + 12;
+
+  page.drawText('Office Code', { x: aoX, y, font, size: 9, color: gray });
+  aoX += font.widthOfTextAtSize('Office Code', 9) + 4;
+  const aoOffice = data.actionOfficerOfficeCode || '';
+  page.drawText(aoOffice, { x: aoX, y, font: boldFont, size: 10, color: black });
+  aoX += Math.max(boldFont.widthOfTextAtSize(aoOffice, 10), 30) + 12;
+
+  page.drawText('Phone', { x: aoX, y, font, size: 9, color: gray });
+  aoX += font.widthOfTextAtSize('Phone', 9) + 4;
+  const aoPhone = data.actionOfficerPhone || '';
+  page.drawText(aoPhone, { x: aoX, y, font: boldFont, size: 10, color: black });
+
+  y -= 20;
+
+  // === REMARKS (below Action Officer, per policy) ===
   if (data.remarks) {
-    y -= 20;
+    y -= 6;
     ensureSpace(50);
-    page.drawText('REMARKS', { x: margin, y, font: boldFont, size: 11, color: black });
-    y -= 16;
+    page.drawText('REMARKS:', { x: margin, y, font: boldFont, size: 10, color: black });
+    y -= 14;
 
     const remarkLines = wrapText(data.remarks, font, 10, contentWidth);
     for (const line of remarkLines) {
