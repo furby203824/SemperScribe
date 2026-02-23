@@ -76,7 +76,7 @@ export interface DocumentFeatures {
   // Behavior
   isAMHS: boolean;
   isDirective: boolean;
-  paragraphTemplate?: 'mco' | 'bulletin' | 'moa' | 'staffing-paper' | 'default';
+  paragraphTemplate?: 'mco' | 'bulletin' | 'moa' | 'staffing-paper' | 'information-paper' | 'default';
   showMultipleTo: boolean;
   showToDistribution: boolean;
   category: DocumentCategory;
@@ -1403,7 +1403,7 @@ export const InformationPaperDefinition: DocumentTypeDefinition = {
   description: 'Provides factual information in concise terms.',
   icon: 'ℹ️',
   schema: StaffingPaperSchema,
-  features: { ...STAFFING_PAPER_FEATURES },
+  features: { ...STAFFING_PAPER_FEATURES, paragraphTemplate: 'information-paper' as const },
   sections: [
     { id: 'header', title: 'Paper Details', fields: StaffingPaperFields },
     { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
