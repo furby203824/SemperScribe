@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import { useFormContext, useFieldArray } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2 } from 'lucide-react';
+import { FormData } from '@/types';
 
 const COMMON_OFFICES = [
   'DC M&RA', 'DC PP&O', 'DC I', 'DC AVN', 'DC CD&I',
@@ -15,13 +15,38 @@ const COMMON_OFFICES = [
   'SJA', 'PAO', 'Inspector General', 'Comptroller',
 ];
 
-export function CoordinationPageForm() {
-  const { control } = useFormContext();
+interface CoordinatingOffice {
+  office: string;
+  concurrence: string;
+  aoName: string;
+  date: string;
+}
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'coordinatingOffices',
-  });
+interface CoordinationPageFormProps {
+  formData: FormData;
+  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
+}
+
+export function CoordinationPageForm({ formData, setFormData }: CoordinationPageFormProps) {
+  const offices: CoordinatingOffice[] = formData.coordinatingOffices || [];
+
+  function updateOffices(newOffices: CoordinatingOffice[]) {
+    setFormData(prev => ({ ...prev, coordinatingOffices: newOffices }));
+  }
+
+  function updateField(index: number, field: keyof CoordinatingOffice, value: string) {
+    const updated = [...offices];
+    updated[index] = { ...updated[index], [field]: value };
+    updateOffices(updated);
+  }
+
+  function addEntry(office = '') {
+    updateOffices([...offices, { office, concurrence: 'pending', aoName: '', date: '' }]);
+  }
+
+  function removeEntry(index: number) {
+    updateOffices(offices.filter((_, i) => i !== index));
+  }
 
   return (
     <Card className="mb-8 border-border shadow-sm">
@@ -33,9 +58,9 @@ export function CoordinationPageForm() {
       </CardHeader>
       <CardContent className="pt-6">
         <div className="grid gap-4">
-          {fields.map((item, index) => (
+          {offices.map((entry, index) => (
             <div
-              key={item.id}
+              key={index}
               className="p-4 border rounded-lg bg-background space-y-3"
             >
               <div className="flex items-center justify-between">
@@ -46,7 +71,7 @@ export function CoordinationPageForm() {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  onClick={() => remove(index)}
+                  onClick={() => removeEntry(index)}
                   className="h-8 w-8 text-destructive hover:text-destructive"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -55,82 +80,57 @@ export function CoordinationPageForm() {
 
               <div className="grid gap-3 grid-cols-1 md:grid-cols-3">
                 {/* STAFF/EXTERNAL AGENCY */}
-                <FormField
-                  control={control}
-                  name={`coordinatingOffices.${index}.office`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Staff/External Agency *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., AC/S G-3"
-                          list={`office-suggestions-${index}`}
-                          {...field}
-                        />
-                      </FormControl>
-                      <datalist id={`office-suggestions-${index}`}>
-                        {COMMON_OFFICES.map(o => (
-                          <option key={o} value={o} />
-                        ))}
-                      </datalist>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-2">
+                  <Label>Staff/External Agency *</Label>
+                  <Input
+                    placeholder="e.g., AC/S G-3"
+                    list={`office-suggestions-${index}`}
+                    value={entry.office}
+                    onChange={e => updateField(index, 'office', e.target.value)}
+                  />
+                  <datalist id={`office-suggestions-${index}`}>
+                    {COMMON_OFFICES.map(o => (
+                      <option key={o} value={o} />
+                    ))}
+                  </datalist>
+                </div>
 
-                {/* NAME — grade and name, or "None Obtained" */}
-                <FormField
-                  control={control}
-                  name={`coordinatingOffices.${index}.aoName`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Grade and name, or None Obtained" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* NAME */}
+                <div className="space-y-2">
+                  <Label>Name</Label>
+                  <Input
+                    placeholder="Grade and name, or None Obtained"
+                    value={entry.aoName}
+                    onChange={e => updateField(index, 'aoName', e.target.value)}
+                  />
+                </div>
 
-                {/* DATE & POSITION — date + concur/nonconcur */}
+                {/* DATE & POSITION */}
                 <div className="grid gap-2 grid-cols-2">
-                  <FormField
-                    control={control}
-                    name={`coordinatingOffices.${index}.date`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Date</FormLabel>
-                        <FormControl>
-                          <Input placeholder="DD Mmm YY" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={control}
-                    name={`coordinatingOffices.${index}.concurrence`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Position</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || 'pending'}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="concur">Concur</SelectItem>
-                            <SelectItem value="nonconcur">Nonconcur</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="space-y-2">
+                    <Label>Date</Label>
+                    <Input
+                      placeholder="DD Mmm YY"
+                      value={entry.date}
+                      onChange={e => updateField(index, 'date', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Position</Label>
+                    <Select
+                      value={entry.concurrence || 'pending'}
+                      onValueChange={val => updateField(index, 'concurrence', val)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="concur">Concur</SelectItem>
+                        <SelectItem value="nonconcur">Nonconcur</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -141,21 +141,22 @@ export function CoordinationPageForm() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => append({ office: '', concurrence: 'pending', aoName: '', date: '' })}
+            onClick={() => addEntry()}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Entry
           </Button>
 
-          {fields.length === 0 && (
+          {offices.length === 0 && (
             <Button
               type="button"
               variant="secondary"
               onClick={() => {
                 const defaults = ['AC/S G-1', 'AC/S G-3', 'AC/S G-4', 'AC/S G-8', 'SJA'];
-                defaults.forEach(office =>
-                  append({ office, concurrence: 'pending', aoName: '', date: '' })
-                );
+                const newOffices = defaults.map(office => ({
+                  office, concurrence: 'pending', aoName: '', date: '',
+                }));
+                updateOffices([...offices, ...newOffices]);
               }}
             >
               <Plus className="mr-2 h-4 w-4" />
