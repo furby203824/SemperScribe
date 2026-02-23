@@ -3,6 +3,7 @@ import { DOCUMENT_TYPES, PdfPipeline } from '@/lib/schemas';
 import { generateBasePDFBlob } from '@/lib/pdf-generator';
 import { generateNavmc10274 } from '@/services/pdf/navmc10274Generator';
 import { generateNavmc11811 } from '@/services/pdf/navmc11811Generator';
+import { createCoordinationPagePdf, CoordinationPageData } from '@/services/pdf/coordinationPageGenerator';
 import { Navmc11811Data } from '@/types/navmc';
 import { mergeAdminSubsections } from '@/lib/naval-format-utils';
 
@@ -69,11 +70,33 @@ async function generateNavmc11811Pdf(ctx: PdfBuildContext): Promise<Blob> {
   return new Blob([pdfBytes], { type: 'application/pdf' });
 }
 
+function buildCoordinationPageData(ctx: PdfBuildContext): CoordinationPageData {
+  return {
+    documentType: ctx.formData.documentType,
+    subj: ctx.formData.subj || '',
+    date: ctx.formData.date,
+    actionOfficerName: ctx.formData.actionOfficerName || '',
+    actionOfficerRank: ctx.formData.actionOfficerRank,
+    actionOfficerOfficeCode: ctx.formData.actionOfficerOfficeCode || '',
+    actionOfficerPhone: ctx.formData.actionOfficerPhone,
+    coordinatingOffices: ctx.formData.coordinatingOffices as CoordinationPageData['coordinatingOffices'],
+    remarks: ctx.formData.remarks,
+    bodyFont: ctx.formData.bodyFont as CoordinationPageData['bodyFont'],
+  };
+}
+
+async function generateCoordinationPagePdf(ctx: PdfBuildContext): Promise<Blob> {
+  const data = buildCoordinationPageData(ctx);
+  const pdfBytes = await createCoordinationPagePdf(data);
+  return new Blob([pdfBytes], { type: 'application/pdf' });
+}
+
 const PIPELINE_MAP: Record<PdfPipeline, (ctx: PdfBuildContext) => Promise<Blob>> = {
   standard: generateStandardPdf,
   navmc10274: generateNavmc10274Pdf,
   navmc11811: generateNavmc11811Pdf,
   amhs: async () => new Blob([], { type: 'text/plain' }), // AMHS doesn't use PDF
+  'coordination-page': generateCoordinationPagePdf,
 };
 
 /**
