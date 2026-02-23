@@ -17,7 +17,6 @@ export interface CoordinationPageData {
   documentType: string;
   subj: string;
   coordinatingOffices?: CoordinatingOffice[];
-  remarks?: string;
   bodyFont?: 'times' | 'courier';
   [key: string]: unknown;
 }
@@ -222,18 +221,28 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
   if (staffingComments.length > 0) {
     y -= 6;
     ensureSpace(50);
+
+    // Separator line between table and staffing comments
+    page.drawLine({
+      start: { x: margin, y: y + 2 },
+      end: { x: margin + contentWidth, y: y + 2 },
+      thickness: 0.5,
+      color: black,
+    });
+    y -= 10;
+
     page = ensureSpace(14);
-    page.drawText('Staffing Comments:', { x: margin, y, font: boldFont, size: 10, color: black });
+    page.drawText('Staffing Comments:', { x: margin, y, font, size: 10, color: black });
     y -= 16;
 
     for (const sc of staffingComments) {
       const prefix = `${sc.office}: `;
-      const prefixWidth = boldFont.widthOfTextAtSize(prefix, 10);
+      const prefixWidth = font.widthOfTextAtSize(prefix, 10);
       const commentLines = wrapText(sc.comment, font, 10, contentWidth - prefixWidth);
 
-      // First line: bold office label + comment text
+      // First line: office label + comment text
       page = ensureSpace(14);
-      page.drawText(prefix, { x: margin, y, font: boldFont, size: 10, color: black });
+      page.drawText(prefix, { x: margin, y, font, size: 10, color: black });
       page.drawText(commentLines[0], { x: margin + prefixWidth, y, font, size: 10, color: black });
       y -= 14;
 
@@ -246,20 +255,7 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
     }
   }
 
-  // === REMARKS (below table) ===
-  if (data.remarks) {
-    y -= 6;
-    ensureSpace(50);
-    page.drawText('REMARKS:', { x: margin, y, font: boldFont, size: 10, color: black });
-    y -= 14;
 
-    const remarkLines = wrapText(data.remarks, font, 10, contentWidth);
-    for (const line of remarkLines) {
-      ensureSpace(14);
-      page.drawText(line, { x: margin, y, font, size: 10, color: black });
-      y -= 14;
-    }
-  }
 
   return pdfDoc.save();
 }
