@@ -1284,7 +1284,7 @@ const StaffingPaperFields: FieldDefinition[] = [
   }
 ];
 
-const StaffingPaperFooterFields: FieldDefinition[] = [
+const DrafterFooterFields: FieldDefinition[] = [
   {
     name: 'drafterName',
     label: 'Drafter Name',
@@ -1335,7 +1335,11 @@ const StaffingPaperFooterFields: FieldDefinition[] = [
     required: true,
     className: 'md:col-span-1'
   },
-  // Approver Fields (Position Paper)
+];
+
+const StaffingPaperFooterFields: FieldDefinition[] = [
+  ...DrafterFooterFields,
+  // Approver Fields (Position/Decision Papers only)
   {
     name: 'approverName',
     label: 'Approver Name',
@@ -1406,7 +1410,7 @@ export const InformationPaperDefinition: DocumentTypeDefinition = {
   features: { ...STAFFING_PAPER_FEATURES, paragraphTemplate: 'information-paper' as const },
   sections: [
     { id: 'header', title: 'Paper Details', fields: StaffingPaperFields },
-    { id: 'footer', title: 'Identification Footer', fields: StaffingPaperFooterFields }
+    { id: 'footer', title: 'Identification Footer', fields: DrafterFooterFields }
   ]
 };
 
