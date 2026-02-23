@@ -1232,6 +1232,14 @@ export const StaffingPaperSchema = z.object({
   drafterService: z.string().optional(),
   drafterAgency: z.string().optional(),
   classification: z.string().optional(),
+  // Approver fields (Position/Decision Papers)
+  approverName: z.string().optional(),
+  approverRank: z.string().optional(),
+  approverOfficeCode: z.string().optional(),
+  approverPhone: z.string().optional(),
+  // Decision Grid (Position/Decision Papers)
+  decisionGrid: z.any().optional(),
+  decisionMode: z.string().optional(),
 });
 
 const StaffingPaperFields: FieldDefinition[] = [
