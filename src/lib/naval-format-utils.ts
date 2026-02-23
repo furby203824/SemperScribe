@@ -602,64 +602,12 @@ export function validateSpacing(paragraphs: ParagraphData[]): Map<number, string
   return result;
 }
 
-export function getPositionPaperParagraphs(): ParagraphData[] {
+export function getStaffingPaperParagraphs(): ParagraphData[] {
   return [
-    { 
-      id: 1, 
-      level: 1, 
-      content: 'Bottom Line Up Front (BLUF): briefly state who the paper is for and why. For example: "Obtain CMC decision/establish Marine Corps position on subject."', 
-      title: 'Purpose', 
-      isMandatory: true 
-    },
-    { 
-      id: 2, 
-      level: 1, 
-      content: 'Briefly summarize main points to be made.', 
-      title: 'Major Points', 
-      isMandatory: true 
-    },
-    { 
-      id: 3, 
-      level: 2, 
-      content: 'State each point in one brief sentence.', 
-      title: '', 
-      isMandatory: true 
-    },
-    { 
-      id: 4, 
-      level: 2, 
-      content: 'Major points should stand alone and not require amplification by subordinate points.', 
-      title: '', 
-      isMandatory: true 
-    },
-    { 
-      id: 5, 
-      level: 1, 
-      content: '', 
-      title: 'Discussion', 
-      isMandatory: true 
-    },
-    { 
-      id: 6, 
-      level: 2, 
-      content: 'Tailor discussion to needs and knowledge of the reader.', 
-      title: '', 
-      isMandatory: true 
-    },
-    { 
-      id: 7, 
-      level: 2, 
-      content: 'Write in short, clear, direct conversational style so the reader understands the key points and arrives at a logical conclusion.', 
-      title: '', 
-      isMandatory: true 
-    },
-    { 
-      id: 8, 
-      level: 1, 
-      content: 'The recommendation(s) must flow logically from the major points and discussion. State in direct and positive language.', 
-      title: 'Recommendation', 
-      isMandatory: true 
-    },
+    { id: 1, level: 1, content: '', title: 'Purpose', isMandatory: true },
+    { id: 2, level: 1, content: '', title: 'Main Points', isMandatory: true },
+    { id: 3, level: 1, content: '', title: 'Discussion', isMandatory: true },
+    { id: 4, level: 1, content: '', title: 'Recommendation', isMandatory: true },
   ];
 }
 

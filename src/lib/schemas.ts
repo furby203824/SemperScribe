@@ -76,7 +76,7 @@ export interface DocumentFeatures {
   // Behavior
   isAMHS: boolean;
   isDirective: boolean;
-  paragraphTemplate?: 'mco' | 'bulletin' | 'moa' | 'default';
+  paragraphTemplate?: 'mco' | 'bulletin' | 'moa' | 'staffing-paper' | 'default';
   showMultipleTo: boolean;
   showToDistribution: boolean;
   category: DocumentCategory;
@@ -1381,6 +1381,7 @@ const STAFFING_PAPER_FEATURES: DocumentFeatures = {
   showSignature: false,
   category: 'staffing-papers',
   exportFormats: ['pdf'],
+  paragraphTemplate: 'staffing-paper',
 };
 
 export const PositionPaperDefinition: DocumentTypeDefinition = {
