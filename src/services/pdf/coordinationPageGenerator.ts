@@ -2,12 +2,13 @@ import { PDFDocument, rgb, StandardFonts, PDFPage, PDFFont } from 'pdf-lib';
 
 interface CoordinatingOffice {
   office: string;
-  concurrence: 'concur' | 'nonconcur' | 'pending';
+  concurrence: 'concur' | 'concur-comment' | 'nonconcur' | 'nonconcur-comment' | 'no-response' | 'pending';
   aoName?: string;
   date?: string;
   initials?: string;
   comments?: string;
   datePosition?: string;
+  staffingComment?: string;
 }
 
 export interface CoordinationPageData {
@@ -183,20 +184,58 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
 
       // DATE & POSITION — combine date and concurrence position
       const datePart = office.date || '';
-      const positionPart = office.concurrence === 'concur'
-        ? 'Concur'
-        : office.concurrence === 'nonconcur'
-          ? 'Nonconcur'
-          : '';
+      let positionPart = '';
+      switch (office.concurrence) {
+        case 'concur': positionPart = 'Concur'; break;
+        case 'concur-comment': positionPart = 'Concur w/comment'; break;
+        case 'nonconcur': positionPart = 'Non-concur'; break;
+        case 'nonconcur-comment': positionPart = 'Non-concur w/comment'; break;
+        case 'no-response': positionPart = datePart ? `No response as of ${datePart}` : 'No response'; break;
+      }
       // Use explicit datePosition field if provided, otherwise build from date + concurrence
+      // For "no-response" the date is already embedded in the position text
       const datePositionText = office.datePosition
-        || [datePart, positionPart].filter(Boolean).join(' / ');
+        || (office.concurrence === 'no-response'
+          ? positionPart
+          : [datePart, positionPart].filter(Boolean).join(' / '));
       page.drawText(datePositionText, {
         x: colDatePos + 4, y: y - 10, font, size: 9, color: black,
       });
     }
 
     y -= rowHeight;
+  }
+
+  // === STAFFING COMMENTS (below table) ===
+  const staffingComments = offices
+    .filter(o => o.staffingComment?.trim())
+    .map(o => ({ office: o.office, comment: o.staffingComment!.trim() }));
+
+  if (staffingComments.length > 0) {
+    y -= 6;
+    ensureSpace(50);
+    page = ensureSpace(14);
+    page.drawText('Staffing Comments:', { x: margin, y, font: boldFont, size: 10, color: black });
+    y -= 16;
+
+    for (const sc of staffingComments) {
+      const prefix = `${sc.office}: `;
+      const prefixWidth = boldFont.widthOfTextAtSize(prefix, 10);
+      const commentLines = wrapText(sc.comment, font, 10, contentWidth - prefixWidth);
+
+      // First line: bold office label + comment text
+      page = ensureSpace(14);
+      page.drawText(prefix, { x: margin, y, font: boldFont, size: 10, color: black });
+      page.drawText(commentLines[0], { x: margin + prefixWidth, y, font, size: 10, color: black });
+      y -= 14;
+
+      // Continuation lines indented to align with first line text
+      for (let i = 1; i < commentLines.length; i++) {
+        page = ensureSpace(14);
+        page.drawText(commentLines[i], { x: margin + prefixWidth, y, font, size: 10, color: black });
+        y -= 14;
+      }
+    }
   }
 
   // === REMARKS (below table) ===

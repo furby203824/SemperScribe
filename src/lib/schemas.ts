@@ -1025,9 +1025,10 @@ export const CoordinationPageSchema = z.object({
   subj: subjFieldRequired(),
   coordinatingOffices: z.array(z.object({
     office: z.string().min(1, "Staff/External Agency is required."),
-    concurrence: z.enum(['concur', 'nonconcur', 'pending']).default('pending'),
+    concurrence: z.enum(['concur', 'concur-comment', 'nonconcur', 'nonconcur-comment', 'no-response', 'pending']).default('pending'),
     aoName: z.string().optional(),
     date: z.string().optional(),
+    staffingComment: z.string().optional(),
   })).optional(),
   remarks: z.string().optional(),
 });
