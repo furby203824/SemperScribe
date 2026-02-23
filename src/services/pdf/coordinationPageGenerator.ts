@@ -134,29 +134,61 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
     const datePart = office.date || '';
     const commentText = office.concurrenceCommentText?.trim();
     const noRespDate = office.noResponseDate || datePart;
-    let positionPart = '';
-    switch (office.concurrence) {
-      case 'concur': positionPart = 'Concur'; break;
-      case 'concur-comment': positionPart = commentText ? `Concur w/comment ${commentText}` : 'Concur w/comment'; break;
-      case 'nonconcur': positionPart = 'Non-concur'; break;
-      case 'nonconcur-comment': positionPart = commentText ? `Non-concur w/comment ${commentText}` : 'Non-concur w/comment'; break;
-      case 'no-response': {
-        const deliveredPart = datePart ? `Delivered ${datePart}` : '';
-        const noRespPart = noRespDate ? `No response as of ${noRespDate}` : 'No response';
-        positionPart = [deliveredPart, noRespPart].filter(Boolean).join('; ');
-        break;
-      }
-    }
-    // Use explicit datePosition field if provided, otherwise build from date + concurrence
-    const datePositionText = office.datePosition
-      || (office.concurrence === 'no-response'
-        ? positionPart
-        : [datePart, positionPart].filter(Boolean).join('; '));
-    page.drawText(datePositionText, {
-      x: colDatePos, y, font, size: 9, color: black,
-    });
 
-    y -= rowHeight;
+    if (office.datePosition) {
+      // Explicit datePosition overrides everything
+      page.drawText(office.datePosition, {
+        x: colDatePos, y, font, size: 9, color: black,
+      });
+      y -= rowHeight;
+    } else if ((office.concurrence === 'concur-comment' || office.concurrence === 'nonconcur-comment') && commentText) {
+      // w/comment with text: first line is "date; Concur w/comment", second line is the comment text
+      const label = office.concurrence === 'concur-comment' ? 'Concur w/comment' : 'Non-concur w/comment';
+      const firstLine = [datePart, label].filter(Boolean).join('; ');
+      page.drawText(firstLine, {
+        x: colDatePos, y, font, size: 9, color: black,
+      });
+      y -= rowHeight;
+      ensureSpace(rowHeight + 20);
+      page.drawText(commentText, {
+        x: colDatePos, y, font, size: 9, color: black,
+      });
+      y -= rowHeight;
+    } else if (office.concurrence === 'no-response') {
+      // No response: first line is "Delivered date;", second line is "No response as of date"
+      const deliveredPart = datePart ? `Delivered ${datePart};` : '';
+      const noRespPart = noRespDate ? `No response as of ${noRespDate}` : 'No response';
+      if (deliveredPart) {
+        page.drawText(deliveredPart, {
+          x: colDatePos, y, font, size: 9, color: black,
+        });
+        y -= rowHeight;
+        ensureSpace(rowHeight + 20);
+        page.drawText(noRespPart, {
+          x: colDatePos, y, font, size: 9, color: black,
+        });
+        y -= rowHeight;
+      } else {
+        page.drawText(noRespPart, {
+          x: colDatePos, y, font, size: 9, color: black,
+        });
+        y -= rowHeight;
+      }
+    } else {
+      // Simple cases: concur, nonconcur, w/comment without text
+      let positionPart = '';
+      switch (office.concurrence) {
+        case 'concur': positionPart = 'Concur'; break;
+        case 'concur-comment': positionPart = 'Concur w/comment'; break;
+        case 'nonconcur': positionPart = 'Non-concur'; break;
+        case 'nonconcur-comment': positionPart = 'Non-concur w/comment'; break;
+      }
+      const datePositionText = [datePart, positionPart].filter(Boolean).join('; ');
+      page.drawText(datePositionText, {
+        x: colDatePos, y, font, size: 9, color: black,
+      });
+      y -= rowHeight;
+    }
   }
 
   // === STAFFING COMMENTS (below table) ===
