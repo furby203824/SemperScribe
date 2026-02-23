@@ -115,10 +115,10 @@ export function CoordinationPageForm({ formData, setFormData }: CoordinationPage
                 <div className="grid gap-2 grid-cols-2">
                   <div className="space-y-2">
                     <Label>Date</Label>
-                    <Input
-                      placeholder="DD Mmm YY"
-                      value={entry.date}
-                      onChange={e => updateField(index, 'date', e.target.value)}
+                    <DatePicker
+                      date={entry.date ? parse(entry.date, 'd MMM yy', new Date()) : undefined}
+                      setDate={(d) => updateField(index, 'date', d ? format(d, 'd MMM yy') : '')}
+                      placeholder="Pick a date"
                     />
                   </div>
                   <div className="space-y-2">
@@ -160,8 +160,8 @@ export function CoordinationPageForm({ formData, setFormData }: CoordinationPage
                 <div className="space-y-2">
                   <Label>As of Date</Label>
                   <DatePicker
-                    date={entry.noResponseDate ? parse(entry.noResponseDate, 'dd MMM yy', new Date()) : undefined}
-                    setDate={(d) => updateField(index, 'noResponseDate', d ? format(d, 'dd MMM yy') : '')}
+                    date={entry.noResponseDate ? parse(entry.noResponseDate, 'd MMM yy', new Date()) : undefined}
+                    setDate={(d) => updateField(index, 'noResponseDate', d ? format(d, 'd MMM yy') : '')}
                     placeholder="Select as-of date"
                   />
                 </div>
