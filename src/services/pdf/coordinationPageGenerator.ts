@@ -221,6 +221,16 @@ export async function createCoordinationPagePdf(data: CoordinationPageData): Pro
   if (staffingComments.length > 0) {
     y -= 6;
     ensureSpace(50);
+
+    // Separator line between table and staffing comments
+    page.drawLine({
+      start: { x: margin, y: y + 2 },
+      end: { x: margin + contentWidth, y: y + 2 },
+      thickness: 0.5,
+      color: black,
+    });
+    y -= 10;
+
     page = ensureSpace(14);
     page.drawText('Staffing Comments:', { x: margin, y, font, size: 10, color: black });
     y -= 16;
