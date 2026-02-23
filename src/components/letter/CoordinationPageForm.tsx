@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Plus, Trash2 } from 'lucide-react';
 import { FormData } from '@/types';
 
@@ -20,6 +21,7 @@ interface CoordinatingOffice {
   concurrence: string;
   aoName: string;
   date: string;
+  staffingComment: string;
 }
 
 interface CoordinationPageFormProps {
@@ -41,7 +43,7 @@ export function CoordinationPageForm({ formData, setFormData }: CoordinationPage
   }
 
   function addEntry(office = '') {
-    updateOffices([...offices, { office, concurrence: 'pending', aoName: '', date: '' }]);
+    updateOffices([...offices, { office, concurrence: 'pending', aoName: '', date: '', staffingComment: '' }]);
   }
 
   function removeEntry(index: number) {
@@ -127,11 +129,25 @@ export function CoordinationPageForm({ formData, setFormData }: CoordinationPage
                       <SelectContent>
                         <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="concur">Concur</SelectItem>
-                        <SelectItem value="nonconcur">Nonconcur</SelectItem>
+                        <SelectItem value="concur-comment">Concur w/comment</SelectItem>
+                        <SelectItem value="nonconcur">Non-concur</SelectItem>
+                        <SelectItem value="nonconcur-comment">Non-concur w/comment</SelectItem>
+                        <SelectItem value="no-response">No response</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
+              </div>
+
+              {/* STAFFING COMMENT */}
+              <div className="space-y-2">
+                <Label>Staffing Comment</Label>
+                <Textarea
+                  placeholder="Optional staffing comment for this office..."
+                  value={entry.staffingComment || ''}
+                  onChange={e => updateField(index, 'staffingComment', e.target.value)}
+                  rows={2}
+                />
               </div>
             </div>
           ))}
@@ -154,7 +170,7 @@ export function CoordinationPageForm({ formData, setFormData }: CoordinationPage
               onClick={() => {
                 const defaults = ['AC/S G-1', 'AC/S G-3', 'AC/S G-4', 'AC/S G-8', 'SJA'];
                 const newOffices = defaults.map(office => ({
-                  office, concurrence: 'pending', aoName: '', date: '',
+                  office, concurrence: 'pending', aoName: '', date: '', staffingComment: '',
                 }));
                 updateOffices([...offices, ...newOffices]);
               }}

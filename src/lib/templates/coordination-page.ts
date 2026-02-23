@@ -16,33 +16,38 @@ export const CoordinationPageTemplate: DocumentTemplate = {
     coordinatingOffices: [
       {
         office: 'AC/S G-1',
-        concurrence: 'concur',
+        concurrence: 'concur-comment',
         aoName: 'Maj R. L. Smith',
         date: '08 Feb 26',
+        staffingComment: 'No impact to current manpower allocations. Recommend approval.',
       },
       {
         office: 'AC/S G-3',
         concurrence: 'concur',
         aoName: 'LtCol P. J. Adams',
         date: '09 Feb 26',
+        staffingComment: '',
       },
       {
         office: 'AC/S G-4',
-        concurrence: 'nonconcur',
+        concurrence: 'nonconcur-comment',
         aoName: 'Maj T. K. Brown',
         date: '09 Feb 26',
+        staffingComment: 'Supply chain transition requires 180 days vice 90. Recommend extending Phase 2 timeline.',
       },
       {
         office: 'AC/S G-8',
-        concurrence: 'concur',
-        aoName: 'Capt M. A. Wilson',
+        concurrence: 'no-response',
+        aoName: '',
         date: '10 Feb 26',
+        staffingComment: '',
       },
       {
         office: 'SJA',
-        concurrence: 'concur',
+        concurrence: 'concur-comment',
         aoName: 'Maj H. R. Garcia',
         date: '10 Feb 26',
+        staffingComment: 'No legal objections.',
       },
     ],
 
