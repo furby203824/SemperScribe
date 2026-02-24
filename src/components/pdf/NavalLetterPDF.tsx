@@ -1789,29 +1789,37 @@ export function NavalLetterPDF({
       {isDirective && formData.showStructuralPages && (
         <>
           {/* Page i: Locator Sheet */}
-          <Page size="LETTER" style={[styles.page, { justifyContent: 'center', alignItems: 'center' }]}>
-            <View style={{ alignItems: 'center', marginBottom: 48 }}>
-              <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center', marginBottom: 12 }}>
+          <Page size="LETTER" style={styles.page}>
+            {/* Top-right: Directive designation and date */}
+            <View style={{ alignItems: 'flex-end', marginBottom: 48 }}>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
                 {formData.directiveTitle || buildDirectiveTitle(formData)}
               </Text>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, textAlign: 'center', marginBottom: 24 }}>
-                {(formData.subj || '').toUpperCase()}
-              </Text>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, textAlign: 'center', marginBottom: 48 }}>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
                 {formattedDate}
               </Text>
             </View>
-            <View style={{ alignItems: 'center', marginTop: 48 }}>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, textAlign: 'center', marginBottom: 12 }}>
-                PCN {formData.distribution?.pcn || '___________'}
+            {/* Centered title */}
+            <View style={{ alignItems: 'center', marginTop: 96, marginBottom: 48 }}>
+              <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center' }}>
+                LOCATOR SHEET
               </Text>
             </View>
-            <View style={{ width: '80%', marginTop: 48 }}>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, marginBottom: 8 }}>
-                Location: _______________________________________________
+            {/* Left-aligned Subj line */}
+            <View style={{ marginBottom: 48 }}>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
+                Subj:  {(formData.subj || '').toUpperCase()}
               </Text>
-              <Text style={{ fontFamily: fontFamily, fontSize: 8, color: '#666666' }}>
-                (Binder/Folder/Electronic File)
+            </View>
+            {/* Left-aligned Location line */}
+            <View style={{ marginBottom: 4 }}>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
+                Location:  _______________________________________________
+              </Text>
+            </View>
+            <View>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
+                (Indicate the location(s) of the copy(ies) of this Order.)
               </Text>
             </View>
             <Text style={[styles.footer, { fontFamily: fontFamily }]}>i</Text>
