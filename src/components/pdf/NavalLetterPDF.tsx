@@ -816,7 +816,7 @@ export function NavalLetterPDF({
                    <View style={{ alignItems: 'flex-end' }}>
                       <View style={{ alignItems: 'flex-start' }}>
                         <Text style={styles.addressLine}>
-                          {formData.directiveTitle || buildDirectiveTitle(formData)}
+                          {formatDirectiveSSICBlock(formData)}
                         </Text>
                         <Text style={styles.addressLine}>{formattedDate}</Text>
                       </View>
@@ -1306,22 +1306,22 @@ export function NavalLetterPDF({
           const validReports = formData.reports.filter((r: { title: string }) => r.title);
           const plural = validReports.length > 1;
           const label = `Report${plural ? 's' : ''} Required:`;
-          // Width of the label column — "Reports Required:" is ~108pt in 12pt Times
-          const labelWidth = 108;
+          // Label width must accommodate "Reports Required:" without wrapping (~120pt in 12pt Times)
+          const labelWidth = 120;
 
           if (validReports.length <= 4) {
             return (
-              <View style={styles.refEnclSection}>
+              <View style={{ marginBottom: PDF_SPACING.sectionGap }}>
                 {validReports.map((report: { id: string; title: string; controlSymbol: string; paragraphRef: string; exempt?: boolean }, idx: number) => {
                   const numeral = validReports.length > 1 ? `${toRoman(idx + 1).toUpperCase()}.` : '';
                   const controlText = report.exempt ? 'EXEMPT' : (report.controlSymbol ? `Report Control Symbol ${report.controlSymbol}` : '');
                   const parRef = report.paragraphRef ? `, par. ${report.paragraphRef}` : '';
                   const reportText = `${report.title}${controlText ? ` (${controlText})` : ''}${parRef}`;
                   return (
-                    <View key={report.id || idx} style={{ flexDirection: 'row', fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
-                      <Text style={{ width: labelWidth }}>{idx === 0 ? label : ''}</Text>
+                    <View key={report.id || idx} wrap={false} style={{ flexDirection: 'row', fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
+                      <Text style={{ width: labelWidth, flexShrink: 0 }}>{idx === 0 ? label : ''}</Text>
                       {validReports.length > 1 && (
-                        <Text style={{ width: 22, textAlign: 'right', paddingRight: 4 }}>{numeral}</Text>
+                        <Text style={{ width: 22, flexShrink: 0, textAlign: 'right', paddingRight: 4 }}>{numeral}</Text>
                       )}
                       <Text style={{ flex: 1 }}>{reportText}</Text>
                     </View>
@@ -1332,9 +1332,9 @@ export function NavalLetterPDF({
           } else {
             // 5+ reports: refer to the Reports Required page
             return (
-              <View style={styles.refEnclSection}>
+              <View style={{ marginBottom: PDF_SPACING.sectionGap }}>
                 <View style={{ flexDirection: 'row', fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
-                  <Text style={{ width: labelWidth }}>Reports Required:</Text>
+                  <Text style={{ width: labelWidth, flexShrink: 0 }}>Reports Required:</Text>
                   <Text style={{ flex: 1 }}>See page following signature page.</Text>
                 </View>
               </View>
