@@ -594,10 +594,10 @@ export function NavalLetterPDF({
   const enclsWithContent = enclosures.filter((e) => e.trim());
   const copiesWithContent = copyTos.filter((c) => c.trim());
   const distListWithContent = distList.filter((d) => d.trim());
-  const paragraphsWithContent = paragraphs.filter((p) => p.content.trim());
+  const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin' || formData.documentType === 'change-transmittal';
+  const paragraphsWithContent = paragraphs.filter((p) => p.content.trim() || (isDirective && p.title && p.title.trim()));
 
   const formattedSubjLines = splitSubject((formData.subj || '').toUpperCase(), PDF_SUBJECT.maxLineLength);
-  const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin' || formData.documentType === 'change-transmittal';
   const isFromToMemo = formData.documentType === 'from-to-memo';
   const isMfr = formData.documentType === 'mfr';
   const isMoaOrMou = formData.documentType === 'moa' || formData.documentType === 'mou';
@@ -1302,36 +1302,45 @@ export function NavalLetterPDF({
 
 
         {/* Reports Required (for Directives) - before first paragraph per MCO 5216.20B par. 29b */}
-        {isDirective && formData.reports && formData.reports.filter((r: { title: string }) => r.title).length > 0 && (
-          <View style={styles.bodySection}>
-            {(() => {
-              const validReports = formData.reports.filter((r: { title: string }) => r.title);
-              const plural = validReports.length > 1;
-              const label = `Report${plural ? 's' : ''} Required:`;
-              if (validReports.length <= 4) {
-                // Inline format: "Report(s) Required: Title (Report Control Symbol XX), par. Xa"
-                const reportLines = validReports.map((report: { id: string; title: string; controlSymbol: string; paragraphRef: string; exempt?: boolean }, idx: number) => {
-                  const numeral = validReports.length > 1 ? `${toRoman(idx + 1).toUpperCase()}. ` : '';
+        {isDirective && formData.reports && formData.reports.filter((r: { title: string }) => r.title).length > 0 && (() => {
+          const validReports = formData.reports.filter((r: { title: string }) => r.title);
+          const plural = validReports.length > 1;
+          const label = `Report${plural ? 's' : ''} Required:`;
+          // Width of the label column — "Reports Required:" is ~108pt in 12pt Times
+          const labelWidth = 108;
+
+          if (validReports.length <= 4) {
+            return (
+              <View style={styles.refEnclSection}>
+                {validReports.map((report: { id: string; title: string; controlSymbol: string; paragraphRef: string; exempt?: boolean }, idx: number) => {
+                  const numeral = validReports.length > 1 ? `${toRoman(idx + 1).toUpperCase()}.` : '';
                   const controlText = report.exempt ? 'EXEMPT' : (report.controlSymbol ? `Report Control Symbol ${report.controlSymbol}` : '');
                   const parRef = report.paragraphRef ? `, par. ${report.paragraphRef}` : '';
-                  return `${numeral}${report.title}${controlText ? ` (${controlText})` : ''}${parRef}`;
-                });
-                return (
-                  <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body }}>
-                    {label}{' '}{reportLines.join('\n')}
-                  </Text>
-                );
-              } else {
-                // 5+ reports: refer to the Reports Required page
-                return (
-                  <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body }}>
-                    Reports Required: See page following signature page.
-                  </Text>
-                );
-              }
-            })()}
-          </View>
-        )}
+                  const reportText = `${report.title}${controlText ? ` (${controlText})` : ''}${parRef}`;
+                  return (
+                    <View key={report.id || idx} style={{ flexDirection: 'row', fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
+                      <Text style={{ width: labelWidth }}>{idx === 0 ? label : ''}</Text>
+                      {validReports.length > 1 && (
+                        <Text style={{ width: 22, textAlign: 'right', paddingRight: 4 }}>{numeral}</Text>
+                      )}
+                      <Text style={{ flex: 1 }}>{reportText}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            );
+          } else {
+            // 5+ reports: refer to the Reports Required page
+            return (
+              <View style={styles.refEnclSection}>
+                <View style={{ flexDirection: 'row', fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
+                  <Text style={{ width: labelWidth }}>Reports Required:</Text>
+                  <Text style={{ flex: 1 }}>See page following signature page.</Text>
+                </View>
+              </View>
+            );
+          }
+        })()}
 
         {/* Body paragraphs - text wraps to left margin */}
         <View style={styles.bodySection}>
