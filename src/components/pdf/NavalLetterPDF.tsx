@@ -736,11 +736,6 @@ export function NavalLetterPDF({
               </Text>
             </View>
             <Text style={[styles.footer, { fontFamily: fontFamily }]}>i</Text>
-            {distributionStatementText !== '' && (
-              <Text style={{ position: 'absolute', bottom: 22, left: PDF_MARGINS.left, right: PDF_MARGINS.left, textAlign: 'left', fontSize: PDF_FONT_SIZES.body, fontFamily: fontFamily }}>
-                {distributionStatementText}
-              </Text>
-            )}
           </Page>
 
           {/* Page ii: Record of Changes */}
@@ -774,11 +769,6 @@ export function NavalLetterPDF({
               </View>
             ))}
             <Text style={[styles.footer, { fontFamily: fontFamily }]}>ii</Text>
-            {distributionStatementText !== '' && (
-              <Text style={{ position: 'absolute', bottom: 22, left: PDF_MARGINS.left, right: PDF_MARGINS.left, textAlign: 'left', fontSize: PDF_FONT_SIZES.body, fontFamily: fontFamily }}>
-                {distributionStatementText}
-              </Text>
-            )}
           </Page>
 
           {/* Page iii: Table of Contents */}
@@ -820,11 +810,6 @@ export function NavalLetterPDF({
               </View>
             )}
             <Text style={[styles.footer, { fontFamily: fontFamily }]}>iii</Text>
-            {distributionStatementText !== '' && (
-              <Text style={{ position: 'absolute', bottom: 22, left: PDF_MARGINS.left, right: PDF_MARGINS.left, textAlign: 'left', fontSize: PDF_FONT_SIZES.body, fontFamily: fontFamily }}>
-                {distributionStatementText}
-              </Text>
-            )}
           </Page>
         </>
       )}
@@ -1355,7 +1340,7 @@ export function NavalLetterPDF({
                     <View key={report.id || idx} wrap={false} style={{ flexDirection: 'row', fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
                       <Text style={{ width: labelWidth, flexShrink: 0 }}>{idx === 0 ? label : ''}</Text>
                       {validReports.length > 1 && (
-                        <Text style={{ width: 22, flexShrink: 0, textAlign: 'right', paddingRight: 4 }}>{numeral}</Text>
+                        <Text style={{ width: fontFamily === 'Liberation Mono' ? 30 : 26, flexShrink: 0, textAlign: 'right', paddingRight: 4 }}>{numeral}</Text>
                       )}
                       <Text style={{ flex: 1 }}>{reportText}</Text>
                     </View>
@@ -1647,7 +1632,7 @@ export function NavalLetterPDF({
         )}
 
         {/* Distribution / Copy To for Directives */}
-        {/* Distribution Statement moved to fixed footer (every page) */}
+        {/* Distribution Statement rendered in footer on first page only */}
         {isDirective && (
             <View style={styles.copyToSection}>
                 {formData.distribution && (formData.distribution.type === 'pcn' || formData.distribution.type === 'pcn-with-copy') && (
@@ -1747,7 +1732,7 @@ export function NavalLetterPDF({
           fixed
         />
 
-        {/* Distribution Statement Footer — shown on every page for directives */}
+        {/* Distribution Statement Footer — first page only for directives */}
         {distributionStatementText !== '' && (
           <Text
             style={{
@@ -1760,9 +1745,8 @@ export function NavalLetterPDF({
               fontFamily: fontFamily,
             }}
             fixed
-          >
-            {distributionStatementText}
-          </Text>
+            render={({ pageNumber }) => pageNumber === 1 ? distributionStatementText : ''}
+          />
         )}
 
         {/* FOUO Footer - Per MCO 5215.1K para 10 */}
@@ -1865,8 +1849,9 @@ export function NavalLetterPDF({
 
           {/* Column headers */}
           <View style={{ flexDirection: 'row', marginBottom: 8 }}>
+            <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: fontFamily === 'Liberation Mono' ? 30 : 26, flexShrink: 0 }}>{''}</Text>
             <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: '50%' }}>
-              {'    REPORT TITLE'}
+              REPORT TITLE
             </Text>
             <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: '28%' }}>
               REPORT{'\n'}CONTROL SYMBOL
@@ -1879,8 +1864,11 @@ export function NavalLetterPDF({
           {/* Report rows */}
           {formData.reports.filter((r: { title: string }) => r.title).map((report: { id: string; title: string; controlSymbol: string; paragraphRef: string; exempt?: boolean }, idx: number) => (
             <View key={report.id || idx} style={{ flexDirection: 'row', marginBottom: 4 }}>
+              <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: fontFamily === 'Liberation Mono' ? 30 : 26, textAlign: 'right', paddingRight: 4, flexShrink: 0 }}>
+                {toRoman(idx + 1).toUpperCase()}.
+              </Text>
               <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: '50%' }}>
-                {toRoman(idx + 1).toUpperCase()}. {report.title}
+                {report.title}
               </Text>
               <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: '28%' }}>
                 {report.exempt ? 'EXEMPT' : (report.controlSymbol || '')}
@@ -1902,22 +1890,6 @@ export function NavalLetterPDF({
           />
 
           {/* Distribution Statement Footer */}
-          {distributionStatementText !== '' && (
-            <Text
-              style={{
-                position: 'absolute',
-                bottom: 22,
-                left: PDF_MARGINS.left,
-                right: PDF_MARGINS.left,
-                textAlign: 'left',
-                fontSize: PDF_FONT_SIZES.body,
-                fontFamily: fontFamily,
-              }}
-              fixed
-            >
-              {distributionStatementText}
-            </Text>
-          )}
         </Page>
       )}
     </Document>
