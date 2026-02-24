@@ -736,11 +736,6 @@ export function NavalLetterPDF({
               </Text>
             </View>
             <Text style={[styles.footer, { fontFamily: fontFamily }]}>i</Text>
-            {distributionStatementText !== '' && (
-              <Text style={{ position: 'absolute', bottom: 22, left: PDF_MARGINS.left, right: PDF_MARGINS.left, textAlign: 'left', fontSize: PDF_FONT_SIZES.body, fontFamily: fontFamily }}>
-                {distributionStatementText}
-              </Text>
-            )}
           </Page>
 
           {/* Page ii: Record of Changes */}
@@ -774,11 +769,6 @@ export function NavalLetterPDF({
               </View>
             ))}
             <Text style={[styles.footer, { fontFamily: fontFamily }]}>ii</Text>
-            {distributionStatementText !== '' && (
-              <Text style={{ position: 'absolute', bottom: 22, left: PDF_MARGINS.left, right: PDF_MARGINS.left, textAlign: 'left', fontSize: PDF_FONT_SIZES.body, fontFamily: fontFamily }}>
-                {distributionStatementText}
-              </Text>
-            )}
           </Page>
 
           {/* Page iii: Table of Contents */}
@@ -820,11 +810,6 @@ export function NavalLetterPDF({
               </View>
             )}
             <Text style={[styles.footer, { fontFamily: fontFamily }]}>iii</Text>
-            {distributionStatementText !== '' && (
-              <Text style={{ position: 'absolute', bottom: 22, left: PDF_MARGINS.left, right: PDF_MARGINS.left, textAlign: 'left', fontSize: PDF_FONT_SIZES.body, fontFamily: fontFamily }}>
-                {distributionStatementText}
-              </Text>
-            )}
           </Page>
         </>
       )}
@@ -1647,7 +1632,7 @@ export function NavalLetterPDF({
         )}
 
         {/* Distribution / Copy To for Directives */}
-        {/* Distribution Statement moved to fixed footer (every page) */}
+        {/* Distribution Statement rendered in footer on first page only */}
         {isDirective && (
             <View style={styles.copyToSection}>
                 {formData.distribution && (formData.distribution.type === 'pcn' || formData.distribution.type === 'pcn-with-copy') && (
@@ -1747,7 +1732,7 @@ export function NavalLetterPDF({
           fixed
         />
 
-        {/* Distribution Statement Footer — shown on every page for directives */}
+        {/* Distribution Statement Footer — first page only for directives */}
         {distributionStatementText !== '' && (
           <Text
             style={{
@@ -1760,9 +1745,8 @@ export function NavalLetterPDF({
               fontFamily: fontFamily,
             }}
             fixed
-          >
-            {distributionStatementText}
-          </Text>
+            render={({ pageNumber }) => pageNumber === 1 ? distributionStatementText : ''}
+          />
         )}
 
         {/* FOUO Footer - Per MCO 5215.1K para 10 */}
@@ -1906,22 +1890,6 @@ export function NavalLetterPDF({
           />
 
           {/* Distribution Statement Footer */}
-          {distributionStatementText !== '' && (
-            <Text
-              style={{
-                position: 'absolute',
-                bottom: 22,
-                left: PDF_MARGINS.left,
-                right: PDF_MARGINS.left,
-                textAlign: 'left',
-                fontSize: PDF_FONT_SIZES.body,
-                fontFamily: fontFamily,
-              }}
-              fixed
-            >
-              {distributionStatementText}
-            </Text>
-          )}
         </Page>
       )}
     </Document>
