@@ -1799,12 +1799,12 @@ export function NavalLetterPDF({
           </View>
           {/* Centered title - 1 hard space after date */}
           <View style={{ alignItems: 'center', marginBottom: PDF_SPACING.emptyLine * 2 }}>
-            <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center' }}>
+            <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, textAlign: 'center' }}>
               LOCATOR SHEET
             </Text>
           </View>
           {/* Left-aligned Subj line - 2 hard spaces after title */}
-          <View style={{ marginBottom: 48 }}>
+          <View style={{ marginBottom: PDF_SPACING.emptyLine }}>
             <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
               Subj:  {(formData.subj || '').toUpperCase()}
             </Text>
