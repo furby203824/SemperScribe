@@ -682,6 +682,24 @@ export function NavalLetterPDF({
         }))
     : [];
 
+  // Pre-compute distribution statement text for use in fixed footer
+  const distributionStatementText = (() => {
+    const dist = formData.distribution;
+    if (!isDirective || !dist?.statementCode) return '';
+    const stmt = DISTRIBUTION_STATEMENTS[dist.statementCode as keyof typeof DISTRIBUTION_STATEMENTS];
+    if (!stmt) return '';
+    let text = stmt.text;
+    if (stmt.requiresFillIns) {
+      if (dist.statementReason) text = text.replace('(fill in reason)', dist.statementReason);
+      if (dist.statementDate) text = text.replace('(date of determination)', formatCancellationDate(dist.statementDate));
+      if (dist.statementAuthority) {
+        text = text.replace('(insert originating command)', dist.statementAuthority);
+        text = text.replace('(originating command)', dist.statementAuthority);
+      }
+    }
+    return text;
+  })();
+
   return (
     <Document
       title={formData.subj || 'Naval Letter'}
@@ -718,6 +736,11 @@ export function NavalLetterPDF({
               </Text>
             </View>
             <Text style={[styles.footer, { fontFamily: fontFamily }]}>i</Text>
+            {distributionStatementText !== '' && (
+              <Text style={{ position: 'absolute', bottom: 22, left: PDF_MARGINS.left, right: PDF_MARGINS.left, textAlign: 'left', fontSize: PDF_FONT_SIZES.body, fontFamily: fontFamily }}>
+                {distributionStatementText}
+              </Text>
+            )}
           </Page>
 
           {/* Page ii: Record of Changes */}
@@ -751,6 +774,11 @@ export function NavalLetterPDF({
               </View>
             ))}
             <Text style={[styles.footer, { fontFamily: fontFamily }]}>ii</Text>
+            {distributionStatementText !== '' && (
+              <Text style={{ position: 'absolute', bottom: 22, left: PDF_MARGINS.left, right: PDF_MARGINS.left, textAlign: 'left', fontSize: PDF_FONT_SIZES.body, fontFamily: fontFamily }}>
+                {distributionStatementText}
+              </Text>
+            )}
           </Page>
 
           {/* Page iii: Table of Contents */}
@@ -792,6 +820,11 @@ export function NavalLetterPDF({
               </View>
             )}
             <Text style={[styles.footer, { fontFamily: fontFamily }]}>iii</Text>
+            {distributionStatementText !== '' && (
+              <Text style={{ position: 'absolute', bottom: 22, left: PDF_MARGINS.left, right: PDF_MARGINS.left, textAlign: 'left', fontSize: PDF_FONT_SIZES.body, fontFamily: fontFamily }}>
+                {distributionStatementText}
+              </Text>
+            )}
           </Page>
         </>
       )}
@@ -1614,33 +1647,9 @@ export function NavalLetterPDF({
         )}
 
         {/* Distribution / Copy To for Directives */}
+        {/* Distribution Statement moved to fixed footer (every page) */}
         {isDirective && (
             <View style={styles.copyToSection}>
-                {/* Distribution Statement */}
-                {(() => {
-                    const dist = formData.distribution;
-                    if (dist?.statementCode && DISTRIBUTION_STATEMENTS[dist.statementCode as keyof typeof DISTRIBUTION_STATEMENTS]) {
-                        const stmt = DISTRIBUTION_STATEMENTS[dist.statementCode as keyof typeof DISTRIBUTION_STATEMENTS];
-                        let stmtText = stmt.text;
-                        if (stmt.requiresFillIns) {
-                            if (dist.statementReason) stmtText = stmtText.replace('(fill in reason)', dist.statementReason);
-                            if (dist.statementDate) stmtText = stmtText.replace('(date of determination)', formatCancellationDate(dist.statementDate));
-                            if (dist.statementAuthority) {
-                                stmtText = stmtText.replace('(insert originating command)', dist.statementAuthority);
-                                stmtText = stmtText.replace('(originating command)', dist.statementAuthority);
-                            }
-                        }
-                        return (
-                            <View style={{ marginBottom: PDF_SPACING.sectionGap, marginTop: PDF_SPACING.sectionGap }}>
-                                <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body }}>
-                                    {stmtText}
-                                </Text>
-                            </View>
-                        );
-                    }
-                    return null;
-                })()}
-
                 {formData.distribution && (formData.distribution.type === 'pcn' || formData.distribution.type === 'pcn-with-copy') && (
                     <View style={{ flexDirection: 'row', marginTop: PDF_SPACING.paragraph }}>
                         <Text style={styles.copyToLabel}>DISTRIBUTION: </Text>
@@ -1737,6 +1746,24 @@ export function NavalLetterPDF({
           }}
           fixed
         />
+
+        {/* Distribution Statement Footer — shown on every page for directives */}
+        {distributionStatementText !== '' && (
+          <Text
+            style={{
+              position: 'absolute',
+              bottom: 22,
+              left: PDF_MARGINS.left,
+              right: PDF_MARGINS.left,
+              textAlign: 'left',
+              fontSize: PDF_FONT_SIZES.body,
+              fontFamily: fontFamily,
+            }}
+            fixed
+          >
+            {distributionStatementText}
+          </Text>
+        )}
 
         {/* FOUO Footer - Per MCO 5215.1K para 10 */}
         {/* "FOR OFFICIAL USE ONLY" centered at bottom of pages for FOUO-designated directives */}
@@ -1873,6 +1900,24 @@ export function NavalLetterPDF({
             }}
             fixed
           />
+
+          {/* Distribution Statement Footer */}
+          {distributionStatementText !== '' && (
+            <Text
+              style={{
+                position: 'absolute',
+                bottom: 22,
+                left: PDF_MARGINS.left,
+                right: PDF_MARGINS.left,
+                textAlign: 'left',
+                fontSize: PDF_FONT_SIZES.body,
+                fontFamily: fontFamily,
+              }}
+              fixed
+            >
+              {distributionStatementText}
+            </Text>
+          )}
         </Page>
       )}
     </Document>
