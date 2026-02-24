@@ -1791,7 +1791,7 @@ export function NavalLetterPDF({
           {/* Page i: Locator Sheet */}
           <Page size="LETTER" style={styles.page}>
             {/* Top-right: Directive designation and date */}
-            <View style={{ alignItems: 'flex-end', marginBottom: 48 }}>
+            <View style={{ alignItems: 'flex-end', marginBottom: PDF_SPACING.emptyLine }}>
               <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
                 {formData.directiveTitle || buildDirectiveTitle(formData)}
               </Text>
@@ -1799,13 +1799,13 @@ export function NavalLetterPDF({
                 {formattedDate}
               </Text>
             </View>
-            {/* Centered title */}
-            <View style={{ alignItems: 'center', marginTop: 96, marginBottom: 48 }}>
+            {/* Centered title - 1 hard space after date */}
+            <View style={{ alignItems: 'center', marginBottom: PDF_SPACING.emptyLine * 2 }}>
               <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center' }}>
                 LOCATOR SHEET
               </Text>
             </View>
-            {/* Left-aligned Subj line */}
+            {/* Left-aligned Subj line - 2 hard spaces after title */}
             <View style={{ marginBottom: 48 }}>
               <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
                 Subj:  {(formData.subj || '').toUpperCase()}
