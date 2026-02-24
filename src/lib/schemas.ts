@@ -468,6 +468,7 @@ export const MCODefinition: DocumentTypeDefinition = {
   schema: MCOSchema,
   features: {
     ...STANDARD_LETTER_FEATURES,
+    showVia: false,
     showDirectiveTitle: true,
     showDistribution: true,
     showReports: true,
@@ -610,6 +611,7 @@ export const BulletinDefinition: DocumentTypeDefinition = {
   schema: BulletinSchema,
   features: {
     ...STANDARD_LETTER_FEATURES,
+    showVia: false,
     showDirectiveTitle: true,
     showDistribution: true,
     showReports: true,
@@ -1842,6 +1844,7 @@ export const ChangeTransmittalDefinition: DocumentTypeDefinition = {
   schema: ChangeTransmittalSchema,
   features: {
     ...STANDARD_LETTER_FEATURES,
+    showVia: false,
     isDirective: true,
     category: 'directives',
   },
