@@ -1741,7 +1741,7 @@ export function NavalLetterPDF({
 
           {/* Column headers */}
           <View style={{ flexDirection: 'row', marginBottom: 8 }}>
-            <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: fontFamily === 'Liberation Mono' ? 30 : 26, flexShrink: 0 }}>{''}</Text>
+            <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: fontFamily === 'Liberation Mono' ? 42 : 36, flexShrink: 0 }}>{''}</Text>
             <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: '50%' }}>
               REPORT TITLE
             </Text>
@@ -1756,7 +1756,7 @@ export function NavalLetterPDF({
           {/* Report rows */}
           {formData.reports.filter((r: { title: string }) => r.title).map((report: { id: string; title: string; controlSymbol: string; paragraphRef: string; exempt?: boolean }, idx: number) => (
             <View key={report.id || idx} style={{ flexDirection: 'row', marginBottom: 4 }}>
-              <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: fontFamily === 'Liberation Mono' ? 30 : 26, textAlign: 'right', paddingRight: 4, flexShrink: 0 }}>
+              <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: fontFamily === 'Liberation Mono' ? 42 : 36, textAlign: 'right', paddingRight: 6, flexShrink: 0 }}>
                 {`${toRoman(idx + 1).toUpperCase()}.`}
               </Text>
               <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: '50%' }}>
