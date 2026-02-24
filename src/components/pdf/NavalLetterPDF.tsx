@@ -706,114 +706,6 @@ export function NavalLetterPDF({
       author="by Semper Admin"
       subject="Generated Naval Letter Format"
     >
-      {/* Structural Pages per MCO 5215.1K para 48 (only for directives with option enabled) */}
-      {isDirective && formData.showStructuralPages && (
-        <>
-          {/* Page i: Locator Sheet */}
-          <Page size="LETTER" style={[styles.page, { justifyContent: 'center', alignItems: 'center' }]}>
-            <View style={{ alignItems: 'center', marginBottom: 48 }}>
-              <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center', marginBottom: 12 }}>
-                {formData.directiveTitle || buildDirectiveTitle(formData)}
-              </Text>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, textAlign: 'center', marginBottom: 24 }}>
-                {(formData.subj || '').toUpperCase()}
-              </Text>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, textAlign: 'center', marginBottom: 48 }}>
-                {formattedDate}
-              </Text>
-            </View>
-            <View style={{ alignItems: 'center', marginTop: 48 }}>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, textAlign: 'center', marginBottom: 12 }}>
-                PCN {formData.distribution?.pcn || '___________'}
-              </Text>
-            </View>
-            <View style={{ width: '80%', marginTop: 48 }}>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, marginBottom: 8 }}>
-                Location: _______________________________________________
-              </Text>
-              <Text style={{ fontFamily: fontFamily, fontSize: 8, color: '#666666' }}>
-                (Binder/Folder/Electronic File)
-              </Text>
-            </View>
-            <Text style={[styles.footer, { fontFamily: fontFamily }]}>i</Text>
-          </Page>
-
-          {/* Page ii: Record of Changes */}
-          <Page size="LETTER" style={styles.page}>
-            <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center', marginBottom: 24 }}>
-              RECORD OF CHANGES
-            </Text>
-            {/* Table Header */}
-            <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#000', paddingBottom: 4, marginBottom: 8 }}>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '15%' }}>Change No.</Text>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '25%' }}>Date of Change</Text>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '30%' }}>Pages Affected</Text>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '30%' }}>Entered By</Text>
-            </View>
-            {/* Existing changes */}
-            {(formData.recordOfChanges || []).map((change: { changeNo: number; date: string; pagesAffected: string; enteredBy: string }, i: number) => (
-              <View key={i} style={{ flexDirection: 'row', marginBottom: 4 }}>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '15%' }}>{change.changeNo}</Text>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '25%' }}>{change.date}</Text>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '30%' }}>{change.pagesAffected}</Text>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '30%' }}>{change.enteredBy}</Text>
-              </View>
-            ))}
-            {/* Empty rows for future changes */}
-            {Array.from({ length: Math.max(0, 15 - (formData.recordOfChanges?.length || 0)) }).map((_, i) => (
-              <View key={`empty-${i}`} style={{ flexDirection: 'row', height: 20, borderBottomWidth: 0.5, borderBottomColor: '#ccc' }}>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '15%' }}> </Text>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '25%' }}> </Text>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '30%' }}> </Text>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '30%' }}> </Text>
-              </View>
-            ))}
-            <Text style={[styles.footer, { fontFamily: fontFamily }]}>ii</Text>
-          </Page>
-
-          {/* Page iii: Table of Contents */}
-          <Page size="LETTER" style={styles.page}>
-            <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center', marginBottom: 24 }}>
-              TABLE OF CONTENTS
-            </Text>
-            <View style={{ marginBottom: 12 }}>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', marginBottom: 8, borderBottomWidth: 1, borderBottomColor: '#000', paddingBottom: 4 }}>
-                PARAGRAPH{'\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'}TITLE
-              </Text>
-              {tocEntries.map((entry, i) => (
-                <View key={i} style={{ flexDirection: 'row', marginBottom: 4 }}>
-                  <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: 60 }}>
-                    {entry.number}.
-                  </Text>
-                  <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, flex: 1 }}>
-                    {entry.title}
-                  </Text>
-                </View>
-              ))}
-            </View>
-            {/* Enclosures in TOC */}
-            {enclsWithContent.length > 0 && (
-              <View style={{ marginTop: 12 }}>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', marginBottom: 8, borderBottomWidth: 1, borderBottomColor: '#000', paddingBottom: 4 }}>
-                  ENCLOSURE{'\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'}TITLE
-                </Text>
-                {enclsWithContent.map((encl, i) => (
-                  <View key={i} style={{ flexDirection: 'row', marginBottom: 4 }}>
-                    <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: 60 }}>
-                      ({i + 1})
-                    </Text>
-                    <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, flex: 1 }}>
-                      {encl}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
-            <Text style={[styles.footer, { fontFamily: fontFamily }]}>iii</Text>
-          </Page>
-        </>
-      )}
-
       <Page size="LETTER" style={[styles.page, formData.isShortLetter ? { paddingLeft: 144, paddingRight: 144 } : {}]}>
         {/* Continuation page header - Subject line on pages 2+ (absolutely positioned) */}
         {/* For directives: show directive ID block (SSIC + date) per MCO 5215.1K para 38 */}
@@ -1865,7 +1757,7 @@ export function NavalLetterPDF({
           {formData.reports.filter((r: { title: string }) => r.title).map((report: { id: string; title: string; controlSymbol: string; paragraphRef: string; exempt?: boolean }, idx: number) => (
             <View key={report.id || idx} style={{ flexDirection: 'row', marginBottom: 4 }}>
               <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: fontFamily === 'Liberation Mono' ? 30 : 26, textAlign: 'right', paddingRight: 4, flexShrink: 0 }}>
-                {toRoman(idx + 1).toUpperCase()}.
+                {`${toRoman(idx + 1).toUpperCase()}.`}
               </Text>
               <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: '50%' }}>
                 {report.title}
@@ -1891,6 +1783,114 @@ export function NavalLetterPDF({
 
           {/* Distribution Statement Footer */}
         </Page>
+      )}
+
+      {/* Structural Pages per MCO 5215.1K para 48 — placed after the last body/reports page */}
+      {isDirective && formData.showStructuralPages && (
+        <>
+          {/* Page i: Locator Sheet */}
+          <Page size="LETTER" style={[styles.page, { justifyContent: 'center', alignItems: 'center' }]}>
+            <View style={{ alignItems: 'center', marginBottom: 48 }}>
+              <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center', marginBottom: 12 }}>
+                {formData.directiveTitle || buildDirectiveTitle(formData)}
+              </Text>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, textAlign: 'center', marginBottom: 24 }}>
+                {(formData.subj || '').toUpperCase()}
+              </Text>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, textAlign: 'center', marginBottom: 48 }}>
+                {formattedDate}
+              </Text>
+            </View>
+            <View style={{ alignItems: 'center', marginTop: 48 }}>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, textAlign: 'center', marginBottom: 12 }}>
+                PCN {formData.distribution?.pcn || '___________'}
+              </Text>
+            </View>
+            <View style={{ width: '80%', marginTop: 48 }}>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, marginBottom: 8 }}>
+                Location: _______________________________________________
+              </Text>
+              <Text style={{ fontFamily: fontFamily, fontSize: 8, color: '#666666' }}>
+                (Binder/Folder/Electronic File)
+              </Text>
+            </View>
+            <Text style={[styles.footer, { fontFamily: fontFamily }]}>i</Text>
+          </Page>
+
+          {/* Page ii: Record of Changes */}
+          <Page size="LETTER" style={styles.page}>
+            <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center', marginBottom: 24 }}>
+              RECORD OF CHANGES
+            </Text>
+            {/* Table Header */}
+            <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#000', paddingBottom: 4, marginBottom: 8 }}>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '15%' }}>Change No.</Text>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '25%' }}>Date of Change</Text>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '30%' }}>Pages Affected</Text>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '30%' }}>Entered By</Text>
+            </View>
+            {/* Existing changes */}
+            {(formData.recordOfChanges || []).map((change: { changeNo: number; date: string; pagesAffected: string; enteredBy: string }, i: number) => (
+              <View key={i} style={{ flexDirection: 'row', marginBottom: 4 }}>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '15%' }}>{change.changeNo}</Text>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '25%' }}>{change.date}</Text>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '30%' }}>{change.pagesAffected}</Text>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '30%' }}>{change.enteredBy}</Text>
+              </View>
+            ))}
+            {/* Empty rows for future changes */}
+            {Array.from({ length: Math.max(0, 15 - (formData.recordOfChanges?.length || 0)) }).map((_, i) => (
+              <View key={`empty-${i}`} style={{ flexDirection: 'row', height: 20, borderBottomWidth: 0.5, borderBottomColor: '#ccc' }}>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '15%' }}> </Text>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '25%' }}> </Text>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '30%' }}> </Text>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '30%' }}> </Text>
+              </View>
+            ))}
+            <Text style={[styles.footer, { fontFamily: fontFamily }]}>ii</Text>
+          </Page>
+
+          {/* Page iii: Table of Contents */}
+          <Page size="LETTER" style={styles.page}>
+            <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center', marginBottom: 24 }}>
+              TABLE OF CONTENTS
+            </Text>
+            <View style={{ marginBottom: 12 }}>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', marginBottom: 8, borderBottomWidth: 1, borderBottomColor: '#000', paddingBottom: 4 }}>
+                PARAGRAPH{'\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'}TITLE
+              </Text>
+              {tocEntries.map((entry, i) => (
+                <View key={i} style={{ flexDirection: 'row', marginBottom: 4 }}>
+                  <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: 60 }}>
+                    {entry.number}.
+                  </Text>
+                  <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, flex: 1 }}>
+                    {entry.title}
+                  </Text>
+                </View>
+              ))}
+            </View>
+            {/* Enclosures in TOC */}
+            {enclsWithContent.length > 0 && (
+              <View style={{ marginTop: 12 }}>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', marginBottom: 8, borderBottomWidth: 1, borderBottomColor: '#000', paddingBottom: 4 }}>
+                  ENCLOSURE{'\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'}TITLE
+                </Text>
+                {enclsWithContent.map((encl, i) => (
+                  <View key={i} style={{ flexDirection: 'row', marginBottom: 4 }}>
+                    <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: 60 }}>
+                      ({i + 1})
+                    </Text>
+                    <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, flex: 1 }}>
+                      {encl}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+            <Text style={[styles.footer, { fontFamily: fontFamily }]}>iii</Text>
+          </Page>
+        </>
       )}
     </Document>
   );
