@@ -594,10 +594,10 @@ export function NavalLetterPDF({
   const enclsWithContent = enclosures.filter((e) => e.trim());
   const copiesWithContent = copyTos.filter((c) => c.trim());
   const distListWithContent = distList.filter((d) => d.trim());
-  const paragraphsWithContent = paragraphs.filter((p) => p.content.trim());
+  const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin' || formData.documentType === 'change-transmittal';
+  const paragraphsWithContent = paragraphs.filter((p) => p.content.trim() || (isDirective && p.title && p.title.trim()));
 
   const formattedSubjLines = splitSubject((formData.subj || '').toUpperCase(), PDF_SUBJECT.maxLineLength);
-  const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin' || formData.documentType === 'change-transmittal';
   const isFromToMemo = formData.documentType === 'from-to-memo';
   const isMfr = formData.documentType === 'mfr';
   const isMoaOrMou = formData.documentType === 'moa' || formData.documentType === 'mou';
