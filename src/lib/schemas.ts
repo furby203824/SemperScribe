@@ -427,6 +427,8 @@ export const MCOSchema = BasicLetterSchema.extend({
   chapterNumber: z.number().min(1).max(9).optional(),
   // Structural pages per MCO 5215.1K para 48
   showStructuralPages: z.boolean().optional(),
+  showLocatorSheet: z.boolean().optional(),
+  showRecordOfChanges: z.boolean().optional(),
   recordOfChanges: z.array(z.object({
     changeNo: z.number(),
     date: z.string(),
@@ -548,11 +550,25 @@ export const MCODefinition: DocumentTypeDefinition = {
           condition: (formData: any) => !!formData.fourDigitNumbering
         },
         {
-          name: 'showStructuralPages',
-          label: 'Structural Pages',
+          name: 'showLocatorSheet',
+          label: 'Locator Sheet',
           type: 'checkbox',
           className: 'md:col-span-1',
-          description: 'Per MCO 5215.1K para 48 — adds Locator Sheet, Record of Changes, and Table of Contents'
+          description: 'Per MCO 5215.1K para 48 — adds Locator Sheet page'
+        },
+        {
+          name: 'showRecordOfChanges',
+          label: 'Record of Changes',
+          type: 'checkbox',
+          className: 'md:col-span-1',
+          description: 'Per MCO 5215.1K para 48 — adds Record of Changes page'
+        },
+        {
+          name: 'showStructuralPages',
+          label: 'Table of Contents',
+          type: 'checkbox',
+          className: 'md:col-span-1',
+          description: 'Per MCO 5215.1K para 48 — adds Table of Contents page'
         }
       ]
     }
@@ -685,6 +701,27 @@ export const BulletinDefinition: DocumentTypeDefinition = {
           defaultValue: '',
           className: 'md:col-span-1',
           description: 'Per MCO 5215.1K para 10 — marks "FOR OFFICIAL USE ONLY" on pages'
+        },
+        {
+          name: 'showLocatorSheet',
+          label: 'Locator Sheet',
+          type: 'checkbox',
+          className: 'md:col-span-1',
+          description: 'Per MCO 5215.1K para 48 — adds Locator Sheet page'
+        },
+        {
+          name: 'showRecordOfChanges',
+          label: 'Record of Changes',
+          type: 'checkbox',
+          className: 'md:col-span-1',
+          description: 'Per MCO 5215.1K para 48 — adds Record of Changes page'
+        },
+        {
+          name: 'showStructuralPages',
+          label: 'Table of Contents',
+          type: 'checkbox',
+          className: 'md:col-span-1',
+          description: 'Per MCO 5215.1K para 48 — adds Table of Contents page'
         }
       ]
     }

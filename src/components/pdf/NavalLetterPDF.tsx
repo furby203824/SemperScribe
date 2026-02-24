@@ -1785,123 +1785,124 @@ export function NavalLetterPDF({
         </Page>
       )}
 
-      {/* Structural Pages per MCO 5215.1K para 48 — placed after the last body/reports page */}
-      {isDirective && formData.showStructuralPages && (
-        <>
-          {/* Page i: Locator Sheet */}
-          <Page size="LETTER" style={styles.page}>
-            {/* Top-right: Directive designation and date */}
-            <View style={{ alignItems: 'flex-end', marginBottom: PDF_SPACING.emptyLine }}>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
-                {formData.directiveTitle || buildDirectiveTitle(formData)}
-              </Text>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
-                {formattedDate}
-              </Text>
-            </View>
-            {/* Centered title - 1 hard space after date */}
-            <View style={{ alignItems: 'center', marginBottom: PDF_SPACING.emptyLine * 2 }}>
-              <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center' }}>
-                LOCATOR SHEET
-              </Text>
-            </View>
-            {/* Left-aligned Subj line - 2 hard spaces after title */}
-            <View style={{ marginBottom: 48 }}>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
-                Subj:  {(formData.subj || '').toUpperCase()}
-              </Text>
-            </View>
-            {/* Left-aligned Location line */}
-            <View style={{ marginBottom: 4 }}>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
-                Location:  _______________________________________________
-              </Text>
-            </View>
-            <View>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
-                (Indicate the location(s) of the copy(ies) of this Order.)
-              </Text>
-            </View>
-            <Text style={[styles.footer, { fontFamily: fontFamily }]}>i</Text>
-          </Page>
-
-          {/* Page ii: Record of Changes */}
-          <Page size="LETTER" style={styles.page}>
-            <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center', marginBottom: 24 }}>
-              RECORD OF CHANGES
+      {/* Locator Sheet — per MCO 5215.1K para 48 */}
+      {isDirective && formData.showLocatorSheet && (
+        <Page size="LETTER" style={styles.page}>
+          {/* Top-right: Directive designation and date */}
+          <View style={{ alignItems: 'flex-end', marginBottom: PDF_SPACING.emptyLine }}>
+            <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
+              {formData.directiveTitle || buildDirectiveTitle(formData)}
             </Text>
-            {/* Boxed table */}
-            <View style={{ borderWidth: 1, borderColor: '#000' }}>
-              {/* Table Header */}
-              <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#000' }}>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '15%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>Change{'\n'}Number</Text>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '20%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>Date of{'\n'}Change</Text>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '20%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>Date{'\n'}Entered</Text>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '45%', textAlign: 'center', padding: 4 }}>Signature of Person{'\n'}Incorporating Change</Text>
+            <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
+              {formattedDate}
+            </Text>
+          </View>
+          {/* Centered title - 1 hard space after date */}
+          <View style={{ alignItems: 'center', marginBottom: PDF_SPACING.emptyLine * 2 }}>
+            <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center' }}>
+              LOCATOR SHEET
+            </Text>
+          </View>
+          {/* Left-aligned Subj line - 2 hard spaces after title */}
+          <View style={{ marginBottom: 48 }}>
+            <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
+              Subj:  {(formData.subj || '').toUpperCase()}
+            </Text>
+          </View>
+          {/* Left-aligned Location line */}
+          <View style={{ marginBottom: 4 }}>
+            <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
+              Location:  _______________________________________________
+            </Text>
+          </View>
+          <View>
+            <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
+              (Indicate the location(s) of the copy(ies) of this Order.)
+            </Text>
+          </View>
+          <Text style={[styles.footer, { fontFamily: fontFamily }]}>i</Text>
+        </Page>
+      )}
+
+      {/* Record of Changes — per MCO 5215.1K para 48 */}
+      {isDirective && formData.showRecordOfChanges && (
+        <Page size="LETTER" style={styles.page}>
+          <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center', marginBottom: 24 }}>
+            RECORD OF CHANGES
+          </Text>
+          {/* Boxed table */}
+          <View style={{ borderWidth: 1, borderColor: '#000' }}>
+            {/* Table Header */}
+            <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#000' }}>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '15%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>Change{'\n'}Number</Text>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '20%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>Date of{'\n'}Change</Text>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '20%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>Date{'\n'}Entered</Text>
+              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '45%', textAlign: 'center', padding: 4 }}>Signature of Person{'\n'}Incorporating Change</Text>
+            </View>
+            {/* Existing changes */}
+            {(formData.recordOfChanges || []).map((change: { changeNo: number; date: string; pagesAffected: string; enteredBy: string }, i: number) => (
+              <View key={i} style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#000', minHeight: 20 }}>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '15%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>{change.changeNo}</Text>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '20%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>{change.date}</Text>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '20%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>{change.pagesAffected}</Text>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '45%', padding: 4 }}>{change.enteredBy}</Text>
               </View>
-              {/* Existing changes */}
-              {(formData.recordOfChanges || []).map((change: { changeNo: number; date: string; pagesAffected: string; enteredBy: string }, i: number) => (
-                <View key={i} style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#000', minHeight: 20 }}>
-                  <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '15%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>{change.changeNo}</Text>
-                  <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '20%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>{change.date}</Text>
-                  <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '20%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>{change.pagesAffected}</Text>
-                  <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '45%', padding: 4 }}>{change.enteredBy}</Text>
-                </View>
-              ))}
-              {/* Empty rows for future changes */}
-              {Array.from({ length: Math.max(0, 20 - (formData.recordOfChanges?.length || 0)) }).map((_, i, arr) => (
-                <View key={`empty-${i}`} style={{ flexDirection: 'row', minHeight: 20, ...(i < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: '#000' } : {}) }}>
-                  <View style={{ width: '15%', borderRightWidth: 1, borderRightColor: '#000', minHeight: 20 }} />
-                  <View style={{ width: '20%', borderRightWidth: 1, borderRightColor: '#000', minHeight: 20 }} />
-                  <View style={{ width: '20%', borderRightWidth: 1, borderRightColor: '#000', minHeight: 20 }} />
-                  <View style={{ width: '45%', minHeight: 20 }} />
-                </View>
-              ))}
-            </View>
-            <Text style={[styles.footer, { fontFamily: fontFamily }]}>ii</Text>
-          </Page>
+            ))}
+            {/* Empty rows for future changes */}
+            {Array.from({ length: Math.max(0, 20 - (formData.recordOfChanges?.length || 0)) }).map((_, i, arr) => (
+              <View key={`empty-${i}`} style={{ flexDirection: 'row', minHeight: 20, ...(i < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: '#000' } : {}) }}>
+                <View style={{ width: '15%', borderRightWidth: 1, borderRightColor: '#000', minHeight: 20 }} />
+                <View style={{ width: '20%', borderRightWidth: 1, borderRightColor: '#000', minHeight: 20 }} />
+                <View style={{ width: '20%', borderRightWidth: 1, borderRightColor: '#000', minHeight: 20 }} />
+                <View style={{ width: '45%', minHeight: 20 }} />
+              </View>
+            ))}
+          </View>
+          <Text style={[styles.footer, { fontFamily: fontFamily }]}>ii</Text>
+        </Page>
+      )}
 
-          {/* Page iii: Table of Contents */}
-          <Page size="LETTER" style={styles.page}>
-            <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center', marginBottom: 24 }}>
-              TABLE OF CONTENTS
+      {/* Table of Contents — per MCO 5215.1K para 48 */}
+      {isDirective && formData.showStructuralPages && (
+        <Page size="LETTER" style={styles.page}>
+          <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center', marginBottom: 24 }}>
+            TABLE OF CONTENTS
+          </Text>
+          <View style={{ marginBottom: 12 }}>
+            <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', marginBottom: 8, borderBottomWidth: 1, borderBottomColor: '#000', paddingBottom: 4 }}>
+              PARAGRAPH{'\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'}TITLE
             </Text>
-            <View style={{ marginBottom: 12 }}>
+            {tocEntries.map((entry, i) => (
+              <View key={i} style={{ flexDirection: 'row', marginBottom: 4 }}>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: 60 }}>
+                  {entry.number}.
+                </Text>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, flex: 1 }}>
+                  {entry.title}
+                </Text>
+              </View>
+            ))}
+          </View>
+          {/* Enclosures in TOC */}
+          {enclsWithContent.length > 0 && (
+            <View style={{ marginTop: 12 }}>
               <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', marginBottom: 8, borderBottomWidth: 1, borderBottomColor: '#000', paddingBottom: 4 }}>
-                PARAGRAPH{'\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'}TITLE
+                ENCLOSURE{'\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'}TITLE
               </Text>
-              {tocEntries.map((entry, i) => (
+              {enclsWithContent.map((encl, i) => (
                 <View key={i} style={{ flexDirection: 'row', marginBottom: 4 }}>
                   <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: 60 }}>
-                    {entry.number}.
+                    ({i + 1})
                   </Text>
                   <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, flex: 1 }}>
-                    {entry.title}
+                    {encl}
                   </Text>
                 </View>
               ))}
             </View>
-            {/* Enclosures in TOC */}
-            {enclsWithContent.length > 0 && (
-              <View style={{ marginTop: 12 }}>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', marginBottom: 8, borderBottomWidth: 1, borderBottomColor: '#000', paddingBottom: 4 }}>
-                  ENCLOSURE{'\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'}TITLE
-                </Text>
-                {enclsWithContent.map((encl, i) => (
-                  <View key={i} style={{ flexDirection: 'row', marginBottom: 4 }}>
-                    <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: 60 }}>
-                      ({i + 1})
-                    </Text>
-                    <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, flex: 1 }}>
-                      {encl}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
-            <Text style={[styles.footer, { fontFamily: fontFamily }]}>iii</Text>
-          </Page>
-        </>
+          )}
+          <Text style={[styles.footer, { fontFamily: fontFamily }]}>iii</Text>
+        </Page>
       )}
     </Document>
   );
