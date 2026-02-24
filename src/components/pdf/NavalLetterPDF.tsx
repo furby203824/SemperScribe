@@ -1466,7 +1466,7 @@ export function NavalLetterPDF({
               allParagraphs={paragraphsWithContent}
               bodyFont={formData.bodyFont}
               shouldBoldTitle={!['moa', 'mou', 'information-paper', 'position-paper'].includes(formData.documentType)}
-              shouldUppercaseTitle={!['moa', 'mou', 'information-paper', 'position-paper'].includes(formData.documentType)}
+              shouldUppercaseTitle={!['mco', 'bulletin', 'change-transmittal', 'moa', 'mou', 'information-paper', 'position-paper'].includes(formData.documentType)}
               documentType={formData.documentType}
               isShortLetter={formData.isShortLetter}
               fourDigitNumbering={formData.fourDigitNumbering}
@@ -1711,7 +1711,6 @@ export function NavalLetterPDF({
           style={styles.footer}
           render={({ pageNumber }) => {
             const displayPage = pageNumber + startPage - 1;
-            if (isDirective) return displayPage;
             return displayPage > 1 ? displayPage : '';
           }}
           fixed
