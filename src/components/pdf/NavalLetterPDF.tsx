@@ -1306,8 +1306,9 @@ export function NavalLetterPDF({
           const validReports = formData.reports.filter((r: { title: string }) => r.title);
           const plural = validReports.length > 1;
           const label = `Report${plural ? 's' : ''} Required:`;
-          // Label width must accommodate "Reports Required:" without wrapping (~120pt in 12pt Times)
-          const labelWidth = 120;
+          // Label width must accommodate "Reports Required:" without wrapping
+          // Courier/Liberation Mono: 18 chars × 7.2pt = 129.6pt; Times/Serif fits in ~88pt
+          const labelWidth = fontFamily === 'Liberation Mono' ? 135 : 120;
 
           if (validReports.length <= 4) {
             return (
