@@ -682,6 +682,14 @@ export function NavalLetterPDF({
         }))
     : [];
 
+  // Dynamic roman numeral page numbers for structural pages
+  // Locator Sheet is always "i"; Record of Changes and TOC shift based on what's enabled
+  const romanNumerals = ['i', 'ii', 'iii', 'iv', 'v'];
+  let structuralPageIndex = 0;
+  const locatorSheetPageNum = formData.showLocatorSheet ? romanNumerals[structuralPageIndex++] : '';
+  const recordOfChangesPageNum = formData.showRecordOfChanges ? romanNumerals[structuralPageIndex++] : '';
+  const tocPageNum = formData.showStructuralPages ? romanNumerals[structuralPageIndex++] : '';
+
   // Pre-compute distribution statement text for use in fixed footer
   const distributionStatementText = (() => {
     const dist = formData.distribution;
@@ -1799,12 +1807,12 @@ export function NavalLetterPDF({
           </View>
           {/* Centered title - 1 hard space after date */}
           <View style={{ alignItems: 'center', marginBottom: PDF_SPACING.emptyLine * 2 }}>
-            <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center' }}>
+            <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, textAlign: 'center' }}>
               LOCATOR SHEET
             </Text>
           </View>
           {/* Left-aligned Subj line - 2 hard spaces after title */}
-          <View style={{ marginBottom: 48 }}>
+          <View style={{ marginBottom: PDF_SPACING.emptyLine }}>
             <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
               Subj:  {(formData.subj || '').toUpperCase()}
             </Text>
@@ -1820,7 +1828,7 @@ export function NavalLetterPDF({
               (Indicate the location(s) of the copy(ies) of this Order.)
             </Text>
           </View>
-          <Text style={[styles.footer, { fontFamily: fontFamily }]}>i</Text>
+          <Text style={[styles.footer, { fontFamily: fontFamily }]}>{locatorSheetPageNum}</Text>
         </Page>
       )}
 
@@ -1858,7 +1866,7 @@ export function NavalLetterPDF({
               </View>
             ))}
           </View>
-          <Text style={[styles.footer, { fontFamily: fontFamily }]}>ii</Text>
+          <Text style={[styles.footer, { fontFamily: fontFamily }]}>{recordOfChangesPageNum}</Text>
         </Page>
       )}
 
@@ -1901,7 +1909,7 @@ export function NavalLetterPDF({
               ))}
             </View>
           )}
-          <Text style={[styles.footer, { fontFamily: fontFamily }]}>iii</Text>
+          <Text style={[styles.footer, { fontFamily: fontFamily }]}>{tocPageNum}</Text>
         </Page>
       )}
     </Document>
