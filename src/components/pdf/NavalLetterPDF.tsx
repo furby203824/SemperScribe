@@ -1301,6 +1301,38 @@ export function NavalLetterPDF({
 
 
 
+        {/* Reports Required (for Directives) - before first paragraph per MCO 5216.20B par. 29b */}
+        {isDirective && formData.reports && formData.reports.filter((r: { title: string }) => r.title).length > 0 && (
+          <View style={styles.bodySection}>
+            {(() => {
+              const validReports = formData.reports.filter((r: { title: string }) => r.title);
+              const plural = validReports.length > 1;
+              const label = `Report${plural ? 's' : ''} Required:`;
+              if (validReports.length <= 4) {
+                // Inline format: "Report(s) Required: Title (Report Control Symbol XX), par. Xa"
+                const reportLines = validReports.map((report: { id: string; title: string; controlSymbol: string; paragraphRef: string; exempt?: boolean }, idx: number) => {
+                  const numeral = validReports.length > 1 ? `${toRoman(idx + 1).toUpperCase()}. ` : '';
+                  const controlText = report.exempt ? 'EXEMPT' : (report.controlSymbol ? `Report Control Symbol ${report.controlSymbol}` : '');
+                  const parRef = report.paragraphRef ? `, par. ${report.paragraphRef}` : '';
+                  return `${numeral}${report.title}${controlText ? ` (${controlText})` : ''}${parRef}`;
+                });
+                return (
+                  <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body }}>
+                    {label}{' '}{reportLines.join('\n')}
+                  </Text>
+                );
+              } else {
+                // 5+ reports: refer to the Reports Required page
+                return (
+                  <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body }}>
+                    Reports Required: See page following signature page.
+                  </Text>
+                );
+              }
+            })()}
+          </View>
+        )}
+
         {/* Body paragraphs - text wraps to left margin */}
         <View style={styles.bodySection}>
           {paragraphsWithContent.map((p, i) => {
@@ -1476,27 +1508,7 @@ export function NavalLetterPDF({
           })}
         </View>
 
-        {/* Reports Required (for Directives) */}
-        {isDirective && formData.reports && formData.reports.length > 0 && (
-          <View style={styles.bodySection}>
-             <View style={styles.emptyLine} />
-             <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body }}>
-               REPORTS REQUIRED:
-             </Text>
-             {formData.reports.map((report: { id: string; title: string; controlSymbol: string; paragraphRef: string; exempt?: boolean }, i: number) => {
-               let reportText = report.title;
-               if (report.controlSymbol) reportText += ` (${report.controlSymbol})`;
-               if (report.exempt) reportText += " (Exempt)";
-               return (
-                 <View key={i} style={{ flexDirection: 'row', marginLeft: PDF_INDENTS.tabStop1 }}>
-                   <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body }}>
-                     {reportText}
-                   </Text>
-                 </View>
-               );
-             })}
-          </View>
-        )}
+        {/* Reports Required removed – rendered before body paragraphs per MCO 5216.20B */}
 
         {/* Signature block - Standard (Hide for MOA/MOU, Staffing Papers, Business/Exec Letter) */}
         {!isMoaOrMou && !isStaffingPaper && !isCivilianStyle && formData.sig && (
@@ -1804,6 +1816,55 @@ export function NavalLetterPDF({
           )
         )}
       </Page>
+
+      {/* Reports Required page — for directives with 5+ reports (MCO 5216.20B par. 29c) */}
+      {isDirective && formData.reports && formData.reports.filter((r: { title: string }) => r.title).length >= 5 && (
+        <Page size="LETTER" style={styles.page}>
+          <View style={{ alignItems: 'center', marginBottom: PDF_SPACING.sectionGap * 2 }}>
+            <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body }}>
+              Reports Required
+            </Text>
+          </View>
+
+          {/* Column headers */}
+          <View style={{ flexDirection: 'row', marginBottom: 8 }}>
+            <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: '50%' }}>
+              {'    REPORT TITLE'}
+            </Text>
+            <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: '28%' }}>
+              REPORT{'\n'}CONTROL SYMBOL
+            </Text>
+            <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: '22%' }}>
+              PARAGRAPH
+            </Text>
+          </View>
+
+          {/* Report rows */}
+          {formData.reports.filter((r: { title: string }) => r.title).map((report: { id: string; title: string; controlSymbol: string; paragraphRef: string; exempt?: boolean }, idx: number) => (
+            <View key={report.id || idx} style={{ flexDirection: 'row', marginBottom: 4 }}>
+              <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: '50%' }}>
+                {toRoman(idx + 1).toUpperCase()}. {report.title}
+              </Text>
+              <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: '28%' }}>
+                {report.exempt ? 'EXEMPT' : (report.controlSymbol || '')}
+              </Text>
+              <Text style={{ fontFamily: styles.page.fontFamily, fontSize: PDF_FONT_SIZES.body, width: '22%' }}>
+                {report.paragraphRef || ''}
+              </Text>
+            </View>
+          ))}
+
+          {/* Footer - page number */}
+          <Text
+            style={styles.footer}
+            render={({ pageNumber }) => {
+              const displayPage = pageNumber + startPage - 1;
+              return displayPage > 1 ? displayPage : '';
+            }}
+            fixed
+          />
+        </Page>
+      )}
     </Document>
   );
 }
