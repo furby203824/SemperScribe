@@ -495,13 +495,6 @@ export const MCODefinition: DocumentTypeDefinition = {
            className: 'col-span-full'
          },
          {
-           name: 'distribution.pcn',
-           label: 'PCN (Publication Control Number)',
-           type: 'text',
-           placeholder: 'e.g. 10200000000',
-           className: 'md:col-span-1'
-         },
-         {
            name: 'distribution.statementCode',
            label: 'Distribution Statement',
            type: 'select',
@@ -654,13 +647,6 @@ export const BulletinDefinition: DocumentTypeDefinition = {
             { label: 'Contingent (Action Complete)', value: 'contingent' }
           ],
           defaultValue: 'fixed',
-          className: 'md:col-span-1'
-        },
-        {
-          name: 'distribution.pcn',
-          label: 'PCN (Publication Control Number)',
-          type: 'text',
-          placeholder: 'e.g. 10200000000',
           className: 'md:col-span-1'
         },
         {
