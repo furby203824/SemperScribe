@@ -14,13 +14,11 @@ import { ReferencesSection } from '@/components/letter/ReferencesSection';
 import { EnclosuresSection } from '@/components/letter/EnclosuresSection';
 import { MOAFormSection } from '@/components/letter/MOAFormSection';
 import { ReportsSection } from '@/components/letter/ReportsSection';
-import { DistributionStatementSection } from '@/components/letter/DistributionStatementSection';
 import { DistributionSection } from '@/components/letter/DistributionSection';
 import { SignaturePlacementModal } from '@/components/SignaturePlacementModal';
 import { HeaderSettingsSection } from './HeaderSettingsSection';
 import { FontSelectorSection } from './FontSelectorSection';
 import { EndorsementDetailsSection } from './EndorsementDetailsSection';
-import { DirectiveTitleSection } from './DirectiveTitleSection';
 import { SignatureFieldSection } from './SignatureFieldSection';
 import { DecisionGridSection } from '@/components/letter/DecisionGridSection';
 import { CoordinationPageForm } from '@/components/letter/CoordinationPageForm';
@@ -188,10 +186,6 @@ export function DocumentLayout({
             />
           )}
 
-          {features.showDirectiveTitle && (
-            <DirectiveTitleSection formData={formData} setFormData={setFormData} />
-          )}
-
           {features.showVia && (
             <ViaSection vias={vias} setVias={setVias} />
           )}
@@ -263,16 +257,10 @@ export function DocumentLayout({
           )}
 
           {features.showDistribution && (
-            <>
-              <DistributionStatementSection
-                distribution={formData.distribution || { type: 'none' }}
-                onUpdateDistribution={(distribution) => setFormData(prev => ({ ...prev, distribution }))}
-              />
               <DistributionSection
                 distribution={formData.distribution || { type: 'none' }}
                 onUpdateDistribution={(dist) => setFormData(prev => ({ ...prev, distribution: dist }))}
               />
-            </>
           )}
 
           {features.showSignature && (
