@@ -1822,31 +1822,34 @@ export function NavalLetterPDF({
             <Text style={{ fontFamily: fontFamily, fontSize: 14, fontWeight: 'bold', textAlign: 'center', marginBottom: 24 }}>
               RECORD OF CHANGES
             </Text>
-            {/* Table Header */}
-            <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#000', paddingBottom: 4, marginBottom: 8 }}>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '15%' }}>Change No.</Text>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '25%' }}>Date of Change</Text>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '30%' }}>Pages Affected</Text>
-              <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '30%' }}>Entered By</Text>
+            {/* Boxed table */}
+            <View style={{ borderWidth: 1, borderColor: '#000' }}>
+              {/* Table Header */}
+              <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#000' }}>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '15%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>Change{'\n'}Number</Text>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '20%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>Date of{'\n'}Change</Text>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '20%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>Date{'\n'}Entered</Text>
+                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, fontWeight: 'bold', width: '45%', textAlign: 'center', padding: 4 }}>Signature of Person{'\n'}Incorporating Change</Text>
+              </View>
+              {/* Existing changes */}
+              {(formData.recordOfChanges || []).map((change: { changeNo: number; date: string; pagesAffected: string; enteredBy: string }, i: number) => (
+                <View key={i} style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#000', minHeight: 20 }}>
+                  <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '15%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>{change.changeNo}</Text>
+                  <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '20%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>{change.date}</Text>
+                  <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '20%', textAlign: 'center', padding: 4, borderRightWidth: 1, borderRightColor: '#000' }}>{change.pagesAffected}</Text>
+                  <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '45%', padding: 4 }}>{change.enteredBy}</Text>
+                </View>
+              ))}
+              {/* Empty rows for future changes */}
+              {Array.from({ length: Math.max(0, 20 - (formData.recordOfChanges?.length || 0)) }).map((_, i, arr) => (
+                <View key={`empty-${i}`} style={{ flexDirection: 'row', minHeight: 20, ...(i < arr.length - 1 ? { borderBottomWidth: 1, borderBottomColor: '#000' } : {}) }}>
+                  <View style={{ width: '15%', borderRightWidth: 1, borderRightColor: '#000', minHeight: 20 }} />
+                  <View style={{ width: '20%', borderRightWidth: 1, borderRightColor: '#000', minHeight: 20 }} />
+                  <View style={{ width: '20%', borderRightWidth: 1, borderRightColor: '#000', minHeight: 20 }} />
+                  <View style={{ width: '45%', minHeight: 20 }} />
+                </View>
+              ))}
             </View>
-            {/* Existing changes */}
-            {(formData.recordOfChanges || []).map((change: { changeNo: number; date: string; pagesAffected: string; enteredBy: string }, i: number) => (
-              <View key={i} style={{ flexDirection: 'row', marginBottom: 4 }}>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '15%' }}>{change.changeNo}</Text>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '25%' }}>{change.date}</Text>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '30%' }}>{change.pagesAffected}</Text>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '30%' }}>{change.enteredBy}</Text>
-              </View>
-            ))}
-            {/* Empty rows for future changes */}
-            {Array.from({ length: Math.max(0, 15 - (formData.recordOfChanges?.length || 0)) }).map((_, i) => (
-              <View key={`empty-${i}`} style={{ flexDirection: 'row', height: 20, borderBottomWidth: 0.5, borderBottomColor: '#ccc' }}>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '15%' }}> </Text>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '25%' }}> </Text>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '30%' }}> </Text>
-                <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body, width: '30%' }}> </Text>
-              </View>
-            ))}
             <Text style={[styles.footer, { fontFamily: fontFamily }]}>ii</Text>
           </Page>
 
