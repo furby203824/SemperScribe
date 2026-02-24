@@ -215,16 +215,10 @@ export function DocumentLayout({
           )}
 
           {features.showDistribution && (
-            <>
-              <DistributionStatementSection
-                distribution={formData.distribution || { type: 'none' }}
-                onUpdateDistribution={(distribution) => setFormData(prev => ({ ...prev, distribution }))}
-              />
               <ReportsSection
                 reports={formData.reports || []}
                 onUpdateReports={(reports) => setFormData(prev => ({ ...prev, reports }))}
               />
-            </>
           )}
 
           {features.showParagraphs && (
@@ -269,10 +263,16 @@ export function DocumentLayout({
           )}
 
           {features.showDistribution && (
-            <DistributionSection
-              distribution={formData.distribution || { type: 'none' }}
-              onUpdateDistribution={(dist) => setFormData(prev => ({ ...prev, distribution: dist }))}
-            />
+            <>
+              <DistributionStatementSection
+                distribution={formData.distribution || { type: 'none' }}
+                onUpdateDistribution={(distribution) => setFormData(prev => ({ ...prev, distribution }))}
+              />
+              <DistributionSection
+                distribution={formData.distribution || { type: 'none' }}
+                onUpdateDistribution={(dist) => setFormData(prev => ({ ...prev, distribution: dist }))}
+              />
+            </>
           )}
 
           {features.showSignature && (
