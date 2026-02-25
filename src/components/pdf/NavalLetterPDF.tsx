@@ -793,16 +793,21 @@ export function NavalLetterPDF({
             </View>
         )}
 
+        {/* Bulletin cancellation date — centered in right half, two lines above SSIC */}
+        {!isFromToMemo && !isMfr && !isMoaOrMou && !isStaffingPaper &&
+          formData.documentType === 'bulletin' && formData.cancellationDate && (
+          <View style={{ marginBottom: PDF_SPACING.emptyLine, marginLeft: PDF_INDENTS.signature / 2 }}>
+            <Text style={styles.addressLine}>
+              {formData.cancellationType === 'contingent' ? 'Canc frp: ' : 'Canc: '}{formatCancellationDate(formData.cancellationDate)}
+            </Text>
+          </View>
+        )}
+
         {/* SSIC Block - Hide for MFR, FromToMemo, Staffing Papers */}
         {/* New Layout: Flush Right Container, Left Aligned Text Content */}
         {!isFromToMemo && !isMfr && !isMoaOrMou && !isStaffingPaper && (
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: PDF_SPACING.sectionGap }}>
              <View style={{ alignItems: 'flex-start' }}>
-                {formData.documentType === 'bulletin' && formData.cancellationDate && (
-                  <Text style={styles.addressLine}>
-                    {formData.cancellationType === 'contingent' ? 'Canc frp: ' : 'Canc: '}{formatCancellationDate(formData.cancellationDate)}
-                  </Text>
-                )}
                 <Text style={styles.addressLine}>
                   {isDirective ? formatDirectiveSSICBlock(formData) : (formData.ssic || '')}
                 </Text>
