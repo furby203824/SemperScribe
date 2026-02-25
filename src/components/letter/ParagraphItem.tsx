@@ -45,22 +45,25 @@ interface ParagraphItemProps {
 
 /**
  * Parses markdown-like formatting markers into styled React elements for UI preview.
- * Supported: **bold**, *italic*, <u>underline</u>
+ * Supports nested formatting: ***bold italic***, **<u>bold underline</u>**, *<u>italic underline</u>*, etc.
  */
 function renderFormattedPreview(text: string): React.ReactNode[] {
   if (!text) return [];
 
-  const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|<u>.*?<\/u>)/g);
+  const parts = text.split(/(\*\*\*.*?\*\*\*|\*\*.*?\*\*|\*.*?\*|<u>.*?<\/u>)/g);
 
   return parts.map((part, index) => {
+    if (part.startsWith('***') && part.endsWith('***') && part.length >= 6) {
+      return <strong key={index}><em>{renderFormattedPreview(part.slice(3, -3))}</em></strong>;
+    }
     if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
-      return <strong key={index}>{part.slice(2, -2)}</strong>;
+      return <strong key={index}>{renderFormattedPreview(part.slice(2, -2))}</strong>;
     }
     if (part.startsWith('*') && part.endsWith('*') && part.length >= 2) {
-      return <em key={index}>{part.slice(1, -1)}</em>;
+      return <em key={index}>{renderFormattedPreview(part.slice(1, -1))}</em>;
     }
     if (part.startsWith('<u>') && part.endsWith('</u>') && part.length >= 7) {
-      return <span key={index} className="underline">{part.slice(3, -4)}</span>;
+      return <span key={index} className="underline">{renderFormattedPreview(part.slice(3, -4))}</span>;
     }
     return part;
   });
@@ -116,31 +119,61 @@ export function ParagraphItem({
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const text = localContent || ''; // Ensure string
+    const text = localContent || '';
 
     if (start === end) return; // No selection
 
     const selection = text.substring(start, end);
-    let formatted = '';
 
-    // Define markers
-    const markers = {
-      bold: { start: '**', end: '**' },
-      italic: { start: '*', end: '*' },
-      underline: { start: '<u>', end: '</u>' }
-    };
+    // Strip existing formatting layers to detect what's already applied
+    let inner = selection;
+    let hasBold = false;
+    let hasItalic = false;
+    let hasUnderline = false;
 
-    const marker = markers[type];
-    formatted = `${marker.start}${selection}${marker.end}`;
+    let changed = true;
+    while (changed) {
+      changed = false;
+      if (inner.startsWith('***') && inner.endsWith('***') && inner.length >= 6) {
+        hasBold = true;
+        hasItalic = true;
+        inner = inner.slice(3, -3);
+        changed = true;
+      } else if (inner.startsWith('**') && inner.endsWith('**') && inner.length >= 4) {
+        hasBold = true;
+        inner = inner.slice(2, -2);
+        changed = true;
+      } else if (inner.startsWith('*') && inner.endsWith('*') && inner.length >= 2) {
+        hasItalic = true;
+        inner = inner.slice(1, -1);
+        changed = true;
+      }
+      if (inner.startsWith('<u>') && inner.endsWith('</u>') && inner.length >= 7) {
+        hasUnderline = true;
+        inner = inner.slice(3, -4);
+        changed = true;
+      }
+    }
+
+    // Toggle the requested format
+    if (type === 'bold') hasBold = !hasBold;
+    else if (type === 'italic') hasItalic = !hasItalic;
+    else if (type === 'underline') hasUnderline = !hasUnderline;
+
+    // Rebuild with correct nesting: asterisks outside, underline inside
+    let formatted = inner;
+    if (hasUnderline) formatted = `<u>${formatted}</u>`;
+    if (hasBold && hasItalic) formatted = `***${formatted}***`;
+    else if (hasBold) formatted = `**${formatted}**`;
+    else if (hasItalic) formatted = `*${formatted}*`;
 
     const newContent = text.substring(0, start) + formatted + text.substring(end);
-    setLocalContent(newContent); // Update local state immediately
+    setLocalContent(newContent);
 
-    // Restore focus and selection
+    // Restore focus and selection to cover the formatted result
     setTimeout(() => {
         textarea.focus();
-        // Adjust selection to wrap the formatted text
-        textarea.setSelectionRange(start + marker.start.length, end + marker.start.length);
+        textarea.setSelectionRange(start, start + formatted.length);
     }, 0);
   };
 

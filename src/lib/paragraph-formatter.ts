@@ -2,44 +2,36 @@ import { Paragraph, TextRun, TabStopType, AlignmentType, UnderlineType } from 'd
 import { ParagraphData } from '@/types';
 
 // Helper to parse markdown-like formatting to TextRuns
+// Supports nested formatting: ***bold italic***, **<u>bold underline</u>**, *<u>italic underline</u>*, etc.
 export const parseContentToRuns = (text: string, font: string, size: number, color: string = "000000"): TextRun[] => {
+  return parseContentToRunsWithFormat(text, font, size, color, {});
+};
+
+interface FormatFlags {
+  bold?: boolean;
+  italics?: boolean;
+  underline?: { type: typeof UnderlineType.SINGLE; color: string };
+}
+
+const parseContentToRunsWithFormat = (text: string, font: string, size: number, color: string, format: FormatFlags): TextRun[] => {
   if (!text) return [];
 
-  // Split by markers: **...**, *...*, <u>...</u>
-  const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|<u>.*?<\/u>)/g);
+  const parts = text.split(/(\*\*\*.*?\*\*\*|\*\*.*?\*\*|\*.*?\*|<u>.*?<\/u>)/g);
 
-  return parts.map(part => {
+  return parts.flatMap(part => {
+    if (part.startsWith('***') && part.endsWith('***') && part.length >= 6) {
+      return parseContentToRunsWithFormat(part.slice(3, -3), font, size, color, { ...format, bold: true, italics: true });
+    }
     if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
-      return new TextRun({
-        text: part.slice(2, -2),
-        font,
-        size,
-        bold: true,
-        color
-      });
+      return parseContentToRunsWithFormat(part.slice(2, -2), font, size, color, { ...format, bold: true });
     }
     if (part.startsWith('*') && part.endsWith('*') && part.length >= 2) {
-      return new TextRun({
-        text: part.slice(1, -1),
-        font,
-        size,
-        italics: true,
-        color
-      });
+      return parseContentToRunsWithFormat(part.slice(1, -1), font, size, color, { ...format, italics: true });
     }
     if (part.startsWith('<u>') && part.endsWith('</u>') && part.length >= 7) {
-      return new TextRun({
-        text: part.slice(3, -4),
-        font,
-        size,
-        color,
-        underline: {
-          type: UnderlineType.SINGLE,
-          color: color
-        }
-      });
+      return parseContentToRunsWithFormat(part.slice(3, -4), font, size, color, { ...format, underline: { type: UnderlineType.SINGLE, color } });
     }
-    return new TextRun({ text: part, font, size, color });
+    return [new TextRun({ text: part, font, size, color, ...format })];
   });
 };
 
