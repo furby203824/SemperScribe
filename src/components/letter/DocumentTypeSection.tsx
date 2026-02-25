@@ -280,18 +280,17 @@ export function DocumentTypeSection({
                        </Select>
                     </div>
                     
-                    {formData.cancellationType === 'fixed' ? (
-                      <div className="space-y-2">
-                        <Label htmlFor="cancellationDate" className="text-xs">Cancellation Date</Label>
-                        <Input
-                          id="cancellationDate"
-                          type="date"
-                          value={formData.cancellationDate || ''}
-                          onChange={(e) => setFormData(prev => ({ ...prev, cancellationDate: e.target.value }))}
-                        />
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="cancellationDate" className="text-xs">Cancellation Date</Label>
+                      <Input
+                        id="cancellationDate"
+                        type="date"
+                        value={formData.cancellationDate || ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, cancellationDate: e.target.value }))}
+                      />
+                    </div>
+                    {formData.cancellationType === 'contingent' && (
+                      <div className="space-y-2 md:col-span-2">
                         <Label htmlFor="cancellationContingency" className="text-xs">Contingency Condition</Label>
                         <Input
                           id="cancellationContingency"

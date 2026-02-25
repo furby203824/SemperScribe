@@ -578,7 +578,7 @@ export async function generateDocxBlob(
   if (isDirective && formData.directiveTitle) {
     directiveTitleParagraphs.push(new Paragraph({
       children: [new TextRun({
-        text: formData.directiveTitle,
+        text: formData.directiveTitle.toUpperCase(),
         font,
         size: FONT_SIZE_BODY,
         underline: { type: UnderlineType.SINGLE }
