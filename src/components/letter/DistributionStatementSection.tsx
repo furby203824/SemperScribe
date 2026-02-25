@@ -2,6 +2,8 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
+import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Shield, AlertCircle } from 'lucide-react';
 import { DistributionData, DistributionStatementCode } from '@/types';
@@ -152,11 +154,10 @@ export function DistributionStatementSection({
                 <Label className="text-xs font-semibold uppercase text-muted-foreground">
                   Date of Determination
                 </Label>
-                <Input
-                  type="date"
-                  value={distribution.statementDate || ''}
-                  onChange={(e) => updateField('statementDate', e.target.value)}
-                  className="h-9"
+                <DatePicker
+                  date={distribution.statementDate ? new Date(distribution.statementDate + 'T00:00:00') : undefined}
+                  setDate={(d) => updateField('statementDate', d ? format(d, 'yyyy-MM-dd') : '')}
+                  placeholder="Pick determination date"
                 />
                 {distribution.statementDate && (
                   <p className="text-[10px] text-muted-foreground">

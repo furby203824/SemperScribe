@@ -13,6 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
+import { format } from "date-fns";
 import { FileText, FileSignature, ClipboardList, ScrollText, AlertCircle, Building2, Type, FileCheck, MessageSquare, Users, Notebook, Handshake, Lightbulb, Mic, BookOpen, Flag, Plane, Briefcase, Landmark } from 'lucide-react';
 
 interface DocumentTypeSectionProps {
@@ -282,11 +284,10 @@ export function DocumentTypeSection({
                     
                     <div className="space-y-2">
                       <Label htmlFor="cancellationDate" className="text-xs">Cancellation Date</Label>
-                      <Input
-                        id="cancellationDate"
-                        type="date"
-                        value={formData.cancellationDate || ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, cancellationDate: e.target.value }))}
+                      <DatePicker
+                        date={formData.cancellationDate ? new Date(formData.cancellationDate + 'T00:00:00') : undefined}
+                        setDate={(d) => setFormData(prev => ({ ...prev, cancellationDate: d ? format(d, 'yyyy-MM-dd') : '' }))}
+                        placeholder="Pick cancellation date"
                       />
                     </div>
                     {formData.cancellationType === 'contingent' && (
@@ -706,10 +707,10 @@ export function DocumentTypeSection({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cancellation Date</Label>
-                <Input
-                  type="date"
-                  value={formData.cancellationDate || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, cancellationDate: e.target.value }))}
+                <DatePicker
+                  date={formData.cancellationDate ? new Date(formData.cancellationDate + 'T00:00:00') : undefined}
+                  setDate={(d) => setFormData(prev => ({ ...prev, cancellationDate: d ? format(d, 'yyyy-MM-dd') : '' }))}
+                  placeholder="Pick cancellation date"
                 />
                 <p className="text-xs text-muted-foreground italic">
                   Typically 12 months from issue date. Will display as "Mon YYYY" (e.g., Jan 2027).
