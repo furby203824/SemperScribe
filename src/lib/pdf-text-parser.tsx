@@ -1,28 +1,41 @@
 import React from 'react';
 import { Text } from '@react-pdf/renderer';
 
+interface PdfStyle {
+  fontWeight?: 'bold';
+  fontStyle?: 'italic';
+  textDecoration?: 'underline';
+  [key: `@media${string}`]: never;
+}
+
 /**
  * Parses markdown-like formatting into React-PDF Text components.
  * Supports nested formatting: ***bold italic***, **<u>bold underline</u>**, *<u>italic underline</u>*, etc.
+ * Uses style accumulation (not nesting) because react-pdf Text does not inherit parent styles.
  */
-export function parseFormattedText(text: string): React.ReactNode[] {
+export function parseFormattedText(text: string, parentStyle: PdfStyle = {}): React.ReactNode[] {
   if (!text) return [];
 
   const parts = text.split(/(\*\*\*.*?\*\*\*|\*\*.*?\*\*|\*.*?\*|<u>.*?<\/u>)/g);
 
-  return parts.map((part, index) => {
+  return parts.flatMap((part, index) => {
     if (part.startsWith('***') && part.endsWith('***') && part.length >= 6) {
-      return <Text key={index} style={{ fontWeight: 'bold', fontStyle: 'italic' }}>{parseFormattedText(part.slice(3, -3))}</Text>;
+      return parseFormattedText(part.slice(3, -3), { ...parentStyle, fontWeight: 'bold', fontStyle: 'italic' });
     }
     if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
-      return <Text key={index} style={{ fontWeight: 'bold' }}>{parseFormattedText(part.slice(2, -2))}</Text>;
+      return parseFormattedText(part.slice(2, -2), { ...parentStyle, fontWeight: 'bold' });
     }
     if (part.startsWith('*') && part.endsWith('*') && part.length >= 2) {
-      return <Text key={index} style={{ fontStyle: 'italic' }}>{parseFormattedText(part.slice(1, -1))}</Text>;
+      return parseFormattedText(part.slice(1, -1), { ...parentStyle, fontStyle: 'italic' });
     }
     if (part.startsWith('<u>') && part.endsWith('</u>') && part.length >= 7) {
-      return <Text key={index} style={{ textDecoration: 'underline' }}>{parseFormattedText(part.slice(3, -4))}</Text>;
+      return parseFormattedText(part.slice(3, -4), { ...parentStyle, textDecoration: 'underline' });
     }
-    return part;
+    // Leaf node: apply all accumulated styles
+    if (!part) return [];
+    if (Object.keys(parentStyle).length > 0) {
+      return [<Text key={index} style={parentStyle}>{part}</Text>];
+    }
+    return [part];
   });
 }
