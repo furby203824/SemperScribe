@@ -796,7 +796,7 @@ export function NavalLetterPDF({
         {/* Bulletin cancellation date — centered in right half, two lines above SSIC */}
         {!isFromToMemo && !isMfr && !isMoaOrMou && !isStaffingPaper &&
           formData.documentType === 'bulletin' && formData.cancellationDate && (
-          <View style={{ marginBottom: PDF_SPACING.emptyLine, marginLeft: PDF_INDENTS.signature }}>
+          <View style={{ marginBottom: PDF_SPACING.emptyLine, marginLeft: PDF_INDENTS.signature / 2 }}>
             <Text style={styles.addressLine}>
               {formData.cancellationType === 'contingent' ? 'Canc frp: ' : 'Canc: '}{formatCancellationDate(formData.cancellationDate)}
             </Text>

@@ -161,7 +161,7 @@ export async function generateDocxBlob(
         ssicParagraphs.push(new Paragraph({
           children: [new TextRun({ text: `${cancPrefix} ${formatCancellationDate(formData.cancellationDate)}`, font, size: FONT_SIZE_BODY })],
           alignment: AlignmentType.LEFT,
-          indent: { left: 4680 }, // ~3.25" in twips (matches signature indent)
+          indent: { left: 2340 }, // ~1.625" in twips
           spacing: { after: 240 } // blank line before SSIC
         }));
       }
