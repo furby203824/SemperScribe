@@ -1,15 +1,16 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   FileText,
-  BookOpen,
-  PenTool,
-  Info,
+  Search,
+  X,
   MessageSquare,
   Mail,
   ScrollText,
   ClipboardList,
   Notebook,
   Briefcase,
+  FileInput,
+  Type,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -26,11 +27,183 @@ interface SidebarProps {
   documentType: string;
   onDocumentTypeChange: (type: string) => void;
   paragraphs?: ParagraphData[];
+  formData?: Record<string, any>;
 }
 
-export function Sidebar({ className, documentType, onDocumentTypeChange, paragraphs = [] }: SidebarProps) {
-  // Filter for top-level paragraphs only for the navigation
-  const topLevelParagraphs = paragraphs.filter(p => p.level === 1);
+interface SearchResult {
+  type: 'paragraph' | 'field';
+  label: string;
+  snippet: string;
+  elementId?: string;
+  fieldValue?: string;
+}
+
+const FIELD_LABELS: Record<string, string> = {
+  from: 'From',
+  to: 'To',
+  subj: 'Subject',
+  ssic: 'SSIC',
+  sig: 'Signature',
+  date: 'Date',
+  originatorCode: 'Originator Code',
+  delegationText: 'Delegation',
+  line1: 'Unit Name',
+  line2: 'Street Address',
+  line3: 'City/State/Zip',
+  directiveTitle: 'Designation Line',
+  recipientName: 'Recipient Name',
+  recipientTitle: 'Recipient Title',
+  businessName: 'Business Name',
+  salutation: 'Salutation',
+  complimentaryClose: 'Complimentary Close',
+  classification: 'Classification',
+  drafterName: 'Drafter Name',
+  drafterPhone: 'Drafter Phone',
+  approverName: 'Approver Name',
+  name: 'Name',
+  edipi: 'DOD ID / EDIPI',
+  remarksLeft: 'Left Column',
+  remarksRight: 'Right Column',
+  attentionLine: 'Attention Line',
+  signerRank: 'Signer Rank',
+  signerTitle: 'Signer Title',
+};
+
+const SKIP_FIELDS = new Set(['documentType', 'bodyFont', 'headerType', 'accentColor', 'adminSubsections']);
+
+function formatFieldName(name: string): string {
+  return name
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, s => s.toUpperCase())
+    .trim();
+}
+
+function stripFormatting(text: string): string {
+  return text.replace(/\*{1,3}|<\/?u>/g, '');
+}
+
+function getSnippet(text: string, query: string, maxLen = 60): string {
+  const clean = stripFormatting(text);
+  const lower = clean.toLowerCase();
+  const idx = lower.indexOf(query.toLowerCase());
+  if (idx === -1) return clean.slice(0, maxLen);
+  const start = Math.max(0, idx - 20);
+  const end = Math.min(clean.length, idx + query.length + 30);
+  let snippet = clean.slice(start, end);
+  if (start > 0) snippet = '...' + snippet;
+  if (end < clean.length) snippet += '...';
+  return snippet;
+}
+
+function collectFieldResults(
+  data: any,
+  query: string,
+  results: SearchResult[],
+  parentKey = ''
+) {
+  if (!data || typeof data !== 'object' || results.length >= 20) return;
+
+  for (const [key, value] of Object.entries(data)) {
+    if (results.length >= 20) return;
+    if (SKIP_FIELDS.has(key)) continue;
+
+    const fullKey = parentKey ? `${parentKey}.${key}` : key;
+
+    if (typeof value === 'string' && value.length >= 2) {
+      if (stripFormatting(value).toLowerCase().includes(query)) {
+        const label = FIELD_LABELS[key] || formatFieldName(key);
+        results.push({
+          type: 'field',
+          label,
+          snippet: getSnippet(value, query),
+          fieldValue: value,
+        });
+      }
+    } else if (Array.isArray(value)) {
+      value.forEach((item, i) => {
+        if (results.length >= 20) return;
+        if (typeof item === 'string' && item.length >= 2) {
+          if (stripFormatting(item).toLowerCase().includes(query)) {
+            const label = FIELD_LABELS[key] || formatFieldName(key);
+            results.push({
+              type: 'field',
+              label: `${label} [${i + 1}]`,
+              snippet: getSnippet(item, query),
+              fieldValue: item,
+            });
+          }
+        } else if (typeof item === 'object' && item !== null) {
+          collectFieldResults(item, query, results, `${fullKey}[${i}]`);
+        }
+      });
+    } else if (typeof value === 'object' && value !== null) {
+      collectFieldResults(value, query, results, fullKey);
+    }
+  }
+}
+
+function scrollToResult(result: SearchResult, query: string) {
+  // For paragraphs, scroll to the paragraph card
+  if (result.elementId) {
+    const el = document.getElementById(result.elementId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2'), 2000);
+      return;
+    }
+  }
+
+  // For form fields, find the input/textarea with matching value
+  if (result.type === 'field' && result.fieldValue) {
+    const q = query.toLowerCase();
+    const inputs = document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input, textarea');
+    for (const input of inputs) {
+      if (input.value && stripFormatting(input.value).toLowerCase().includes(q)) {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        input.focus();
+        const parent = input.closest('.space-y-2, .rounded-md, [class*="card"]');
+        if (parent instanceof HTMLElement) {
+          parent.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+          setTimeout(() => parent.classList.remove('ring-2', 'ring-primary', 'ring-offset-2'), 2000);
+        }
+        return;
+      }
+    }
+  }
+}
+
+export function Sidebar({ className, documentType, onDocumentTypeChange, paragraphs = [], formData }: SidebarProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (q.length < 2) return [];
+
+    const results: SearchResult[] = [];
+
+    // Search paragraphs
+    for (const p of paragraphs) {
+      if (results.length >= 20) break;
+      const contentClean = stripFormatting(p.content || '').toLowerCase();
+      const titleClean = (p.title || '').toLowerCase();
+      if (contentClean.includes(q) || titleClean.includes(q)) {
+        results.push({
+          type: 'paragraph',
+          label: p.title ? `${p.title}` : `Paragraph`,
+          snippet: getSnippet(p.content || p.title || '', searchQuery),
+          elementId: `paragraph-${p.id}`,
+        });
+      }
+    }
+
+    // Search form data
+    if (formData) {
+      collectFieldResults(formData, q, results);
+    }
+
+    return results;
+  }, [searchQuery, paragraphs, formData]);
 
   return (
     <aside className={cn("w-64 bg-card border-r border-border hidden md:flex flex-col h-full", className)}>
@@ -233,32 +406,62 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
           </div>
         </div>
 
-        {/* Document Structure */}
+        {/* Find in Document */}
         <div className="p-4">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Document Structure</h3>
-          <nav className="space-y-1">
-            <StructureItem icon={<Info className="w-4 h-4" />} label="Header Info" href="#header" />
-            <StructureItem icon={<BookOpen className="w-4 h-4" />} label="References" href="#references" />
-            
-            {/* Dynamic Body Navigation */}
-            <div className="pt-2 pb-1">
-              <div className="text-[10px] font-bold text-muted-foreground px-2 uppercase mb-1">Body</div>
-              {topLevelParagraphs.length > 0 ? (
-                topLevelParagraphs.map((para, index) => (
-                  <StructureItem 
-                    key={para.id}
-                    label={`${index + 1}. ${para.title || 'Paragraph'}`}
-                    href={`#paragraph-${para.id}`} 
-                    isSubItem 
-                  />
-                ))
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Find in Document</h3>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search..."
+              className="w-full pl-8 pr-8 py-1.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {searchQuery.trim().length >= 2 && (
+            <div className="mt-3 space-y-1">
+              {searchResults.length > 0 ? (
+                <>
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase mb-2">
+                    {searchResults.length} result{searchResults.length !== 1 ? 's' : ''}
+                  </div>
+                  {searchResults.map((result, i) => (
+                    <button
+                      key={i}
+                      onClick={() => scrollToResult(result, searchQuery)}
+                      className="w-full text-left px-2 py-1.5 rounded-md hover:bg-muted transition-colors group"
+                    >
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-foreground group-hover:text-primary">
+                        {result.type === 'paragraph' ? (
+                          <Type className="w-3 h-3 shrink-0 text-muted-foreground" />
+                        ) : (
+                          <FileInput className="w-3 h-3 shrink-0 text-muted-foreground" />
+                        )}
+                        {result.label}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground truncate mt-0.5 pl-[18px]">
+                        {result.snippet}
+                      </div>
+                    </button>
+                  ))}
+                </>
               ) : (
-                <StructureItem label="1. Paragraph" href="#paragraph-1" isSubItem />
+                <div className="text-xs text-muted-foreground text-center py-4">
+                  No matches found
+                </div>
               )}
             </div>
-
-            <StructureItem icon={<PenTool className="w-4 h-4" />} label="Closing Block" href="#closing" />
-          </nav>
+          )}
         </div>
       </ScrollArea>
     </aside>
@@ -267,39 +470,24 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
 
 function DocumentTypeButton({ active, onClick, label, isSpecial }: { active: boolean, onClick: () => void, label: string, isSpecial?: boolean }) {
   return (
-    <button 
+    <button
       onClick={onClick}
       className={cn(
         "w-full text-left flex items-center px-2 py-1.5 text-sm font-medium rounded-md group transition-colors",
-        active 
-          ? "text-primary bg-primary/10 border border-primary/20 shadow-sm" 
+        active
+          ? "text-primary bg-primary/10 border border-primary/20 shadow-sm"
           : "text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
       )}
     >
       <span className={cn(
         "w-4 h-4 rounded-full border mr-2 flex items-center justify-center transition-colors",
-        active 
-          ? "border-primary bg-primary text-primary-foreground" 
+        active
+          ? "border-primary bg-primary text-primary-foreground"
           : "border-muted-foreground/30 group-hover:border-muted-foreground/50"
       )}>
         {active && <span className="w-1.5 h-1.5 rounded-full bg-background"></span>}
       </span>
       {label}
     </button>
-  );
-}
-
-function StructureItem({ icon, label, href, isSubItem }: { icon?: React.ReactNode, label: string, href: string, isSubItem?: boolean }) {
-  return (
-    <a 
-      href={href} 
-      className={cn(
-        "flex items-center px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground rounded-md group transition-colors",
-        isSubItem && "pl-8 border-l-2 border-transparent hover:border-muted-foreground/30"
-      )}
-    >
-      {icon && <span className="text-muted-foreground/70 group-hover:text-foreground mr-2">{icon}</span>}
-      {label}
-    </a>
   );
 }
