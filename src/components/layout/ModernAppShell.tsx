@@ -162,10 +162,11 @@ export function ModernAppShell({
       {/* Main Content Area (3-Pane Grid) */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Pane: Sidebar */}
-        <Sidebar 
-          documentType={documentType} 
-          onDocumentTypeChange={onDocumentTypeChange} 
+        <Sidebar
+          documentType={documentType}
+          onDocumentTypeChange={onDocumentTypeChange}
           paragraphs={paragraphs}
+          formData={formData as Record<string, any>}
         />
 
         {/* Center Pane: Editor */}
