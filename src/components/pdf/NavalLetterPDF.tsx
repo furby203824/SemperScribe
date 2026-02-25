@@ -1430,7 +1430,7 @@ export function NavalLetterPDF({
               index={i}
               allParagraphs={paragraphsWithContent}
               bodyFont={formData.bodyFont}
-              shouldBoldTitle={!['moa', 'mou', 'information-paper', 'position-paper'].includes(formData.documentType)}
+              shouldBoldTitle={!['mco', 'moa', 'mou', 'information-paper', 'position-paper'].includes(formData.documentType)}
               shouldUppercaseTitle={!['mco', 'bulletin', 'change-transmittal', 'moa', 'mou', 'information-paper', 'position-paper'].includes(formData.documentType)}
               documentType={formData.documentType}
               isShortLetter={formData.isShortLetter}
