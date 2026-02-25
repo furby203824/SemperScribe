@@ -799,7 +799,7 @@ export function NavalLetterPDF({
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: PDF_SPACING.sectionGap }}>
              <View style={{ alignItems: 'flex-start' }}>
                 {formData.documentType === 'bulletin' && formData.cancellationDate && (
-                  <Text style={styles.addressLine}>
+                  <Text style={[styles.addressLine, { marginBottom: PDF_SPACING.emptyLine }]}>
                     {formData.cancellationType === 'contingent' ? 'Canc frp: ' : 'Canc: '}{formatCancellationDate(formData.cancellationDate)}
                   </Text>
                 )}

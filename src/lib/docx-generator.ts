@@ -159,6 +159,7 @@ export async function generateDocxBlob(
       if (formData.documentType === 'bulletin' && formData.cancellationDate) {
         const cancPrefix = formData.cancellationType === 'contingent' ? 'Canc frp:' : 'Canc:';
         ssicBlock.push(`${cancPrefix} ${formatCancellationDate(formData.cancellationDate)}`);
+        ssicBlock.push(''); // Blank line: cancellation date sits two lines above SSIC
       }
       
       if (formData.documentType === 'mco' && formData.orderPrefix) {
