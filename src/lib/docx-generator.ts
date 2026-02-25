@@ -155,13 +155,18 @@ export async function generateDocxBlob(
           spacing: { before: 1440, after: 0 } // 1 inch top spacing
        }));
   } else if (!isMoaOrMou && !isStaffingPaper) {
-      const ssicBlock = [];
+      // Bulletin cancellation date — indented at ~3.25" (signature indent), above SSIC block
       if (formData.documentType === 'bulletin' && formData.cancellationDate) {
         const cancPrefix = formData.cancellationType === 'contingent' ? 'Canc frp:' : 'Canc:';
-        ssicBlock.push(`${cancPrefix} ${formatCancellationDate(formData.cancellationDate)}`);
-        ssicBlock.push(''); // Blank line: cancellation date sits two lines above SSIC
+        ssicParagraphs.push(new Paragraph({
+          children: [new TextRun({ text: `${cancPrefix} ${formatCancellationDate(formData.cancellationDate)}`, font, size: FONT_SIZE_BODY })],
+          alignment: AlignmentType.LEFT,
+          indent: { left: 4680 }, // ~3.25" in twips (matches signature indent)
+          spacing: { after: 240 } // blank line before SSIC
+        }));
       }
-      
+
+      const ssicBlock = [];
       if (formData.documentType === 'mco' && formData.orderPrefix) {
         ssicBlock.push(`${formData.orderPrefix} ${formData.ssic}`);
       } else {
