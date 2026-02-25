@@ -211,6 +211,7 @@ export function ParagraphItem({
                 variant="ghost"
                 size="sm"
                 className="h-6 w-6 p-0 hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => applyFormat('bold')}
                 title="Bold (**text**)"
               >
@@ -220,6 +221,7 @@ export function ParagraphItem({
                 variant="ghost"
                 size="sm"
                 className="h-6 w-6 p-0 hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => applyFormat('italic')}
                 title="Italic (*text*)"
               >
@@ -229,6 +231,7 @@ export function ParagraphItem({
                 variant="ghost"
                 size="sm"
                 className="h-6 w-6 p-0 hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => applyFormat('underline')}
                 title="Underline (<u>text</u>)"
               >
