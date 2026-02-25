@@ -894,7 +894,7 @@ export function NavalLetterPDF({
         {isDirective && (formData.directiveTitle || formData.ssic) && (
           <View style={{ marginBottom: PDF_SPACING.sectionGap }}>
             <Text style={[styles.addressLine, { textDecoration: 'underline' }]}>
-              {formData.directiveTitle || buildDirectiveTitle(formData)}
+              {(formData.directiveTitle || buildDirectiveTitle(formData)).toUpperCase()}
             </Text>
           </View>
         )}
@@ -1799,7 +1799,7 @@ export function NavalLetterPDF({
           {/* Top-right: Directive designation and date */}
           <View style={{ alignItems: 'flex-end', marginBottom: PDF_SPACING.emptyLine }}>
             <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
-              {formData.directiveTitle || buildDirectiveTitle(formData)}
+              {(formData.directiveTitle || buildDirectiveTitle(formData)).toUpperCase()}
             </Text>
             <Text style={{ fontFamily: fontFamily, fontSize: PDF_FONT_SIZES.body }}>
               {formattedDate}
