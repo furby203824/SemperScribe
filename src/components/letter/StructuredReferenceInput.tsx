@@ -10,6 +10,8 @@ import { REFERENCE_TYPES, COMMON_ORIGINATORS } from '@/lib/constants';
 import { FormData } from '@/types';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
+import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Info } from 'lucide-react';
@@ -118,11 +120,10 @@ export function StructuredReferenceInput({ formData, setFormData }: StructuredRe
 
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold uppercase text-muted-foreground">Date</Label>
-            <Input
-              type="date"
-              value={formData.referenceDate}
-              onChange={(e) => updateReference('date', e.target.value)}
-              className="h-9"
+            <DatePicker
+              date={formData.referenceDate ? new Date(formData.referenceDate + 'T00:00:00') : undefined}
+              setDate={(d) => updateReference('date', d ? format(d, 'yyyy-MM-dd') : '')}
+              placeholder="Pick a date"
             />
             {formData.referenceDate && (
               <p className="text-[10px] text-muted-foreground">
