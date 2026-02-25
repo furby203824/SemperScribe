@@ -161,7 +161,7 @@ export async function generateDocxBlob(
         ssicParagraphs.push(new Paragraph({
           children: [new TextRun({ text: `${cancPrefix} ${formatCancellationDate(formData.cancellationDate)}`, font, size: FONT_SIZE_BODY })],
           alignment: AlignmentType.LEFT,
-          indent: { left: 7020 }, // ~4.875" in twips
+          indent: { left: formData.cancellationType === 'contingent' ? 6300 : 7020 },
           spacing: { after: 240 } // blank line before SSIC
         }));
       }
