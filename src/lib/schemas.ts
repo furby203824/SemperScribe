@@ -53,7 +53,8 @@ export type DocumentCategory =
   | 'forms'
   | 'staffing-papers'
   | 'external-executive'
-  | 'amhs';
+  | 'amhs'
+  | 'dla-correspondence';
 
 export interface DocumentFeatures {
   // Section visibility
@@ -1922,6 +1923,244 @@ export const ChangeTransmittalDefinition: DocumentTypeDefinition = {
   ]
 };
 
+// --- DLA Correspondence Schemas (DLA Correspondence Manual, 2011) ---
+
+const DLA_CORRESPONDENCE_FEATURES: DocumentFeatures = {
+  showHeaderSettings: true,
+  showFontSelector: false,
+  showUnitInfo: true,
+  showEndorsementDetails: false,
+  showDirectiveTitle: false,
+  showVia: false,           // DLA uses THROUGH, not Via
+  showReferences: true,
+  showEnclosures: true,
+  showDistribution: false,
+  showReports: false,
+  showParagraphs: true,
+  showClosingBlock: true,
+  showMOAForm: false,
+  showSignature: true,
+  showDecisionGrid: false,
+  showCoordinationTable: false,
+  isAMHS: false,
+  isDirective: false,
+  showMultipleTo: false,
+  showToDistribution: false,
+  category: 'dla-correspondence',
+  exportFormats: ['pdf', 'docx'],
+  pdfPipeline: 'standard',
+};
+
+// DLA Standard Memorandum
+export const DLAMemorandumSchema = z.object({
+  documentType: z.literal('dla-memorandum'),
+  date: z.string().min(1, "Date is required"),
+  memorandumFor: z.string().min(1, "MEMORANDUM FOR addressee is required"),
+  through: z.string().optional(),  // THROUGH routing (optional)
+  subj: subjFieldRequired(),
+  signerFullName: z.string().optional(),
+  delegationText: z.string().optional(),
+  line1: z.string(),
+  line2: z.string(),
+  line3: z.string(),
+  bodyFont: z.string().optional(),
+});
+
+export const DLAMemorandumDefinition: DocumentTypeDefinition = {
+  id: 'dla-memorandum',
+  name: 'Standard Memorandum (DLA)',
+  description: 'Standard memorandum format per DLA Correspondence Manual. Uses MEMORANDUM FOR instead of From/To.',
+  icon: '🏢',
+  schema: DLAMemorandumSchema,
+  features: { ...DLA_CORRESPONDENCE_FEATURES },
+  sections: [
+    {
+      id: 'header',
+      title: 'Memorandum Details',
+      fields: [
+        {
+          name: 'date',
+          label: 'Date',
+          type: 'date',
+          placeholder: 'Month DD, YYYY',
+          description: 'DLA uses civilian date format (e.g., March 21, 2011)',
+          required: true,
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'memorandumFor',
+          label: 'MEMORANDUM FOR',
+          type: 'text',
+          placeholder: 'Director, Defense Logistics Agency',
+          description: 'The addressee for this memorandum',
+          required: true,
+          className: 'col-span-full'
+        },
+        {
+          name: 'through',
+          label: 'THROUGH',
+          type: 'text',
+          placeholder: 'Deputy Director, DLA (optional)',
+          description: 'Optional routing through an intermediary',
+          className: 'col-span-full'
+        },
+        {
+          name: 'subj',
+          label: 'SUBJECT',
+          type: 'text',
+          placeholder: 'SUBJECT LINE (ALL CAPS)',
+          required: true,
+          className: 'col-span-full'
+        }
+      ]
+    },
+    {
+      id: 'signature',
+      title: 'Signature Block',
+      fields: [
+        {
+          name: 'signerFullName',
+          label: 'Signer Full Name',
+          type: 'text',
+          placeholder: 'JOHN M. HANCOCK',
+          description: 'Full name in ALL CAPS (DLA format)',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'delegationText',
+          label: 'Delegation Text',
+          type: 'text',
+          placeholder: 'e.g., By direction',
+          className: 'md:col-span-1'
+        }
+      ]
+    }
+  ]
+};
+
+// DLA Business Letter
+export const DLABusinessLetterSchema = z.object({
+  documentType: z.literal('dla-business-letter'),
+  date: z.string().min(1, "Date is required"),
+  recipientName: z.string().optional(),
+  recipientTitle: z.string().optional(),
+  businessName: z.string().optional(),
+  recipientAddress: z.string().optional(),
+  salutation: z.string().optional(),
+  subj: subjFieldRequired(),
+  signerFullName: z.string().optional(),
+  delegationText: z.string().optional(),
+  complimentaryClose: z.string().optional(),
+  line1: z.string(),
+  line2: z.string(),
+  line3: z.string(),
+  bodyFont: z.string().optional(),
+});
+
+export const DLABusinessLetterDefinition: DocumentTypeDefinition = {
+  id: 'dla-business-letter',
+  name: 'Business Letter (DLA)',
+  description: 'DLA business letter for correspondence with non-DoD entities.',
+  icon: '💼',
+  schema: DLABusinessLetterSchema,
+  features: { ...DLA_CORRESPONDENCE_FEATURES },
+  sections: [
+    {
+      id: 'header',
+      title: 'Letter Details',
+      fields: [
+        {
+          name: 'date',
+          label: 'Date',
+          type: 'date',
+          placeholder: 'Month DD, YYYY',
+          description: 'DLA uses civilian date format',
+          required: true,
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'subj',
+          label: 'SUBJECT',
+          type: 'text',
+          placeholder: 'SUBJECT LINE (ALL CAPS)',
+          required: true,
+          className: 'col-span-full'
+        }
+      ]
+    },
+    {
+      id: 'recipient',
+      title: 'Inside Address',
+      fields: [
+        {
+          name: 'recipientName',
+          label: 'Recipient Name',
+          type: 'text',
+          placeholder: 'Mr. John Doe',
+          className: 'col-span-full'
+        },
+        {
+          name: 'recipientTitle',
+          label: 'Title',
+          type: 'text',
+          placeholder: 'Vice President',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'businessName',
+          label: 'Business Name',
+          type: 'text',
+          placeholder: 'Acme Corp',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'recipientAddress',
+          label: 'Address',
+          type: 'textarea',
+          placeholder: '123 Main St\nCity, State Zip',
+          className: 'col-span-full',
+          rows: 3
+        },
+        {
+          name: 'salutation',
+          label: 'Salutation',
+          type: 'text',
+          placeholder: 'Dear Mr. Doe:',
+          className: 'col-span-full'
+        }
+      ]
+    },
+    {
+      id: 'signature',
+      title: 'Signature Block',
+      fields: [
+        {
+          name: 'complimentaryClose',
+          label: 'Complimentary Close',
+          type: 'text',
+          placeholder: 'Sincerely,',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'signerFullName',
+          label: 'Signer Full Name',
+          type: 'text',
+          placeholder: 'JOHN M. HANCOCK',
+          description: 'Full name in ALL CAPS (DLA format)',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'delegationText',
+          label: 'Delegation Text',
+          type: 'text',
+          placeholder: 'e.g., By direction',
+          className: 'md:col-span-1'
+        }
+      ]
+    }
+  ]
+};
+
 // Create a union of all schemas for type inference
 export const DocumentSchema = z.union([
   BasicLetterSchema,
@@ -1942,6 +2181,8 @@ export const DocumentSchema = z.union([
   StaffingPaperSchema,
   BusinessLetterSchema,
   ExecutiveCorrespondenceSchema,
+  DLAMemorandumSchema,
+  DLABusinessLetterSchema,
 ]);
 
 // Infer the FormData type from the union schema
@@ -1972,4 +2213,6 @@ export const DOCUMENT_TYPES: Record<string, DocumentTypeDefinition> = {
   'coordination-page': CoordinationPageDefinition,
   'business-letter': BusinessLetterDefinition,
   'executive-correspondence': ExecutiveCorrespondenceDefinition,
+  'dla-memorandum': DLAMemorandumDefinition,
+  'dla-business-letter': DLABusinessLetterDefinition,
 };

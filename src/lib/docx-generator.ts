@@ -72,7 +72,7 @@ export async function generateDocxBlob(
 ): Promise<Blob> {
   const font = getFont(formData.bodyFont);
   const headerColor = getHeaderColor(formData.accentColor);
-  const sealBuffer = await getDoDSealBuffer(formData.headerType === 'DON' ? 'navy' : 'marine-corps');
+  const sealBuffer = await getDoDSealBuffer(formData.headerType === 'DON' ? 'navy' : 'marine-corps'); // DLA uses marine-corps (DoD) seal
   const isDirective = formData.documentType === 'mco' || formData.documentType === 'bulletin';
   const isStaffingPaper = ['position-paper', 'information-paper', 'decision-paper'].includes(formData.documentType);
   const isPositionPaper = formData.documentType === 'position-paper';

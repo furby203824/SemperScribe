@@ -10,6 +10,8 @@ import { CoordinationPageTemplate } from './coordination-page';
 import { ExecutiveCorrespondenceTemplate } from './executive-correspondence';
 import { FromToMemoTemplate, LetterheadMemoTemplate, MOATemplate, MOUTemplate } from './memo';
 import { MCOTemplate, BulletinTemplate, ChangeTransmittalTemplate, AssumptionOfCommandTemplate } from './orders';
+import { DLAMemorandumTemplate } from './dla-memorandum';
+import { DLABusinessLetterTemplate } from './dla-business-letter';
 
 // Re-export all templates
 export * from './types';
@@ -24,6 +26,8 @@ export * from './decision-paper';
 export * from './coordination-page';
 export * from './memo';
 export * from './orders';
+export * from './dla-memorandum';
+export * from './dla-business-letter';
 
 // Master Registry
 export const DOCUMENT_TEMPLATES: Record<string, DocumentTemplate> = {
@@ -50,7 +54,11 @@ export const DOCUMENT_TEMPLATES: Record<string, DocumentTemplate> = {
   // Aliases or Additional Placeholders (Mapped to Basic if not implemented)
   'multiple-address': { ...BasicLetterTemplate, id: 'multiple-address-default', typeId: 'multiple-address', name: 'Multiple-Address Letter' },
   'page11': { ...BasicLetterTemplate, id: 'page11-default', typeId: 'page11', name: 'Page 11' }, // Placeholder
-  'amhs': { ...BasicLetterTemplate, id: 'amhs-default', typeId: 'amhs', name: 'AMHS Message' } // Placeholder
+  'amhs': { ...BasicLetterTemplate, id: 'amhs-default', typeId: 'amhs', name: 'AMHS Message' }, // Placeholder
+
+  // DLA Correspondence
+  'dla-memorandum': DLAMemorandumTemplate,
+  'dla-business-letter': DLABusinessLetterTemplate,
 };
 
 /**
