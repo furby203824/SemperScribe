@@ -5,8 +5,8 @@ import { DOD_SEAL_DETAILED, NAVY_SEAL_BLUE } from './dod-seal-data';
  * @param headerType - 'USMC' for Marine Corps (black DoD seal) or 'DON' for Navy (blue seal)
  * @returns Base64 data URL for the seal image
  */
-export function getPDFSealDataUrl(headerType: 'USMC' | 'DON' = 'USMC'): string {
-  // Use Navy blue seal for DON, DoD seal for USMC
+export function getPDFSealDataUrl(headerType: 'USMC' | 'DON' | 'DLA' = 'USMC'): string {
+  // Use Navy blue seal for DON, DoD seal for USMC and DLA
   const sealData = (headerType === 'DON' && NAVY_SEAL_BLUE && !NAVY_SEAL_BLUE.includes('YOUR_NAVY_SEAL_BASE64_DATA_HERE'))
     ? NAVY_SEAL_BLUE
     : DOD_SEAL_DETAILED;

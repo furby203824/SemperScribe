@@ -23,6 +23,7 @@ export function HeaderSettingsSection({ formData, setFormData }: HeaderSettingsS
           <SelectContent>
             <SelectItem value="USMC">USMC Standard</SelectItem>
             <SelectItem value="DON">Department of the Navy</SelectItem>
+            <SelectItem value="DLA">Defense Logistics Agency</SelectItem>
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">Changes header title text</p>

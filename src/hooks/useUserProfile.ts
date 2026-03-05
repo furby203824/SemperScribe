@@ -13,7 +13,7 @@ export interface UserProfile {
   unitRuc: string;
 
   // Document Formatting
-  headerType: 'USMC' | 'DON';
+  headerType: 'USMC' | 'DON' | 'DLA';
   bodyFont: 'times' | 'courier';
   accentColor: 'black' | 'blue';
 

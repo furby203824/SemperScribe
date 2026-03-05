@@ -276,7 +276,7 @@ export function SettingsDialog({
                     <Label className="text-xs font-medium text-muted-foreground">Header Type</Label>
                     <Select
                       value={profile.headerType}
-                      onValueChange={(val) => onUpdateProfile({ headerType: val as 'USMC' | 'DON' })}
+                      onValueChange={(val) => onUpdateProfile({ headerType: val as 'USMC' | 'DON' | 'DLA' })}
                     >
                       <SelectTrigger className="bg-background border-input">
                         <SelectValue />
@@ -284,6 +284,7 @@ export function SettingsDialog({
                       <SelectContent>
                         <SelectItem value="USMC">USMC Standard</SelectItem>
                         <SelectItem value="DON">Department of the Navy</SelectItem>
+                        <SelectItem value="DLA">Defense Logistics Agency</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
