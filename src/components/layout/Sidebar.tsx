@@ -11,6 +11,7 @@ import {
   Briefcase,
   FileInput,
   Type,
+  Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -337,6 +338,30 @@ export function Sidebar({ className, documentType, onDocumentTypeChange, paragra
                     active={documentType === 'executive-correspondence'}
                     onClick={() => onDocumentTypeChange('executive-correspondence')}
                     label="Executive Correspondence"
+                  />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* DLA Correspondence Group */}
+            <AccordionItem value="dla-correspondence" className="border-none">
+              <AccordionTrigger className="py-2 text-sm font-semibold text-foreground hover:no-underline">
+                <span className="flex items-center">
+                  <Building2 className="w-4 h-4 mr-2 text-primary" />
+                  DLA Correspondence
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-2">
+                <div className="space-y-1 pl-2">
+                  <DocumentTypeButton
+                    active={documentType === 'dla-memorandum'}
+                    onClick={() => onDocumentTypeChange('dla-memorandum')}
+                    label="Standard Memorandum"
+                  />
+                  <DocumentTypeButton
+                    active={documentType === 'dla-business-letter'}
+                    onClick={() => onDocumentTypeChange('dla-business-letter')}
+                    label="Business Letter (DLA)"
                   />
                 </div>
               </AccordionContent>
