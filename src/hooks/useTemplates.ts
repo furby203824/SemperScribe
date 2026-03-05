@@ -47,8 +47,13 @@ export function useTemplates({ documentType, currentUnitCode, currentUnitName }:
   }, []);
 
   const matchesQuery = (t: Template) => {
-    // Filter by document type if specified
-    if (documentType) {
+    const q = searchQuery.trim().toLowerCase();
+    const hasSearchQuery = q.length > 0;
+
+    // When searching, skip document type filter so users can discover templates
+    // across all document types (e.g., searching "DLA" while in a basic letter).
+    // When NOT searching, filter by current document type to show relevant templates.
+    if (!hasSearchQuery && documentType) {
       if (t.documentType && t.documentType !== documentType) {
         return false;
       }
@@ -58,15 +63,15 @@ export function useTemplates({ documentType, currentUnitCode, currentUnitName }:
       }
     }
 
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return true;
+    if (!hasSearchQuery) return true;
 
-    // Search in title, description, unit name, unit code
+    // Search in title, description, unit name, unit code, and document type
     return [
-      t.title, 
-      t.description || '', 
-      t.unitName || '', 
-      t.unitCode || ''
+      t.title,
+      t.description || '',
+      t.unitName || '',
+      t.unitCode || '',
+      t.documentType || '',
     ].some(field => field.toLowerCase().includes(q));
   };
 
