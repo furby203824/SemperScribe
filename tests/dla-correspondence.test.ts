@@ -11,12 +11,12 @@ import { runProofreadChecks } from '@/lib/proofread-checks';
 
 describe('DLA Correspondence Schemas', () => {
   describe('DLA Memorandum Schema', () => {
-    it('accepts valid DLA memorandum data', () => {
+    it('accepts valid DLA memorandum data with Title Case subject', () => {
       const validData = {
         documentType: 'dla-memorandum',
         date: 'March 5, 2026',
         memorandumFor: 'Director, Defense Logistics Agency',
-        subj: 'TEST MEMORANDUM SUBJECT',
+        subj: 'Preparing a Memorandum',
         line1: '',
         line2: '',
         line3: '',
@@ -25,12 +25,26 @@ describe('DLA Correspondence Schemas', () => {
       expect(result.success).toBe(true);
     });
 
+    it('accepts ALL CAPS subject for DLA memorandum (backwards compatible)', () => {
+      const data = {
+        documentType: 'dla-memorandum',
+        date: 'March 5, 2026',
+        memorandumFor: 'Director, DLA',
+        subj: 'ALL CAPS SUBJECT',
+        line1: '',
+        line2: '',
+        line3: '',
+      };
+      const result = DLAMemorandumSchema.safeParse(data);
+      expect(result.success).toBe(true);
+    });
+
     it('rejects missing MEMORANDUM FOR', () => {
       const invalidData = {
         documentType: 'dla-memorandum',
         date: 'March 5, 2026',
         memorandumFor: '',
-        subj: 'TEST SUBJECT',
+        subj: 'Test Subject',
         line1: '',
         line2: '',
         line3: '',
@@ -39,12 +53,12 @@ describe('DLA Correspondence Schemas', () => {
       expect(result.success).toBe(false);
     });
 
-    it('rejects lowercase subject', () => {
+    it('rejects empty subject', () => {
       const invalidData = {
         documentType: 'dla-memorandum',
         date: 'March 5, 2026',
         memorandumFor: 'Director, DLA',
-        subj: 'lowercase subject',
+        subj: '',
         line1: '',
         line2: '',
         line3: '',
@@ -59,7 +73,7 @@ describe('DLA Correspondence Schemas', () => {
         date: 'March 5, 2026',
         memorandumFor: 'Director, DLA',
         through: 'Deputy Director, DLA',
-        subj: 'TEST SUBJECT',
+        subj: 'Test Subject',
         line1: '',
         line2: '',
         line3: '',
@@ -68,13 +82,15 @@ describe('DLA Correspondence Schemas', () => {
       expect(result.success).toBe(true);
     });
 
-    it('accepts optional signerFullName', () => {
+    it('accepts optional signerFullName with rank and title', () => {
       const data = {
         documentType: 'dla-memorandum',
         date: 'March 5, 2026',
         memorandumFor: 'Director, DLA',
-        subj: 'TEST SUBJECT',
+        subj: 'Test Subject',
         signerFullName: 'JOHN M. HANCOCK',
+        signerRank: 'Lieutenant General, USAF',
+        signerTitle: 'Director',
         line1: '',
         line2: '',
         line3: '',
@@ -162,6 +178,19 @@ describe('DLA Templates', () => {
     expect(template.defaultData.signerFullName).toBeTruthy();
   });
 
+  it('DLA Memorandum template has rank and title defaults', () => {
+    const template = DOCUMENT_TEMPLATES['dla-memorandum'];
+    expect(template.defaultData.signerRank).toBeTruthy();
+    expect(template.defaultData.signerTitle).toBeTruthy();
+  });
+
+  it('DLA Memorandum template uses Title Case subject', () => {
+    const template = DOCUMENT_TEMPLATES['dla-memorandum'];
+    expect(template.formatting?.subjectCase).toBe('titlecase');
+    // Subject should not be ALL CAPS
+    expect(template.defaultData.subj).not.toBe(template.defaultData.subj?.toUpperCase());
+  });
+
   it('DLA Business Letter template is registered', () => {
     const template = DOCUMENT_TEMPLATES['dla-business-letter'];
     expect(template).toBeDefined();
@@ -182,7 +211,7 @@ describe('DLA Proofreading Checks', () => {
     documentType: 'dla-memorandum',
     date: 'March 5, 2026',
     memorandumFor: 'Director, DLA',
-    subj: 'TEST SUBJECT',
+    subj: 'Preparing a Memorandum',
     signerFullName: 'JOHN M. HANCOCK',
     headerType: 'DLA',
     line1: 'DEFENSE LOGISTICS AGENCY',
@@ -224,10 +253,40 @@ describe('DLA Proofreading Checks', () => {
     expect(ssicCheck).toBeUndefined();
   });
 
-  it('checks subject ALL CAPS for DLA types', () => {
-    const badSubjData = { ...baseMemoData, subj: 'lowercase subject' };
+  it('checks Title Case subject for DLA memo (passes with capitalized first letter)', () => {
     const checks = runProofreadChecks(
-      badSubjData as any,
+      baseMemoData as any,
+      [{ id: 1, level: 1, content: 'Test paragraph.' }],
+      [],
+      [],
+    );
+    const subjCheck = checks.find(c => c.id === 'subject-caps');
+    expect(subjCheck).toBeDefined();
+    expect(subjCheck?.status).toBe('pass');
+    expect(subjCheck?.label).toContain('Title Case');
+  });
+
+  it('warns on DLA memo subject starting with lowercase', () => {
+    const lowercaseData = { ...baseMemoData, subj: 'lowercase subject' };
+    const checks = runProofreadChecks(
+      lowercaseData as any,
+      [{ id: 1, level: 1, content: 'Test paragraph.' }],
+      [],
+      [],
+    );
+    const subjCheck = checks.find(c => c.id === 'subject-caps');
+    expect(subjCheck).toBeDefined();
+    expect(subjCheck?.status).toBe('warn');
+  });
+
+  it('DLA business letter still checks ALL CAPS subject', () => {
+    const bizLetterData = {
+      ...baseMemoData,
+      documentType: 'dla-business-letter',
+      subj: 'lowercase subject',
+    };
+    const checks = runProofreadChecks(
+      bizLetterData as any,
       [{ id: 1, level: 1, content: 'Test paragraph.' }],
       [],
       [],

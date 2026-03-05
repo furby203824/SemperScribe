@@ -650,12 +650,12 @@ export async function generateDocxBlob(
       }));
     }
 
-    // Subject for DLA Memo
+    // Subject for DLA Memo — Title Case per DLA Corr Manual Ch.3 Para 8
     addressParagraphs.push(createEmptyLine(font));
     addressParagraphs.push(new Paragraph({
       children: [
         new TextRun({ text: 'SUBJECT:', font, size: FONT_SIZE_BODY }),
-        new TextRun({ text: '\t' + (formData.subj || '').toUpperCase(), font, size: FONT_SIZE_BODY }),
+        new TextRun({ text: '\t' + (formData.subj || ''), font, size: FONT_SIZE_BODY }),
       ],
       tabStops: [{ type: TabStopType.LEFT, position: tabPosition }],
       spacing: { after: 240 },
@@ -921,7 +921,25 @@ export async function generateDocxBlob(
   const enclParagraphs: Paragraph[] = [];
   const encls = enclosures.filter(e => e.trim());
   if (encls.length > 0 && !isStaffingPaper) {
-    if (isCivilianStyle) {
+    if (isDLAType) {
+        // DLA uses "Attachments" (not "Enclosures") per DLA Corr Manual Ch.3 Para 19
+        const label = encls.length > 1 ? "Attachments:" : "Attachment:";
+        enclParagraphs.push(new Paragraph({
+            children: [new TextRun({ text: label, font, size: FONT_SIZE_BODY })],
+            alignment: AlignmentType.LEFT,
+            spacing: { after: 0 }
+        }));
+
+        encls.forEach((encl, index) => {
+            const text = encls.length > 1 ? `${index + 1}.  ${encl}` : encl;
+            enclParagraphs.push(new Paragraph({
+                children: [new TextRun({ text, font, size: FONT_SIZE_BODY })],
+                alignment: AlignmentType.LEFT,
+                spacing: { after: 0 }
+            }));
+        });
+        enclParagraphs.push(createEmptyLine(font));
+    } else if (isCivilianStyle) {
         // Business/Executive Letter Enclosures (Flush Left)
         const label = encls.length > 1 ? "Enclosures" : "Enclosure";
         enclParagraphs.push(new Paragraph({
@@ -929,7 +947,7 @@ export async function generateDocxBlob(
             alignment: AlignmentType.LEFT,
             spacing: { after: 0 }
         }));
-        
+
         encls.forEach(encl => {
             enclParagraphs.push(new Paragraph({
                 children: [new TextRun({ text: encl, font, size: FONT_SIZE_BODY })],
@@ -1063,21 +1081,20 @@ export async function generateDocxBlob(
         return; // Skip standard processing for this paragraph
     }
 
-    // DLA-specific paragraph rendering: ½ inch per indent level, max 3 levels
+    // DLA paragraph rendering per DLA Corr Manual Ch.3:
+    // Level 1: unnumbered, one tab indent; Levels 2-4: a., (1), (a)
     if (isDLAType) {
         const { citation } = generateCitation(p, index, paragraphsWithContent);
-        const effectiveLevel = Math.min(p.level, 3);
+        const effectiveLevel = Math.min(p.level, 4); // Max 4 levels (unnumbered + 3 subdivisions)
         const dlaIndentTwips = 720; // ½ inch = 720 twips
 
         if (effectiveLevel === 1) {
-            // Level 1: First-line indent of ½ inch, text at left margin
+            // Level 1: No number, first-line indent of one tab, text wraps to left margin
             const children: TextRun[] = [];
             if (p.title) {
                 children.push(new TextRun({ text: p.title.toUpperCase() + '.  ', font, size: FONT_SIZE_BODY, bold: true }));
             }
-            // Parse content for bold/italic
-            const contentText = p.content || '';
-            children.push(new TextRun({ text: contentText, font, size: FONT_SIZE_BODY }));
+            children.push(new TextRun({ text: p.content || '', font, size: FONT_SIZE_BODY }));
 
             bodyParagraphs.push(new Paragraph({
                 children,
@@ -1085,7 +1102,7 @@ export async function generateDocxBlob(
                 spacing: { after: 240 },
             }));
         } else {
-            // Sub-levels (2-3): citation + text at indent position
+            // Sub-levels (2-4): citation + text at indent position
             const leftIndent = (effectiveLevel - 1) * dlaIndentTwips;
             const children: TextRun[] = [];
 
@@ -1440,7 +1457,8 @@ export async function generateDocxBlob(
       });
       signatureParagraphs.push(table);
   } else if (isDLAMemo) {
-      // DLA Memorandum Signature Block — no complimentary close
+      // DLA Memorandum Signature Block — 4 blank lines, centered per Ch.3-2 Para 16-17
+      signatureParagraphs.push(createEmptyLine(font));
       signatureParagraphs.push(createEmptyLine(font));
       signatureParagraphs.push(createEmptyLine(font));
       signatureParagraphs.push(createEmptyLine(font));
@@ -1448,14 +1466,28 @@ export async function generateDocxBlob(
       if (formData.signerFullName) {
           signatureParagraphs.push(new Paragraph({
               children: [new TextRun({ text: formData.signerFullName, font, size: FONT_SIZE_BODY })],
-              alignment: AlignmentType.LEFT,
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 0 }
+          }));
+      }
+      if (formData.signerRank) {
+          signatureParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: formData.signerRank, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 0 }
+          }));
+      }
+      if (formData.signerTitle) {
+          signatureParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: formData.signerTitle, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.CENTER,
               spacing: { after: 0 }
           }));
       }
       if (formData.delegationText) {
           signatureParagraphs.push(new Paragraph({
               children: [new TextRun({ text: formData.delegationText, font, size: FONT_SIZE_BODY })],
-              alignment: AlignmentType.LEFT,
+              alignment: AlignmentType.CENTER,
               spacing: { after: 0 }
           }));
       }
@@ -1684,10 +1716,10 @@ export async function generateDocxBlob(
           }
       }
 
-      // Standard Letter Copy To
+      // Standard Letter Copy To (DLA uses "cc:" per Ch.3 Para 21)
       const copiesWithContent = copyTos.filter(c => c.trim());
       if (copiesWithContent.length > 0) {
-          const copyToLabel = getCopyToSpacing(formData.bodyFont);
+          const copyToLabel = isDLAType ? 'cc:' : getCopyToSpacing(formData.bodyFont);
           distributionParagraphs.push(createEmptyLine(font));
           distributionParagraphs.push(new Paragraph({
               children: [new TextRun({ text: copyToLabel, font, size: FONT_SIZE_BODY })],
@@ -1993,7 +2025,7 @@ export async function generateDocxBlob(
               size: FONT_SIZE_BODY
           })
       ],
-      alignment: AlignmentType.CENTER
+      alignment: isDLAType ? AlignmentType.RIGHT : AlignmentType.CENTER  // DLA: right margin per Ch.3-2 Para 13
   }));
 
   const footer = new Footer({ children: footerChildren });

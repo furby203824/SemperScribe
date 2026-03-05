@@ -502,17 +502,19 @@ function ParagraphItem({
      }
   }
 
-  // DLA paragraph rendering: ½ inch (36pt) per indent level, max 3 subparagraph levels
+  // DLA paragraph rendering per DLA Corr Manual Ch.3:
+  // - Level 1: unnumbered, indent one tab (½ inch) from left margin
+  // - Level 2: a. — first subdivision, indent additional tab
+  // - Level 3: (1) — second subdivision, indent additional tab
+  // - Level 4: (a) — third designation (max), indent additional tab
+  // "Do not list subdivisions more than the third designation"
   if (documentType?.startsWith('dla-')) {
-    // DLA Correspondence Manual Ch.1 Para 11: indent ½ inch, additional ½ inch per sub-level
-    // Max 3rd subparagraph (levels 1-3 only)
-    const effectiveLevel = Math.min(level, 3);
-    const dlaIndent = 36; // ½ inch = 36pt
-    const leftMarginDLA = (effectiveLevel - 1) * dlaIndent;
-    const citationWidth = 24; // space for citation like "1.", "a.", "(1)"
+    const effectiveLevel = Math.min(level, 4); // Max 4 levels (unnumbered + 3 subdivisions)
+    const dlaIndent = 36; // ½ inch = 36pt per tab
+    const citationWidth = 24; // space for citation like "a.", "(1)", "(a)"
 
     if (effectiveLevel === 1) {
-      // Level 1: First-line indent of ½ inch, paragraph text at left margin
+      // Level 1: No number, first-line indent of one tab, text wraps to left margin
       return (
         <View style={{ marginLeft: 0, marginBottom: PDF_SPACING.paragraph, textIndent: dlaIndent }}>
           <Text>
@@ -527,7 +529,9 @@ function ParagraphItem({
       );
     }
 
-    // Sub-levels: citation + text at indent position
+    // Sub-levels (2-4): citation + text at indent position
+    // Each sub-level indents an additional tab from left margin
+    const leftMarginDLA = (effectiveLevel - 1) * dlaIndent;
     return (
       <View style={{ flexDirection: 'row', marginLeft: leftMarginDLA, marginBottom: PDF_SPACING.paragraph }}>
         <View style={{ width: citationWidth }}>
@@ -969,10 +973,10 @@ export function NavalLetterPDF({
                 <Text style={styles.addressLine}>{formData.through}</Text>
               </View>
             )}
-            {/* SUBJECT */}
+            {/* SUBJECT — Title Case per DLA Corr Manual Ch.3 Para 8 */}
             <View style={{ flexDirection: 'row', marginBottom: PDF_SPACING.sectionGap }}>
               <Text style={[styles.addressLine, { width: 130, minWidth: 130 }]}>SUBJECT:</Text>
-              <Text style={[styles.addressLine, { flex: 1, textTransform: 'uppercase' }]}>{formData.subj || ''}</Text>
+              <Text style={[styles.addressLine, { flex: 1 }]}>{formData.subj || ''}</Text>
             </View>
           </View>
         )}
@@ -1305,8 +1309,21 @@ export function NavalLetterPDF({
           </View>
         )}
 
-        {/* Enclosures / Tabs - Hide for Business/Exec Letter (rendered at bottom), show for DLA */}
+        {/* Enclosures / Tabs / Attachments - Hide for Business/Exec Letter (rendered at bottom), show for DLA */}
         {(!isCivilianStyle || isDLAType) && enclsWithContent.length > 0 && (
+          isDLAType ? (
+            // DLA uses "Attachments" (not "Enclosures") per DLA Corr Manual Ch.3 Para 19
+            <View style={styles.refEnclSection}>
+              <Text style={styles.addressLine}>
+                {enclsWithContent.length > 1 ? 'Attachments:' : 'Attachment:'}
+              </Text>
+              {enclsWithContent.map((encl, i) => (
+                <Text key={i} style={styles.addressLine}>
+                  {enclsWithContent.length > 1 ? `${i + 1}.  ${encl}` : encl}
+                </Text>
+              ))}
+            </View>
+          ) : (
           <View style={styles.refEnclSection}>
             {enclsWithContent.map((encl, i) => {
               const isPositionPaper = formData.documentType === 'position-paper';
@@ -1314,27 +1331,27 @@ export function NavalLetterPDF({
               const enclLabel = isPositionPaper ? 'Tab:' : 'Encl:';
               // Tabs use A, B, C... Enclosures use (1), (2), (3)...
               const enclIndicator = isPositionPaper ? String.fromCharCode(65 + i) : `(${enclNum})`;
-              
+
               if (formData.bodyFont === 'courier') {
                 // Adjust spacing for "Tab:" (4 chars) vs "Encl:" (5 chars)
                 // Actually "Tab:" is 4, "Encl:" is 5.
                 // Standard letter uses 2 spaces after colon.
                 const labelStr = i === 0 ? enclLabel : '';
-                const padding = i === 0 
-                    ? (isPositionPaper ? '\u00A0\u00A0' : '\u00A0\u00A0') 
+                const padding = i === 0
+                    ? (isPositionPaper ? '\u00A0\u00A0' : '\u00A0\u00A0')
                     : (isPositionPaper ? '\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0' : '\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
-                
+
                 // For Courier, we need precise alignment.
                 // Tab:  (A)  Item
                 //       (B)  Item
                 // Encl: (1)  Item
                 //       (2)  Item
-                
+
                 // Let's use a simplified approach for now consistent with previous code
                  const prefix = i === 0
                   ? `${enclLabel}\u00A0\u00A0${isPositionPaper ? '' : ''}${enclIndicator}\u00A0`
                   : `\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0${enclIndicator}\u00A0`;
-                  
+
                 // If it's Tab (shorter label), we might need an extra space to align if mixed (but they aren't mixed)
                 return <Text key={i}>{prefix}{encl}</Text>;
               }
@@ -1347,6 +1364,7 @@ export function NavalLetterPDF({
               );
             })}
           </View>
+          )
         )}
 
 
@@ -1583,17 +1601,24 @@ export function NavalLetterPDF({
           </View>
         )}
 
-        {/* DLA Memorandum Signature Block — no complimentary close */}
+        {/* DLA Memorandum Signature Block — 4 blank lines, centered, with rank/title per Ch.3-2 Para 16-17 */}
         {isDLAMemo && (
           <View style={styles.signatureBlock}>
             <View style={styles.emptyLine} />
             <View style={styles.emptyLine} />
             <View style={styles.emptyLine} />
+            <View style={styles.emptyLine} />
             {formData.signerFullName && (
-              <Text style={[styles.signatureLine, { textAlign: 'left' }]}>{formData.signerFullName}</Text>
+              <Text style={[styles.signatureLine, { textAlign: 'center' }]}>{formData.signerFullName}</Text>
+            )}
+            {formData.signerRank && (
+              <Text style={[styles.signatureLine, { textAlign: 'center' }]}>{formData.signerRank}</Text>
+            )}
+            {formData.signerTitle && (
+              <Text style={[styles.signatureLine, { textAlign: 'center' }]}>{formData.signerTitle}</Text>
             )}
             {formData.delegationText && (
-              <Text style={[styles.signatureLine, { textAlign: 'left' }]}>{formData.delegationText}</Text>
+              <Text style={[styles.signatureLine, { textAlign: 'center' }]}>{formData.delegationText}</Text>
             )}
           </View>
         )}
@@ -1777,7 +1802,7 @@ export function NavalLetterPDF({
                <View style={styles.emptyLine} />
             )}
             <Text style={styles.copyToLabel}>
-              {formData.bodyFont === 'courier' ? 'Copy to:  ' : 'Copy to:'}
+              {isDLAType ? 'cc:' : (formData.bodyFont === 'courier' ? 'Copy to:  ' : 'Copy to:')}
             </Text>
             {copiesWithContent.map((copy, i) => (
               <Text key={i} style={styles.copyToLine}>
@@ -1788,8 +1813,9 @@ export function NavalLetterPDF({
         )}
 
         {/* Footer - page number on pages after first */}
+        {/* DLA: page number at right margin per Ch.3-2 Para 13 */}
         <Text
-          style={styles.footer}
+          style={isDLAType ? { ...styles.footer, textAlign: 'right', right: PDF_MARGINS.right } : styles.footer}
           render={({ pageNumber }) => {
             const displayPage = pageNumber + startPage - 1;
             return displayPage > 1 ? displayPage : '';

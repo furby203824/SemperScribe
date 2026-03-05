@@ -10,7 +10,7 @@
     "package": {
       "title": "DLA Standard Memorandum",
       "description": "Standard memorandum format per DLA Correspondence Manual (2011).",
-      "subject": "DLA STANDARD MEMORANDUM TEMPLATE",
+      "subject": "Preparing a Memorandum",
       "documentType": "dla-memorandum",
       "tags": [
         "template",
@@ -31,8 +31,10 @@
       "through": "",
       "suspenseDate": "",
       "fouoDesignation": "",
-      "subj": "DLA STANDARD MEMORANDUM TEMPLATE",
+      "subj": "Preparing a Memorandum",
       "signerFullName": "JOHN M. HANCOCK",
+      "signerRank": "Lieutenant General, USAF",
+      "signerTitle": "Director",
       "delegationText": "",
       "headerType": "DLA",
       "bodyFont": "times",
