@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "packageId": "nldp_dla_memorandum_full_test",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-03-05T00:00:00.000Z",
+    "author": {
+      "name": "System Template",
+      "unit": "DLA"
+    },
+    "package": {
+      "title": "DLA Memorandum - Full Test",
+      "description": "Comprehensive DLA memorandum exercising all fields: suspense date, FOUO, THROUGH, references, attachments, cc, and all subparagraph levels.",
+      "subject": "Comprehensive Test of DLA Memorandum Fields",
+      "documentType": "dla-memorandum",
+      "tags": [
+        "template",
+        "dla",
+        "memorandum",
+        "test"
+      ]
+    },
+    "checksums": {
+      "dataHash": "",
+      "crc32": ""
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "dla-memorandum",
+      "date": "March 5, 2026",
+      "suspenseDate": "April 15, 2026",
+      "fouoDesignation": "full",
+      "memorandumFor": "DLA Installation Support, ATTN: DS-A",
+      "through": "Deputy Director, Defense Logistics Agency",
+      "subj": "Comprehensive Test of DLA Memorandum Fields",
+      "signerFullName": "JOHN M. HANCOCK",
+      "signerRank": "Lieutenant General, USAF",
+      "signerTitle": "Director",
+      "delegationText": "",
+      "headerType": "DLA",
+      "bodyFont": "times",
+      "accentColor": "black",
+      "line1": "DEFENSE LOGISTICS AGENCY",
+      "line2": "8725 JOHN J. KINGMAN ROAD",
+      "line3": "FORT BELVOIR, VIRGINIA 22060-6221"
+    },
+    "paragraphs": [
+      {
+        "id": 1,
+        "level": 1,
+        "content": "This memorandum exercises every field available in the DLA standard memorandum format. It includes a suspense date, FOUO marking, THROUGH routing, references, attachments, courtesy copies, and paragraphs at all subparagraph levels per the DLA Correspondence Manual Chapter 3.",
+        "isMandatory": true
+      },
+      {
+        "id": 2,
+        "level": 1,
+        "content": "The following subparagraphs demonstrate the DLA indent and citation format. Level 1 paragraphs are unnumbered with a one-tab first-line indent. Subparagraphs are lettered and indented an additional tab for each level."
+      },
+      {
+        "id": 3,
+        "level": 2,
+        "content": "This is the first subdivision (a.). It is indented one additional tab from the left margin. Text wraps to the left margin of this indent level."
+      },
+      {
+        "id": 4,
+        "level": 2,
+        "content": "This is the second subdivision (b.). Each subdivided paragraph must have at least two subdivisions per DLA Correspondence Manual Chapter 3, Paragraph 12."
+      },
+      {
+        "id": 5,
+        "level": 3,
+        "content": "This is a second-level subdivision (1). It is indented an additional tab from the (a) level."
+      },
+      {
+        "id": 6,
+        "level": 3,
+        "content": "This is a second-level subdivision (2). Again, at least two subdivisions are required."
+      },
+      {
+        "id": 7,
+        "level": 4,
+        "content": "This is the third designation (a), the maximum subdivision depth allowed by the DLA Correspondence Manual."
+      },
+      {
+        "id": 8,
+        "level": 4,
+        "content": "This is the third designation (b). No further subdivision is permitted beyond this level."
+      },
+      {
+        "id": 9,
+        "level": 1,
+        "content": "Point of contact for this action is Mr. Joe Smith, J3, (703) 767-0000, DSN 427-0000 or email: joe.smith@dla.mil."
+      }
+    ],
+    "vias": [],
+    "references": [
+      "DOD Executive Secretary Memorandum, February 15, 2026",
+      "DOD Directive 5105.53, \"Director of Administration and Management (DA&M),\" February 26, 2008"
+    ],
+    "enclosures": [
+      "Annual Report",
+      "Review Panel Members"
+    ],
+    "copyTos": [
+      "J6",
+      "J3"
+    ]
+  }
+}

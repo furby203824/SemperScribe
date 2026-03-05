@@ -1,0 +1,92 @@
+{
+  "metadata": {
+    "packageId": "nldp_dla_business_letter_full_test",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-03-05T00:00:00.000Z",
+    "author": {
+      "name": "System Template",
+      "unit": "DLA"
+    },
+    "package": {
+      "title": "DLA Business Letter - Full Test",
+      "description": "Comprehensive DLA business letter exercising all fields: suspense date, FOUO, full recipient address, salutation, complimentary close, references, enclosures, and cc.",
+      "subject": "COMPREHENSIVE TEST OF DLA BUSINESS LETTER FIELDS",
+      "documentType": "dla-business-letter",
+      "tags": [
+        "template",
+        "dla",
+        "business-letter",
+        "test"
+      ]
+    },
+    "checksums": {
+      "dataHash": "",
+      "crc32": ""
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "dla-business-letter",
+      "date": "March 5, 2026",
+      "suspenseDate": "March 31, 2026",
+      "fouoDesignation": "full",
+      "recipientName": "Ms. Jane A. Rodriguez",
+      "recipientTitle": "Senior Vice President, Government Programs",
+      "businessName": "National Defense Systems Inc.",
+      "recipientAddress": "4500 Industrial Boulevard\nSuite 200\nArlington, VA 22203",
+      "salutation": "Dear Ms. Rodriguez:",
+      "subj": "CONTRACT RENEWAL AND PERFORMANCE REVIEW",
+      "complimentaryClose": "Sincerely,",
+      "signerFullName": "ROBERT T. WILLIAMS",
+      "delegationText": "",
+      "headerType": "DLA",
+      "bodyFont": "times",
+      "accentColor": "black",
+      "line1": "DEFENSE LOGISTICS AGENCY",
+      "line2": "8725 JOHN J. KINGMAN ROAD",
+      "line3": "FORT BELVOIR, VIRGINIA 22060-6221"
+    },
+    "paragraphs": [
+      {
+        "id": 1,
+        "level": 1,
+        "content": "This letter is to inform you that the Defense Logistics Agency has completed its annual review of Contract SPRXXXXX-XX-D-XXXX. This comprehensive test template exercises all available fields in the DLA business letter format.",
+        "isMandatory": true
+      },
+      {
+        "id": 2,
+        "level": 1,
+        "content": "Based on our review, the following areas were evaluated and scored in accordance with the established performance criteria. The overall performance rating for the contract period was satisfactory."
+      },
+      {
+        "id": 3,
+        "level": 2,
+        "content": "Delivery schedule adherence was rated as exceeds expectations, with 98% of deliveries meeting or beating the required delivery date."
+      },
+      {
+        "id": 4,
+        "level": 2,
+        "content": "Quality assurance metrics met all contractual requirements. The defect rate remained below the 2% threshold throughout the evaluation period."
+      },
+      {
+        "id": 5,
+        "level": 1,
+        "content": "We look forward to continuing our partnership and request your written acknowledgment of this performance evaluation within 30 days of receipt. Should you have any questions, please contact our Contracting Officer, Mr. David Chen, at (703) 767-1234 or david.chen@dla.mil."
+      }
+    ],
+    "vias": [],
+    "references": [
+      "Contract SPRXXXXX-XX-D-XXXX, awarded January 15, 2024",
+      "DLA Acquisition Directive 5025.01, \"Performance Evaluation Procedures,\" March 1, 2023"
+    ],
+    "enclosures": [
+      "Performance Evaluation Summary Report",
+      "Delivery Schedule Compliance Data",
+      "Quality Assurance Metrics Dashboard"
+    ],
+    "copyTos": [
+      "DLA Acquisition (J7)",
+      "DLA Logistics Operations (J3)"
+    ]
+  }
+}
