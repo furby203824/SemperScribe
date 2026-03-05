@@ -38,6 +38,7 @@ export function runProofreadChecks(
   // Skip checks entirely for non-letter types
   const isForm = ['page11', 'aa-form', 'coordination-page', 'decision-paper'].includes(docType);
   const isAmhs = docType === 'amhs';
+  const isDLAType = docType?.startsWith('dla-') || false;
 
   // ─── a. Format Check (auto-pass: controlled by generators) ───────────
 
@@ -208,7 +209,11 @@ export function runProofreadChecks(
   if (!isForm && !isAmhs) {
     const noSigTypes = ['mfr'];
     const needsSig = !noSigTypes.includes(docType) && !formData.omitSignatureBlock;
-    const hasSig = !!(formData.sig && formData.sig.trim());
+    // DLA types use signerFullName instead of sig
+    const hasSig = isDLAType
+      ? !!(formData.signerFullName && formData.signerFullName.trim())
+      : !!(formData.sig && formData.sig.trim());
+    const sigDisplay = isDLAType ? formData.signerFullName : formData.sig;
 
     checks.push({
       id: 'signature',
@@ -220,7 +225,7 @@ export function runProofreadChecks(
         ? (hasSig ? 'pass' : 'warn')
         : 'pass',
       detail: needsSig
-        ? (hasSig ? `Signature: ${formData.sig}` : 'No signature name entered.')
+        ? (hasSig ? `Signature: ${sigDisplay}` : 'No signature name entered.')
         : (formData.omitSignatureBlock ? 'Signature block intentionally omitted.' : 'This document type does not require a signature block.'),
       isAutomatic: true,
     });
@@ -304,8 +309,8 @@ export function runProofreadChecks(
 
   // Subject line uppercase check (for standard letters)
   if (!isForm && !isAmhs && formData.subj) {
-    const isCivilianStyle = ['business-letter', 'executive-correspondence'].includes(docType);
-    if (!isCivilianStyle) {
+    const isCivilianStyleNonDLA = ['business-letter', 'executive-correspondence'].includes(docType);
+    if (!isCivilianStyleNonDLA || isDLAType) {
       const isAllCaps = formData.subj === formData.subj.toUpperCase();
       checks.push({
         id: 'subject-caps',
@@ -320,8 +325,8 @@ export function runProofreadChecks(
     }
   }
 
-  // SSIC format check
-  if (!isForm && !isAmhs && formData.ssic) {
+  // SSIC format check (DLA types don't use SSIC)
+  if (!isForm && !isAmhs && !isDLAType && formData.ssic) {
     const ssicValid = /^\d{4,5}$/.test(formData.ssic);
     checks.push({
       id: 'ssic-format',
