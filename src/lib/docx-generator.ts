@@ -83,7 +83,10 @@ export async function generateDocxBlob(
   const isBusinessLetter = formData.documentType === 'business-letter';
   const isExecCorr = formData.documentType === 'executive-correspondence';
   const isExecLetter = isExecCorr && (formData.execFormat === 'letter' || !formData.execFormat);
-  const isCivilianStyle = isBusinessLetter || isExecLetter;
+  const isDLAType = formData.documentType?.startsWith('dla-') || false;
+  const isDLAMemo = formData.documentType === 'dla-memorandum';
+  const isDLABusinessLetter = formData.documentType === 'dla-business-letter';
+  const isCivilianStyle = isBusinessLetter || isExecLetter || isDLAType;
 
   const moaData = formData.moaData || {
     activityA: '',
@@ -118,6 +121,8 @@ export async function generateDocxBlob(
       // Department Header Text
       const headerText = formData.headerType === 'USMC'
         ? 'UNITED STATES MARINE CORPS'
+        : formData.headerType === 'DLA'
+        ? 'DEFENSE LOGISTICS AGENCY'
         : 'DEPARTMENT OF THE NAVY';
         
       letterheadParagraphs.push(new Paragraph({
@@ -154,6 +159,13 @@ export async function generateDocxBlob(
           alignment: AlignmentType.RIGHT,
           spacing: { before: 1440, after: 0 } // 1 inch top spacing
        }));
+  } else if (isDLAType) {
+      // DLA: Date flush right (no SSIC or originator code)
+      ssicParagraphs.push(new Paragraph({
+          children: [new TextRun({ text: formattedDate || 'Date Placeholder', font, size: FONT_SIZE_BODY })],
+          alignment: AlignmentType.RIGHT,
+          spacing: { after: 240 }
+      }));
   } else if (!isMoaOrMou && !isStaffingPaper) {
       // Bulletin cancellation date — indented at ~3.25" (signature indent), above SSIC block
       if (formData.documentType === 'bulletin' && formData.cancellationDate) {
@@ -609,6 +621,82 @@ export async function generateDocxBlob(
       alignment: AlignmentType.LEFT,
       spacing: { after: 240 } // Double space after title
     }));
+  } else if (isDLAMemo) {
+    // DLA Memorandum: MEMORANDUM FOR / THROUGH / SUBJECT
+    addressParagraphs.push(new Paragraph({
+      children: [
+        new TextRun({ text: 'MEMORANDUM FOR', font, size: FONT_SIZE_BODY }),
+        new TextRun({ text: '\t' + (formData.memorandumFor || ''), font, size: FONT_SIZE_BODY }),
+      ],
+      tabStops: [{ type: TabStopType.LEFT, position: tabPosition }],
+      spacing: { after: addressSpacing },
+    }));
+
+    if (formData.through) {
+      addressParagraphs.push(new Paragraph({
+        children: [
+          new TextRun({ text: 'THROUGH', font, size: FONT_SIZE_BODY }),
+          new TextRun({ text: '\t' + formData.through, font, size: FONT_SIZE_BODY }),
+        ],
+        tabStops: [{ type: TabStopType.LEFT, position: tabPosition }],
+        spacing: { after: addressSpacing },
+      }));
+    }
+
+    // Subject for DLA Memo
+    addressParagraphs.push(createEmptyLine(font));
+    addressParagraphs.push(new Paragraph({
+      children: [
+        new TextRun({ text: 'SUBJECT:', font, size: FONT_SIZE_BODY }),
+        new TextRun({ text: '\t' + (formData.subj || '').toUpperCase(), font, size: FONT_SIZE_BODY }),
+      ],
+      tabStops: [{ type: TabStopType.LEFT, position: tabPosition }],
+      spacing: { after: 240 },
+    }));
+  } else if (isDLABusinessLetter) {
+    // DLA Business Letter: Inside Address + Salutation + Subject
+    if (formData.recipientName) {
+      addressParagraphs.push(new Paragraph({
+        children: [new TextRun({ text: formData.recipientName, font, size: FONT_SIZE_BODY })],
+        spacing: { after: 0 },
+      }));
+    }
+    if (formData.recipientTitle) {
+      addressParagraphs.push(new Paragraph({
+        children: [new TextRun({ text: formData.recipientTitle, font, size: FONT_SIZE_BODY })],
+        spacing: { after: 0 },
+      }));
+    }
+    if (formData.businessName) {
+      addressParagraphs.push(new Paragraph({
+        children: [new TextRun({ text: formData.businessName, font, size: FONT_SIZE_BODY })],
+        spacing: { after: 0 },
+      }));
+    }
+    if (formData.recipientAddress) {
+      (formData.recipientAddress as string).split('\n').forEach((line: string) => {
+        addressParagraphs.push(new Paragraph({
+          children: [new TextRun({ text: line, font, size: FONT_SIZE_BODY })],
+          spacing: { after: 0 },
+        }));
+      });
+    }
+    addressParagraphs.push(createEmptyLine(font));
+    addressParagraphs.push(new Paragraph({
+      children: [new TextRun({ text: formData.salutation || 'Dear Sir or Madam:', font, size: FONT_SIZE_BODY })],
+      spacing: { after: 240 },
+    }));
+
+    if (formData.subj) {
+      addressParagraphs.push(new Paragraph({
+        children: [
+          new TextRun({ text: 'SUBJECT:', font, size: FONT_SIZE_BODY }),
+          new TextRun({ text: '\t' + (formData.subj || '').toUpperCase(), font, size: FONT_SIZE_BODY }),
+        ],
+        tabStops: [{ type: TabStopType.LEFT, position: tabPosition }],
+        spacing: { after: 240 },
+      }));
+    }
   } else if (!isMoaOrMou && !isStaffingPaper && !isCivilianStyle) {
     // Standard Letter / Directive: From/To/Via
 
@@ -1298,6 +1386,51 @@ export async function generateDocxBlob(
           ]
       });
       signatureParagraphs.push(table);
+  } else if (isDLAMemo) {
+      // DLA Memorandum Signature Block — no complimentary close
+      signatureParagraphs.push(createEmptyLine(font));
+      signatureParagraphs.push(createEmptyLine(font));
+      signatureParagraphs.push(createEmptyLine(font));
+
+      if (formData.signerFullName) {
+          signatureParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: formData.signerFullName, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.LEFT,
+              spacing: { after: 0 }
+          }));
+      }
+      if (formData.delegationText) {
+          signatureParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: formData.delegationText, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.LEFT,
+              spacing: { after: 0 }
+          }));
+      }
+  } else if (isDLABusinessLetter) {
+      // DLA Business Letter Closing Block
+      const close = formData.complimentaryClose || 'Sincerely';
+      signatureParagraphs.push(new Paragraph({
+          children: [new TextRun({ text: close.endsWith(',') ? close : close + ',', font, size: FONT_SIZE_BODY })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 0 }
+      }));
+      signatureParagraphs.push(createEmptyLine(font));
+      signatureParagraphs.push(createEmptyLine(font));
+
+      if (formData.signerFullName) {
+          signatureParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: formData.signerFullName, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 0 }
+          }));
+      }
+      if (formData.delegationText) {
+          signatureParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: formData.delegationText, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 0 }
+          }));
+      }
   } else if (isCivilianStyle) {
       // Business/Executive Letter Closing Block
       let close = formData.complimentaryClose;

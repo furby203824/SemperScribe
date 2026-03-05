@@ -582,9 +582,12 @@ export function NavalLetterPDF({
   const isBusinessLetter = formData.documentType === 'business-letter';
   const isExecCorr = formData.documentType === 'executive-correspondence';
   const isExecLetter = isExecCorr && (formData.execFormat === 'letter' || !formData.execFormat);
-  const isCivilianStyle = isBusinessLetter || isExecLetter;
+  const isDLAType = formData.documentType?.startsWith('dla-') || false;
+  const isDLAMemo = formData.documentType === 'dla-memorandum';
+  const isDLABusinessLetter = formData.documentType === 'dla-business-letter';
+  const isCivilianStyle = isBusinessLetter || isExecLetter || isDLAType;
 
-  const sealDataUrl = getPDFSealDataUrl(formData.headerType as 'USMC' | 'DON');
+  const sealDataUrl = getPDFSealDataUrl(formData.headerType as 'USMC' | 'DON' | 'DLA');
   const formattedDate = isCivilianStyle
     ? formatBusinessDate(formData.date || '')
     : parseAndFormatDate(formData.date || '');
@@ -775,6 +778,8 @@ export function NavalLetterPDF({
           <Text style={styles.headerTitle}>
             {formData.headerType === 'USMC'
               ? 'UNITED STATES MARINE CORPS'
+              : formData.headerType === 'DLA'
+              ? 'DEFENSE LOGISTICS AGENCY'
               : 'DEPARTMENT OF THE NAVY'}
           </Text>
           {formData.line1 && <Text style={styles.headerLine}>{formData.line1}</Text>}
@@ -803,9 +808,9 @@ export function NavalLetterPDF({
           </View>
         )}
 
-        {/* SSIC Block - Hide for MFR, FromToMemo, Staffing Papers */}
+        {/* SSIC Block - Hide for MFR, FromToMemo, Staffing Papers, DLA types */}
         {/* New Layout: Flush Right Container, Left Aligned Text Content */}
-        {!isFromToMemo && !isMfr && !isMoaOrMou && !isStaffingPaper && (
+        {!isFromToMemo && !isMfr && !isMoaOrMou && !isStaffingPaper && !isDLAType && (
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: PDF_SPACING.sectionGap }}>
              <View style={{ alignItems: 'flex-start' }}>
                 <Text style={styles.addressLine}>
@@ -884,6 +889,63 @@ export function NavalLetterPDF({
                     </View>
                  )}
              </View>
+        )}
+
+        {/* DLA Memorandum Header — Date (flush right) + MEMORANDUM FOR / THROUGH / SUBJECT */}
+        {isDLAMemo && (
+          <View>
+            {/* Date flush right */}
+            <View style={{ alignItems: 'flex-end', marginBottom: PDF_SPACING.sectionGap }}>
+              <Text style={styles.addressLine}>{formattedDate}</Text>
+            </View>
+            {/* MEMORANDUM FOR */}
+            <View style={{ flexDirection: 'row', marginBottom: PDF_SPACING.emptyLine }}>
+              <Text style={[styles.addressLine, { width: 130, minWidth: 130 }]}>MEMORANDUM FOR</Text>
+              <Text style={styles.addressLine}>{formData.memorandumFor || ''}</Text>
+            </View>
+            {/* THROUGH (optional) */}
+            {formData.through && (
+              <View style={{ flexDirection: 'row', marginBottom: PDF_SPACING.emptyLine }}>
+                <Text style={[styles.addressLine, { width: 130, minWidth: 130 }]}>THROUGH</Text>
+                <Text style={styles.addressLine}>{formData.through}</Text>
+              </View>
+            )}
+            {/* SUBJECT */}
+            <View style={{ flexDirection: 'row', marginBottom: PDF_SPACING.sectionGap }}>
+              <Text style={[styles.addressLine, { width: 130, minWidth: 130 }]}>SUBJECT:</Text>
+              <Text style={[styles.addressLine, { flex: 1, textTransform: 'uppercase' }]}>{formData.subj || ''}</Text>
+            </View>
+          </View>
+        )}
+
+        {/* DLA Business Letter — Date (flush right) + Inside Address + Salutation + Subject */}
+        {isDLABusinessLetter && (
+          <View>
+            {/* Date flush right */}
+            <View style={{ alignItems: 'flex-end', marginBottom: PDF_SPACING.sectionGap }}>
+              <Text style={styles.addressLine}>{formattedDate}</Text>
+            </View>
+            {/* Inside Address */}
+            <View style={{ marginBottom: PDF_SPACING.sectionGap }}>
+              {formData.recipientName && <Text style={styles.addressLine}>{formData.recipientName}</Text>}
+              {formData.recipientTitle && <Text style={styles.addressLine}>{formData.recipientTitle}</Text>}
+              {formData.businessName && <Text style={styles.addressLine}>{formData.businessName}</Text>}
+              {(formData.recipientAddress || '').split('\n').map((line: string, i: number) => (
+                <Text key={i} style={styles.addressLine}>{line}</Text>
+              ))}
+            </View>
+            {/* Salutation */}
+            <Text style={[styles.addressLine, { marginBottom: PDF_SPACING.sectionGap }]}>
+              {formData.salutation || 'Dear Sir or Madam:'}
+            </Text>
+            {/* SUBJECT */}
+            {formData.subj && (
+              <View style={{ flexDirection: 'row', marginBottom: PDF_SPACING.sectionGap }}>
+                <Text style={[styles.addressLine, { width: 70 }]}>SUBJECT:</Text>
+                <Text style={[styles.addressLine, { flex: 1, textTransform: 'uppercase' }]}>{formData.subj}</Text>
+              </View>
+            )}
+          </View>
         )}
 
         {/* Endorsement Identification Line - Between date and From */}
@@ -1156,8 +1218,8 @@ export function NavalLetterPDF({
         </View>
         )}
 
-        {/* References - Hide for Business/Exec Letter */}
-        {!isCivilianStyle && refsWithContent.length > 0 && (
+        {/* References - Hide for Business/Exec Letter (but show for DLA) */}
+        {(!isCivilianStyle || isDLAType) && refsWithContent.length > 0 && (
           <View style={styles.refEnclSection}>
             {refsWithContent.map((ref, i) => {
               const refLetter = String.fromCharCode(startRefChar + i);
@@ -1178,8 +1240,8 @@ export function NavalLetterPDF({
           </View>
         )}
 
-        {/* Enclosures / Tabs - Hide for Business/Exec Letter (rendered at bottom) */}
-        {!isCivilianStyle && enclsWithContent.length > 0 && (
+        {/* Enclosures / Tabs - Hide for Business/Exec Letter (rendered at bottom), show for DLA */}
+        {(!isCivilianStyle || isDLAType) && enclsWithContent.length > 0 && (
           <View style={styles.refEnclSection}>
             {enclsWithContent.map((encl, i) => {
               const isPositionPaper = formData.documentType === 'position-paper';
@@ -1456,8 +1518,41 @@ export function NavalLetterPDF({
           </View>
         )}
 
+        {/* DLA Memorandum Signature Block — no complimentary close */}
+        {isDLAMemo && (
+          <View style={styles.signatureBlock}>
+            <View style={styles.emptyLine} />
+            <View style={styles.emptyLine} />
+            <View style={styles.emptyLine} />
+            {formData.signerFullName && (
+              <Text style={[styles.signatureLine, { textAlign: 'left' }]}>{formData.signerFullName}</Text>
+            )}
+            {formData.delegationText && (
+              <Text style={[styles.signatureLine, { textAlign: 'left' }]}>{formData.delegationText}</Text>
+            )}
+          </View>
+        )}
+
+        {/* DLA Business Letter Closing Block — with complimentary close */}
+        {isDLABusinessLetter && (
+          <View>
+            <View style={{ marginBottom: PDF_SPACING.sectionGap * 2, marginLeft: PDF_INDENTS.signature }}>
+              <View style={styles.emptyLine} />
+              <Text style={styles.addressLine}>
+                {formData.complimentaryClose || 'Sincerely,'}
+              </Text>
+            </View>
+            <View style={{ marginBottom: PDF_SPACING.sectionGap, marginLeft: PDF_INDENTS.signature }}>
+              <View style={styles.emptyLine} />
+              <View style={styles.emptyLine} />
+              {formData.signerFullName && <Text style={styles.addressLine}>{formData.signerFullName}</Text>}
+              {formData.delegationText && <Text style={styles.addressLine}>{formData.delegationText}</Text>}
+            </View>
+          </View>
+        )}
+
         {/* Business/Executive Letter Closing Block */}
-        {isCivilianStyle && (
+        {isCivilianStyle && !isDLAType && (
             <View>
                 {/* Complimentary Close (Centered) */}
                 <View style={{ marginBottom: PDF_SPACING.sectionGap * 2, marginLeft: PDF_INDENTS.signature }}>
@@ -1609,8 +1704,8 @@ export function NavalLetterPDF({
           </View>
         )}
 
-        {/* Copy to (Standard Letter) - Hide for Business/Exec Letter AND Staffing Papers */}
-        {!isDirective && !isCivilianStyle && !isStaffingPaper && copiesWithContent.length > 0 && (
+        {/* Copy to (Standard Letter) - Hide for Business/Exec Letter AND Staffing Papers (show for DLA) */}
+        {!isDirective && (!isCivilianStyle || isDLAType) && !isStaffingPaper && copiesWithContent.length > 0 && (
           <View style={styles.copyToSection}>
             {/* Add full space if any distribution list was rendered above */}
             {(isToDistribution || (distListWithContent.length > 0)) && (
