@@ -12,6 +12,8 @@ export const DLAMemorandumTemplate: DocumentTemplate = {
     date: 'March 5, 2026',
     memorandumFor: 'Director, Defense Logistics Agency',
     through: '',
+    suspenseDate: '',
+    fouoDesignation: '',
     subj: 'STANDARD MEMORANDUM TEMPLATE',
 
     paragraphs: [

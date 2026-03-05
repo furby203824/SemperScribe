@@ -502,6 +502,49 @@ function ParagraphItem({
      }
   }
 
+  // DLA paragraph rendering: ½ inch (36pt) per indent level, max 3 subparagraph levels
+  if (documentType?.startsWith('dla-')) {
+    // DLA Correspondence Manual Ch.1 Para 11: indent ½ inch, additional ½ inch per sub-level
+    // Max 3rd subparagraph (levels 1-3 only)
+    const effectiveLevel = Math.min(level, 3);
+    const dlaIndent = 36; // ½ inch = 36pt
+    const leftMarginDLA = (effectiveLevel - 1) * dlaIndent;
+    const citationWidth = 24; // space for citation like "1.", "a.", "(1)"
+
+    if (effectiveLevel === 1) {
+      // Level 1: First-line indent of ½ inch, paragraph text at left margin
+      return (
+        <View style={{ marginLeft: 0, marginBottom: PDF_SPACING.paragraph, textIndent: dlaIndent }}>
+          <Text>
+            {paragraph.title && (
+              <Text style={{ fontWeight: shouldBoldTitle ? 'bold' : 'normal' }}>
+                {titleText}{paragraph.content ? '.' : ''}{paragraph.content ? '\u00A0\u00A0' : ''}
+              </Text>
+            )}
+            {parseFormattedText(paragraph.content)}
+          </Text>
+        </View>
+      );
+    }
+
+    // Sub-levels: citation + text at indent position
+    return (
+      <View style={{ flexDirection: 'row', marginLeft: leftMarginDLA, marginBottom: PDF_SPACING.paragraph }}>
+        <View style={{ width: citationWidth }}>
+          <Text>{citation}</Text>
+        </View>
+        <Text style={{ flex: 1 }}>
+          {paragraph.title && (
+            <Text style={{ fontWeight: shouldBoldTitle ? 'bold' : 'normal' }}>
+              {titleText}{paragraph.content ? '.' : ''}{paragraph.content ? '\u00A0\u00A0' : ''}
+            </Text>
+          )}
+          {parseFormattedText(paragraph.content)}
+        </Text>
+      </View>
+    );
+  }
+
   if (bodyFont === 'courier') {
     // Courier uses character-based spacing: 4 non-breaking spaces per indent level
     // This matches DOCX which uses '\u00A0'.repeat((level - 1) * 4)
@@ -775,16 +818,26 @@ export function NavalLetterPDF({
         {/* Letterhead - Only on first page */}
         {showStandardHeader && (
         <View style={styles.letterhead}>
-          <Text style={styles.headerTitle}>
-            {formData.headerType === 'USMC'
-              ? 'UNITED STATES MARINE CORPS'
-              : formData.headerType === 'DLA'
-              ? 'DEFENSE LOGISTICS AGENCY'
-              : 'DEPARTMENT OF THE NAVY'}
-          </Text>
-          {formData.line1 && <Text style={styles.headerLine}>{formData.line1}</Text>}
-          {formData.line2 && <Text style={styles.headerLine}>{formData.line2}</Text>}
-          {formData.line3 && <Text style={styles.headerLine}>{formData.line3}</Text>}
+          {/* DLA letterhead: 12pt bold agency name, 10pt sub-lines per DLA Correspondence Manual Ch.1 Para 17.f.(4) */}
+          {isDLAType ? (
+            <>
+              <Text style={[styles.headerTitle, { fontSize: 12 }]}>DEFENSE LOGISTICS AGENCY</Text>
+              {formData.line1 && <Text style={[styles.headerLine, { fontSize: 10 }]}>{formData.line1}</Text>}
+              {formData.line2 && <Text style={[styles.headerLine, { fontSize: 10 }]}>{formData.line2}</Text>}
+              {formData.line3 && <Text style={[styles.headerLine, { fontSize: 10 }]}>{formData.line3}</Text>}
+            </>
+          ) : (
+            <>
+              <Text style={styles.headerTitle}>
+                {formData.headerType === 'USMC'
+                  ? 'UNITED STATES MARINE CORPS'
+                  : 'DEPARTMENT OF THE NAVY'}
+              </Text>
+              {formData.line1 && <Text style={styles.headerLine}>{formData.line1}</Text>}
+              {formData.line2 && <Text style={styles.headerLine}>{formData.line2}</Text>}
+              {formData.line3 && <Text style={styles.headerLine}>{formData.line3}</Text>}
+            </>
+          )}
         </View>
         )}
 
@@ -891,9 +944,15 @@ export function NavalLetterPDF({
              </View>
         )}
 
-        {/* DLA Memorandum Header — Date (flush right) + MEMORANDUM FOR / THROUGH / SUBJECT */}
+        {/* DLA Memorandum Header — Suspense Date + Date (flush right) + MEMORANDUM FOR / THROUGH / SUBJECT */}
         {isDLAMemo && (
           <View>
+            {/* Suspense date (two lines above document date, flush right) */}
+            {formData.suspenseDate && (
+              <View style={{ alignItems: 'flex-end', marginBottom: PDF_SPACING.emptyLine }}>
+                <Text style={styles.addressLine}>S: {formatBusinessDate(formData.suspenseDate)}</Text>
+              </View>
+            )}
             {/* Date flush right */}
             <View style={{ alignItems: 'flex-end', marginBottom: PDF_SPACING.sectionGap }}>
               <Text style={styles.addressLine}>{formattedDate}</Text>
@@ -918,9 +977,15 @@ export function NavalLetterPDF({
           </View>
         )}
 
-        {/* DLA Business Letter — Date (flush right) + Inside Address + Salutation + Subject */}
+        {/* DLA Business Letter — Suspense Date + Date (flush right) + Inside Address + Salutation + Subject */}
         {isDLABusinessLetter && (
           <View>
+            {/* Suspense date (two lines above document date, flush right) */}
+            {formData.suspenseDate && (
+              <View style={{ alignItems: 'flex-end', marginBottom: PDF_SPACING.emptyLine }}>
+                <Text style={styles.addressLine}>S: {formatBusinessDate(formData.suspenseDate)}</Text>
+              </View>
+            )}
             {/* Date flush right */}
             <View style={{ alignItems: 'flex-end', marginBottom: PDF_SPACING.sectionGap }}>
               <Text style={styles.addressLine}>{formattedDate}</Text>
@@ -1777,6 +1842,39 @@ export function NavalLetterPDF({
               return '';
             }}
           />
+        )}
+
+        {/* DLA FOUO - Per DLA Correspondence Manual Ch.1 Para 15 */}
+        {/* Stamps "FOR OFFICIAL USE ONLY" at top and bottom of each page */}
+        {isDLAType && formData.fouoDesignation && formData.fouoDesignation !== '' && (
+          <>
+            <Text
+              style={{
+                position: 'absolute',
+                top: 8,
+                left: 0,
+                right: 0,
+                textAlign: 'center',
+                fontSize: PDF_FONT_SIZES.body,
+                fontFamily: fontFamily,
+              }}
+              fixed
+              render={() => 'FOR OFFICIAL USE ONLY'}
+            />
+            <Text
+              style={{
+                position: 'absolute',
+                bottom: 18,
+                left: 0,
+                right: 0,
+                textAlign: 'center',
+                fontSize: PDF_FONT_SIZES.body,
+                fontFamily: fontFamily,
+              }}
+              fixed
+              render={() => 'FOR OFFICIAL USE ONLY'}
+            />
+          </>
         )}
 
         {/* Staffing Paper Footer */}
