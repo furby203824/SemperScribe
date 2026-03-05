@@ -159,6 +159,10 @@ const subjFieldRequired = () => z.string()
 const subjFieldOptional = () => z.string().optional()
   .refine(val => !val || val === val.toUpperCase(), { message: "Subject must be in ALL CAPS" });
 
+// DLA memo subjects use Title Case per DLA Corr Manual Ch.3 Para 8:
+// "Capitalize the first letter of each word except articles, prepositions, and conjunctions."
+const subjFieldDLAMemo = () => z.string().min(1, "Subject is required");
+
 // --- Document Type Schemas ---
 
 // 1. Basic Letter
@@ -1958,8 +1962,10 @@ export const DLAMemorandumSchema = z.object({
   suspenseDate: z.string().optional(),  // "S: November 01, 2011" — two lines above date
   memorandumFor: z.string().min(1, "MEMORANDUM FOR addressee is required"),
   through: z.string().optional(),  // THROUGH routing (optional)
-  subj: subjFieldRequired(),
+  subj: subjFieldDLAMemo(),  // Title Case per DLA Corr Manual Ch.3 Para 8
   signerFullName: z.string().optional(),
+  signerRank: z.string().optional(),     // e.g., "Lieutenant General, USAF"
+  signerTitle: z.string().optional(),    // e.g., "Director" or "Title or Position"
   delegationText: z.string().optional(),
   fouoDesignation: z.string().optional(),  // FOUO marking per DLA Ch.1 Para 15
   line1: z.string(),
@@ -2018,7 +2024,8 @@ export const DLAMemorandumDefinition: DocumentTypeDefinition = {
           name: 'subj',
           label: 'SUBJECT',
           type: 'text',
-          placeholder: 'SUBJECT LINE (ALL CAPS)',
+          placeholder: 'Preparing a Memorandum',
+          description: 'Title Case: capitalize first letter of each word except articles, prepositions, and conjunctions.',
           required: true,
           className: 'col-span-full'
         }
@@ -2034,6 +2041,22 @@ export const DLAMemorandumDefinition: DocumentTypeDefinition = {
           type: 'text',
           placeholder: 'JOHN M. HANCOCK',
           description: 'Full name in ALL CAPS (DLA format)',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'signerRank',
+          label: 'Rank / Service',
+          type: 'text',
+          placeholder: 'Lieutenant General, USAF',
+          description: 'Military grade and service branch',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'signerTitle',
+          label: 'Title / Position',
+          type: 'text',
+          placeholder: 'Director',
+          description: 'Official title or position',
           className: 'md:col-span-1'
         },
         {

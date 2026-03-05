@@ -14,7 +14,7 @@ export const DLAMemorandumTemplate: DocumentTemplate = {
     through: '',
     suspenseDate: '',
     fouoDesignation: '',
-    subj: 'STANDARD MEMORANDUM TEMPLATE',
+    subj: 'Preparing a Memorandum',
 
     paragraphs: [
       {
@@ -36,6 +36,8 @@ export const DLAMemorandumTemplate: DocumentTemplate = {
     ],
 
     signerFullName: 'JOHN M. HANCOCK',
+    signerRank: 'Lieutenant General, USAF',
+    signerTitle: 'Director',
     delegationText: '',
 
     vias: [],
@@ -52,7 +54,7 @@ export const DLAMemorandumTemplate: DocumentTemplate = {
   },
   formatting: {
     dateStyle: 'civilian',
-    subjectCase: 'uppercase',
+    subjectCase: 'titlecase',
     font: 'Times New Roman',
   },
 };

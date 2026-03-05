@@ -307,10 +307,27 @@ export function runProofreadChecks(
     isAutomatic: spellIssueCount !== undefined,
   });
 
-  // Subject line uppercase check (for standard letters)
+  // Subject line case check
   if (!isForm && !isAmhs && formData.subj) {
+    const isDLAMemo = docType === 'dla-memorandum';
     const isCivilianStyleNonDLA = ['business-letter', 'executive-correspondence'].includes(docType);
-    if (!isCivilianStyleNonDLA || isDLAType) {
+
+    if (isDLAMemo) {
+      // DLA Memo: Title Case per DLA Corr Manual Ch.3 Para 8
+      // "Capitalize first letter of each word except articles, prepositions, and conjunctions"
+      const hasUpperStart = /^[A-Z]/.test(formData.subj);
+      checks.push({
+        id: 'subject-caps',
+        category: 'typography',
+        reference: 'c.',
+        label: 'Subject line in Title Case',
+        description: 'DLA memorandums use Title Case for subject (capitalize first letter of each word except articles, prepositions, conjunctions).',
+        status: hasUpperStart ? 'pass' : 'warn',
+        detail: hasUpperStart ? 'Subject appears to use Title Case.' : 'Subject should start with a capital letter (Title Case).',
+        isAutomatic: true,
+      });
+    } else if (!isCivilianStyleNonDLA || isDLAType) {
+      // Standard naval correspondence & DLA business letter: ALL CAPS
       const isAllCaps = formData.subj === formData.subj.toUpperCase();
       checks.push({
         id: 'subject-caps',
