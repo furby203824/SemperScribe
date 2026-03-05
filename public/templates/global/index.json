@@ -187,5 +187,33 @@
     "description": "Personnel Reliability Program permanent decertification per SECNAVINST 5510.35D.",
     "documentType": "page11",
     "url": "/templates/global/page11-prp-decertification.nldp"
+  },
+  {
+    "id": "dla-standard-memorandum",
+    "title": "DLA Standard Memorandum",
+    "description": "Standard memorandum format per DLA Correspondence Manual (2011).",
+    "documentType": "dla-memorandum",
+    "url": "/templates/global/dla-standard-memorandum.nldp"
+  },
+  {
+    "id": "dla-business-letter",
+    "title": "DLA Business Letter",
+    "description": "Business letter format for DLA correspondence with non-DoD entities.",
+    "documentType": "dla-business-letter",
+    "url": "/templates/global/dla-business-letter.nldp"
+  },
+  {
+    "id": "dla-memorandum-full-test",
+    "title": "DLA Memorandum - Full Test",
+    "description": "Comprehensive DLA memorandum with all fields: suspense date, FOUO, THROUGH, references, attachments, cc, and all subparagraph levels.",
+    "documentType": "dla-memorandum",
+    "url": "/templates/global/dla-memorandum-full-test.nldp"
+  },
+  {
+    "id": "dla-business-letter-full-test",
+    "title": "DLA Business Letter - Full Test",
+    "description": "Comprehensive DLA business letter with all fields: suspense date, FOUO, recipient address, references, enclosures, and cc.",
+    "documentType": "dla-business-letter",
+    "url": "/templates/global/dla-business-letter-full-test.nldp"
   }
 ]
