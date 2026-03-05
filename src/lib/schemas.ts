@@ -1955,11 +1955,13 @@ const DLA_CORRESPONDENCE_FEATURES: DocumentFeatures = {
 export const DLAMemorandumSchema = z.object({
   documentType: z.literal('dla-memorandum'),
   date: z.string().min(1, "Date is required"),
+  suspenseDate: z.string().optional(),  // "S: November 01, 2011" — two lines above date
   memorandumFor: z.string().min(1, "MEMORANDUM FOR addressee is required"),
   through: z.string().optional(),  // THROUGH routing (optional)
   subj: subjFieldRequired(),
   signerFullName: z.string().optional(),
   delegationText: z.string().optional(),
+  fouoDesignation: z.string().optional(),  // FOUO marking per DLA Ch.1 Para 15
   line1: z.string(),
   line2: z.string(),
   line3: z.string(),
@@ -1985,6 +1987,14 @@ export const DLAMemorandumDefinition: DocumentTypeDefinition = {
           placeholder: 'Month DD, YYYY',
           description: 'DLA uses civilian date format (e.g., March 21, 2011)',
           required: true,
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'suspenseDate',
+          label: 'Suspense Date',
+          type: 'date',
+          placeholder: 'Month DD, YYYY (optional)',
+          description: 'Action required by this date. Placed two lines above document date.',
           className: 'md:col-span-1'
         },
         {
@@ -2032,6 +2042,18 @@ export const DLAMemorandumDefinition: DocumentTypeDefinition = {
           type: 'text',
           placeholder: 'e.g., By direction',
           className: 'md:col-span-1'
+        },
+        {
+          name: 'fouoDesignation',
+          label: 'FOUO Designation',
+          type: 'select',
+          options: [
+            { label: 'None', value: '' },
+            { label: 'FOR OFFICIAL USE ONLY', value: 'full' },
+          ],
+          description: 'Stamps classification at top and bottom of each page (DLA Ch.1 Para 15)',
+          defaultValue: '',
+          className: 'md:col-span-1'
         }
       ]
     }
@@ -2042,6 +2064,7 @@ export const DLAMemorandumDefinition: DocumentTypeDefinition = {
 export const DLABusinessLetterSchema = z.object({
   documentType: z.literal('dla-business-letter'),
   date: z.string().min(1, "Date is required"),
+  suspenseDate: z.string().optional(),  // "S: November 01, 2011" — two lines above date
   recipientName: z.string().optional(),
   recipientTitle: z.string().optional(),
   businessName: z.string().optional(),
@@ -2050,6 +2073,7 @@ export const DLABusinessLetterSchema = z.object({
   subj: subjFieldRequired(),
   signerFullName: z.string().optional(),
   delegationText: z.string().optional(),
+  fouoDesignation: z.string().optional(),  // FOUO marking per DLA Ch.1 Para 15
   complimentaryClose: z.string().optional(),
   line1: z.string(),
   line2: z.string(),
@@ -2076,6 +2100,14 @@ export const DLABusinessLetterDefinition: DocumentTypeDefinition = {
           placeholder: 'Month DD, YYYY',
           description: 'DLA uses civilian date format',
           required: true,
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'suspenseDate',
+          label: 'Suspense Date',
+          type: 'date',
+          placeholder: 'Month DD, YYYY (optional)',
+          description: 'Action required by this date. Placed two lines above document date.',
           className: 'md:col-span-1'
         },
         {
@@ -2154,6 +2186,18 @@ export const DLABusinessLetterDefinition: DocumentTypeDefinition = {
           label: 'Delegation Text',
           type: 'text',
           placeholder: 'e.g., By direction',
+          className: 'md:col-span-1'
+        },
+        {
+          name: 'fouoDesignation',
+          label: 'FOUO Designation',
+          type: 'select',
+          options: [
+            { label: 'None', value: '' },
+            { label: 'FOR OFFICIAL USE ONLY', value: 'full' },
+          ],
+          description: 'Stamps classification at top and bottom of each page (DLA Ch.1 Para 15)',
+          defaultValue: '',
           className: 'md:col-span-1'
         }
       ]

@@ -126,7 +126,7 @@ export async function generateDocxBlob(
         : 'DEPARTMENT OF THE NAVY';
         
       letterheadParagraphs.push(new Paragraph({
-        children: [new TextRun({ text: headerText, font: 'Arial', bold: true, size: 20, color: headerColor })], // Size 20 (10pt), Arial per reference
+        children: [new TextRun({ text: headerText, font: 'Arial', bold: true, size: isDLAType ? 24 : 20, color: headerColor })], // DLA: 12pt bold; Navy/USMC: 10pt
         alignment: AlignmentType.CENTER,
         spacing: { after: 0 },
       }));
@@ -135,7 +135,7 @@ export async function generateDocxBlob(
       [formData.line1, formData.line2, formData.line3].forEach(line => {
         if (line) {
           letterheadParagraphs.push(new Paragraph({
-            children: [new TextRun({ text: line, font: 'Arial', size: 16, color: headerColor })], // Size 16 (8pt), Arial per reference
+            children: [new TextRun({ text: line, font: 'Arial', size: isDLAType ? 20 : 16, color: headerColor })], // DLA: 10pt; Navy/USMC: 8pt
             alignment: AlignmentType.CENTER,
             spacing: { after: 0 },
           }));
@@ -160,7 +160,14 @@ export async function generateDocxBlob(
           spacing: { before: 1440, after: 0 } // 1 inch top spacing
        }));
   } else if (isDLAType) {
-      // DLA: Date flush right (no SSIC or originator code)
+      // DLA: Suspense date (if present) two lines above document date, then date flush right
+      if (formData.suspenseDate) {
+          ssicParagraphs.push(new Paragraph({
+              children: [new TextRun({ text: `S: ${formatBusinessDate(formData.suspenseDate)}`, font, size: FONT_SIZE_BODY })],
+              alignment: AlignmentType.RIGHT,
+              spacing: { after: 0 }
+          }));
+      }
       ssicParagraphs.push(new Paragraph({
           children: [new TextRun({ text: formattedDate || 'Date Placeholder', font, size: FONT_SIZE_BODY })],
           alignment: AlignmentType.RIGHT,
@@ -1056,6 +1063,51 @@ export async function generateDocxBlob(
         return; // Skip standard processing for this paragraph
     }
 
+    // DLA-specific paragraph rendering: ½ inch per indent level, max 3 levels
+    if (isDLAType) {
+        const { citation } = generateCitation(p, index, paragraphsWithContent);
+        const effectiveLevel = Math.min(p.level, 3);
+        const dlaIndentTwips = 720; // ½ inch = 720 twips
+
+        if (effectiveLevel === 1) {
+            // Level 1: First-line indent of ½ inch, text at left margin
+            const children: TextRun[] = [];
+            if (p.title) {
+                children.push(new TextRun({ text: p.title.toUpperCase() + '.  ', font, size: FONT_SIZE_BODY, bold: true }));
+            }
+            // Parse content for bold/italic
+            const contentText = p.content || '';
+            children.push(new TextRun({ text: contentText, font, size: FONT_SIZE_BODY }));
+
+            bodyParagraphs.push(new Paragraph({
+                children,
+                indent: { firstLine: dlaIndentTwips },
+                spacing: { after: 240 },
+            }));
+        } else {
+            // Sub-levels (2-3): citation + text at indent position
+            const leftIndent = (effectiveLevel - 1) * dlaIndentTwips;
+            const children: TextRun[] = [];
+
+            children.push(new TextRun({ text: citation + '\t', font, size: FONT_SIZE_BODY }));
+            if (p.title) {
+                children.push(new TextRun({ text: p.title.toUpperCase() + '.  ', font, size: FONT_SIZE_BODY, bold: true }));
+            }
+            children.push(new TextRun({ text: p.content || '', font, size: FONT_SIZE_BODY }));
+
+            bodyParagraphs.push(new Paragraph({
+                children,
+                indent: { left: leftIndent, hanging: 360 },
+                tabStops: [{ type: TabStopType.LEFT, position: leftIndent }],
+                spacing: { after: 240 },
+            }));
+        }
+
+        bodyParagraphs.push(new Paragraph({
+            children: [],
+            spacing: { after: 0, before: 0 },
+        }));
+    } else {
     // Use the shared formatter logic which correctly handles:
     // 1. Citation generation (1., a., (1), etc.)
     // 2. Tab stops and indentation per SECNAV M-5216.5
@@ -1063,12 +1115,13 @@ export async function generateDocxBlob(
     const shouldBoldTitle = !['mco', 'moa', 'mou', 'information-paper', 'position-paper'].includes(formData.documentType);
     const shouldUppercaseTitle = !['moa', 'mou', 'information-paper', 'position-paper'].includes(formData.documentType);
     bodyParagraphs.push(createFormattedParagraph(p, index, paragraphsWithContent, font, "000000", isDirective, shouldBoldTitle, shouldUppercaseTitle, isCivilianStyle, formData.isShortLetter));
-    
+
     // Add spacing after paragraph
     bodyParagraphs.push(new Paragraph({
-        children: [], 
+        children: [],
         spacing: { after: 0, before: 0 }, // Minimal spacing, rely on the empty line height
     }));
+    }
   });
 
   // Position/Decision Paper Decision Grid (Single & Multiple Choice) - Bottom
@@ -1799,6 +1852,39 @@ export async function generateDocxBlob(
       firstPageHeader = new Header({ children: [] });
   }
 
+  // Add FOUO to first page header for DLA types
+  if (isDLAType && formData.fouoDesignation && formData.fouoDesignation !== '') {
+      const fouoParagraph = new Paragraph({
+          children: [new TextRun({ text: 'FOR OFFICIAL USE ONLY', font, size: FONT_SIZE_BODY })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 0 },
+      });
+
+      if (sealBuffer && !isFromToMemo && !isMfr && !isStaffingPaper) {
+          // Rebuild with FOUO + seal
+          firstPageHeader = new Header({
+              children: [
+                  fouoParagraph,
+                  new Paragraph({
+                      children: [
+                          new ImageRun({
+                              data: sealBuffer,
+                              transformation: { width: 96, height: 96 },
+                              floating: {
+                                  horizontalPosition: { relative: HorizontalPositionRelativeFrom.PAGE, offset: 458700 },
+                                  verticalPosition: { relative: VerticalPositionRelativeFrom.PAGE, offset: 458700 },
+                                  wrap: { type: TextWrappingType.NONE },
+                              },
+                          }),
+                      ],
+                  }),
+              ],
+          });
+      } else {
+          firstPageHeader = new Header({ children: [fouoParagraph] });
+      }
+  }
+
   // --- Header for Subsequent Pages (Subject Line) ---
   const subsequentHeaderParagraphs: Paragraph[] = [];
   
@@ -1873,25 +1959,44 @@ export async function generateDocxBlob(
       subsequentHeaderParagraphs.push(createEmptyLine(font));
   }
 
+  // DLA FOUO header line (appears at top of every page)
+  const dlaFouoHeaderParagraphs: Paragraph[] = [];
+  if (isDLAType && formData.fouoDesignation && formData.fouoDesignation !== '') {
+      dlaFouoHeaderParagraphs.push(new Paragraph({
+          children: [new TextRun({ text: 'FOR OFFICIAL USE ONLY', font, size: FONT_SIZE_BODY })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 0 },
+      }));
+  }
+
   const defaultHeader = new Header({
-      children: subsequentHeaderParagraphs
+      children: [...dlaFouoHeaderParagraphs, ...subsequentHeaderParagraphs]
   });
 
   // --- Footer (Page Numbers) ---
-  const footer = new Footer({
+  const footerChildren: Paragraph[] = [];
+
+  // DLA FOUO footer line
+  if (isDLAType && formData.fouoDesignation && formData.fouoDesignation !== '') {
+      footerChildren.push(new Paragraph({
+          children: [new TextRun({ text: 'FOR OFFICIAL USE ONLY', font, size: FONT_SIZE_BODY })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 0 },
+      }));
+  }
+
+  footerChildren.push(new Paragraph({
       children: [
-          new Paragraph({
-              children: [
-                  new TextRun({
-                      children: [PageNumber.CURRENT],
-                      font,
-                      size: FONT_SIZE_BODY
-                  })
-              ],
-              alignment: AlignmentType.CENTER
+          new TextRun({
+              children: [PageNumber.CURRENT],
+              font,
+              size: FONT_SIZE_BODY
           })
-      ]
-  });
+      ],
+      alignment: AlignmentType.CENTER
+  }));
+
+  const footer = new Footer({ children: footerChildren });
 
   // Determine if we should show page number on first page
   // Standard letters (start=1): No number on first page

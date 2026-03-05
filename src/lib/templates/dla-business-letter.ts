@@ -15,6 +15,8 @@ export const DLABusinessLetterTemplate: DocumentTemplate = {
     businessName: 'Acme Corporation',
     recipientAddress: '123 Main Street\nAnytown, VA 22030',
     salutation: 'Dear Mr. Doe:',
+    suspenseDate: '',
+    fouoDesignation: '',
     subj: 'BUSINESS LETTER TEMPLATE',
     complimentaryClose: 'Sincerely,',
 
