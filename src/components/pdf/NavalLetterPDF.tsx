@@ -773,7 +773,15 @@ export function NavalLetterPDF({
           render={({ pageNumber }) => (
             pageNumber > 1 ? (
               <View>
-                {isCivilianStyle && (
+                {isDLAType && (
+                   <View style={{ marginBottom: 12 }}>
+                      <View style={styles.continuationSubjLine}>
+                        <Text style={styles.continuationSubjLabel}>SUBJECT:</Text>
+                        <Text style={styles.continuationSubjText}>{formData.subj || ''}</Text>
+                      </View>
+                   </View>
+                )}
+                {isCivilianStyle && !isDLAType && (
                    <View style={{ marginBottom: 12 }}>
                       <Text style={styles.addressLine}>{formData.ssic}</Text>
                       <Text style={styles.addressLine}>{formData.originatorCode}</Text>
@@ -1601,24 +1609,24 @@ export function NavalLetterPDF({
           </View>
         )}
 
-        {/* DLA Memorandum Signature Block — 4 blank lines, centered, with rank/title per Ch.3-2 Para 16-17 */}
+        {/* DLA Memorandum Signature Block — 4 blank lines, right-half centered per DLA Corr Manual Ch.3-2 Para 16-17 */}
         {isDLAMemo && (
-          <View style={styles.signatureBlock}>
+          <View style={{ marginTop: 0, marginLeft: PDF_INDENTS.signature }}>
             <View style={styles.emptyLine} />
             <View style={styles.emptyLine} />
             <View style={styles.emptyLine} />
             <View style={styles.emptyLine} />
             {formData.signerFullName && (
-              <Text style={[styles.signatureLine, { textAlign: 'center' }]}>{formData.signerFullName}</Text>
+              <Text style={[styles.signatureLine, { textAlign: 'left' }]}>{formData.signerFullName}</Text>
             )}
             {formData.signerRank && (
-              <Text style={[styles.signatureLine, { textAlign: 'center' }]}>{formData.signerRank}</Text>
+              <Text style={[styles.signatureLine, { textAlign: 'left' }]}>{formData.signerRank}</Text>
             )}
             {formData.signerTitle && (
-              <Text style={[styles.signatureLine, { textAlign: 'center' }]}>{formData.signerTitle}</Text>
+              <Text style={[styles.signatureLine, { textAlign: 'left' }]}>{formData.signerTitle}</Text>
             )}
             {formData.delegationText && (
-              <Text style={[styles.signatureLine, { textAlign: 'center' }]}>{formData.delegationText}</Text>
+              <Text style={[styles.signatureLine, { textAlign: 'left' }]}>{formData.delegationText}</Text>
             )}
           </View>
         )}

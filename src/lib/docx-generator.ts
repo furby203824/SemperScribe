@@ -1457,7 +1457,7 @@ export async function generateDocxBlob(
       });
       signatureParagraphs.push(table);
   } else if (isDLAMemo) {
-      // DLA Memorandum Signature Block — 4 blank lines, centered per Ch.3-2 Para 16-17
+      // DLA Memorandum Signature Block — 4 blank lines, left-aligned at signature indent per Ch.3-2 Para 16-17
       signatureParagraphs.push(createEmptyLine(font));
       signatureParagraphs.push(createEmptyLine(font));
       signatureParagraphs.push(createEmptyLine(font));
@@ -1466,28 +1466,32 @@ export async function generateDocxBlob(
       if (formData.signerFullName) {
           signatureParagraphs.push(new Paragraph({
               children: [new TextRun({ text: formData.signerFullName, font, size: FONT_SIZE_BODY })],
-              alignment: AlignmentType.CENTER,
+              alignment: AlignmentType.LEFT,
+              indent: { left: signatureIndent },
               spacing: { after: 0 }
           }));
       }
       if (formData.signerRank) {
           signatureParagraphs.push(new Paragraph({
               children: [new TextRun({ text: formData.signerRank, font, size: FONT_SIZE_BODY })],
-              alignment: AlignmentType.CENTER,
+              alignment: AlignmentType.LEFT,
+              indent: { left: signatureIndent },
               spacing: { after: 0 }
           }));
       }
       if (formData.signerTitle) {
           signatureParagraphs.push(new Paragraph({
               children: [new TextRun({ text: formData.signerTitle, font, size: FONT_SIZE_BODY })],
-              alignment: AlignmentType.CENTER,
+              alignment: AlignmentType.LEFT,
+              indent: { left: signatureIndent },
               spacing: { after: 0 }
           }));
       }
       if (formData.delegationText) {
           signatureParagraphs.push(new Paragraph({
               children: [new TextRun({ text: formData.delegationText, font, size: FONT_SIZE_BODY })],
-              alignment: AlignmentType.CENTER,
+              alignment: AlignmentType.LEFT,
+              indent: { left: signatureIndent },
               spacing: { after: 0 }
           }));
       }

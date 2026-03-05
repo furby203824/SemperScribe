@@ -39,9 +39,9 @@
       "headerType": "DLA",
       "bodyFont": "times",
       "accentColor": "black",
-      "line1": "DEFENSE LOGISTICS AGENCY",
-      "line2": "8725 JOHN J. KINGMAN ROAD",
-      "line3": "FORT BELVOIR, VIRGINIA 22060-6221"
+      "line1": "8725 JOHN J. KINGMAN ROAD",
+      "line2": "FORT BELVOIR, VIRGINIA 22060-6221",
+      "line3": ""
     },
     "paragraphs": [
       {
