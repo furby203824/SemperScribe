@@ -26,6 +26,7 @@ const EXPECTED_DOC_TYPES = [
   'amhs', 'moa', 'mou',
   'information-paper', 'position-paper', 'decision-paper',
   'coordination-page', 'business-letter', 'executive-correspondence',
+  'dla-memorandum', 'dla-business-letter',
 ];
 
 describe('DOCUMENT_TYPES registry', () => {

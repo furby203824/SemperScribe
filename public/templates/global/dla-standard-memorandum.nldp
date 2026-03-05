@@ -1,0 +1,60 @@
+{
+  "metadata": {
+    "packageId": "nldp_dla_memorandum_template",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-03-05T00:00:00.000Z",
+    "author": {
+      "name": "System Template",
+      "unit": "DLA"
+    },
+    "package": {
+      "title": "DLA Standard Memorandum",
+      "description": "Standard memorandum format per DLA Correspondence Manual (2011).",
+      "subject": "DLA STANDARD MEMORANDUM TEMPLATE",
+      "documentType": "dla-memorandum",
+      "tags": [
+        "template",
+        "dla",
+        "memorandum"
+      ]
+    },
+    "checksums": {
+      "dataHash": "",
+      "crc32": ""
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "dla-memorandum",
+      "date": "March 5, 2026",
+      "memorandumFor": "Director, Defense Logistics Agency",
+      "through": "",
+      "subj": "DLA STANDARD MEMORANDUM TEMPLATE",
+      "signerFullName": "JOHN M. HANCOCK",
+      "delegationText": "",
+      "headerType": "DLA",
+      "bodyFont": "times",
+      "accentColor": "black",
+      "line1": "DEFENSE LOGISTICS AGENCY",
+      "line2": "8725 JOHN J. KINGMAN ROAD",
+      "line3": "FORT BELVOIR, VIRGINIA 22060-6221"
+    },
+    "paragraphs": [
+      {
+        "id": 1,
+        "level": 1,
+        "content": "This is the first paragraph of a DLA standard memorandum. Per the DLA Correspondence Manual, memorandums use the MEMORANDUM FOR format instead of From/To.",
+        "isMandatory": true
+      },
+      {
+        "id": 2,
+        "level": 1,
+        "content": "This is the second paragraph with additional details."
+      }
+    ],
+    "vias": [],
+    "references": [],
+    "enclosures": [],
+    "copyTos": []
+  }
+}

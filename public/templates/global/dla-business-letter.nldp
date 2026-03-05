@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "packageId": "nldp_dla_business_letter_template",
+    "formatVersion": "1.0.0",
+    "createdAt": "2026-03-05T00:00:00.000Z",
+    "author": {
+      "name": "System Template",
+      "unit": "DLA"
+    },
+    "package": {
+      "title": "DLA Business Letter",
+      "description": "Business letter format for DLA correspondence with non-DoD entities.",
+      "subject": "DLA BUSINESS LETTER TEMPLATE",
+      "documentType": "dla-business-letter",
+      "tags": [
+        "template",
+        "dla",
+        "business-letter"
+      ]
+    },
+    "checksums": {
+      "dataHash": "",
+      "crc32": ""
+    }
+  },
+  "data": {
+    "formData": {
+      "documentType": "dla-business-letter",
+      "date": "March 5, 2026",
+      "recipientName": "Mr. John Doe",
+      "recipientTitle": "Vice President",
+      "businessName": "Acme Corporation",
+      "recipientAddress": "123 Main Street\nAnytown, VA 22030",
+      "salutation": "Dear Mr. Doe:",
+      "subj": "DLA BUSINESS LETTER TEMPLATE",
+      "complimentaryClose": "Sincerely,",
+      "signerFullName": "JOHN M. HANCOCK",
+      "delegationText": "",
+      "headerType": "DLA",
+      "bodyFont": "times",
+      "accentColor": "black",
+      "line1": "DEFENSE LOGISTICS AGENCY",
+      "line2": "8725 JOHN J. KINGMAN ROAD",
+      "line3": "FORT BELVOIR, VIRGINIA 22060-6221"
+    },
+    "paragraphs": [
+      {
+        "id": 1,
+        "level": 1,
+        "content": "This is the first paragraph of a DLA business letter for correspondence with non-DoD entities.",
+        "isMandatory": true
+      },
+      {
+        "id": 2,
+        "level": 1,
+        "content": "This is the second paragraph with additional details."
+      }
+    ],
+    "vias": [],
+    "references": [],
+    "enclosures": [],
+    "copyTos": []
+  }
+}
