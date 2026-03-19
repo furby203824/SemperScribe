@@ -305,9 +305,9 @@ const createStyles = (bodyFont: 'times' | 'courier', accentColor?: string, isSho
       textTransform: 'uppercase',
     },
     infoPaperIdBlock: {
-      marginLeft: PDF_INDENTS.ssicBlock,
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
       marginBottom: PDF_SPACING.sectionGap,
-      alignItems: 'flex-start',
     },
     infoPaperFooterContainer: {
         position: 'absolute',
@@ -1140,8 +1140,10 @@ export function NavalLetterPDF({
               
               {/* ID Block (Right) */}
               <View style={styles.infoPaperIdBlock}>
+                <View style={{ alignItems: 'flex-start' }}>
                   <Text style={styles.addressLine}>{formData.drafterOfficeCode || ''}</Text>
                   <Text style={styles.addressLine}>{formattedDate || ''}</Text>
+                </View>
               </View>
 
               {/* Title */}
