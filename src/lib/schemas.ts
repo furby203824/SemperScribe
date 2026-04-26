@@ -373,6 +373,13 @@ export const AAFormDefinition: DocumentTypeDefinition = {
           className: 'md:col-span-1'
         },
         {
+          name: 'ssic',
+          label: 'SSIC/File No.',
+          type: 'combobox',
+          placeholder: 'Search SSIC by code or name...',
+          className: 'md:col-span-1'
+        },
+        {
           name: 'orgStation',
           label: 'Organization/Station',
           type: 'textarea',

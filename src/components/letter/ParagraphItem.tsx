@@ -113,6 +113,15 @@ export function ParagraphItem({
     return () => clearTimeout(timer);
   }, [localContent, paragraph.id, onUpdateContent]);
 
+  // Auto-grow textarea to fit content
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea && isEditing) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [localContent, isEditing]);
+
   const applyFormat = (type: 'bold' | 'italic' | 'underline') => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -284,7 +293,7 @@ export function ParagraphItem({
                 setIsEditing(false);
               }}
               placeholder="Enter paragraph content..."
-              className="min-h-[100px] resize-y focus:ring-2 focus:ring-primary/50 pr-16 text-base font-serif bg-background text-foreground border-border"
+              className="min-h-[100px] resize-none overflow-hidden focus:ring-2 focus:ring-primary/50 pr-16 text-base font-serif bg-background text-foreground border-border"
               autoFocus
             />
           ) : (
