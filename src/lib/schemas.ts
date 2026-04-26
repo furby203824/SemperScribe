@@ -356,6 +356,7 @@ export const AAFormDefinition: DocumentTypeDefinition = {
   features: {
     ...STANDARD_LETTER_FEATURES,
     showHeaderSettings: false,
+    showUnitInfo: false,
     category: 'forms',
     pdfPipeline: 'navmc10274',
     exportFormats: ['pdf'],
@@ -396,8 +397,9 @@ export const AAFormDefinition: DocumentTypeDefinition = {
         {
           name: 'to',
           label: 'To',
-          type: 'text',
+          type: 'textarea',
           required: true,
+          placeholder: 'HEAD, MILITARY AWARDS BRANCH (MMPB-3)\nMANPOWER MANAGEMENT DIVISION HQ...',
           className: 'col-span-full'
         },
         {
