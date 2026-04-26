@@ -27,8 +27,20 @@ function buildNavmc10274Data(ctx: PdfBuildContext) {
     to: ctx.formData.to || '',
     via: ctx.vias.filter(v => v.trim()).join('\n'),
     subject: ctx.formData.subj || '',
-    reference: ctx.references.filter(r => r.trim()).join('\n'),
-    enclosure: ctx.enclosures.filter(e => e.trim()).join('\n'),
+    reference: (() => {
+      const startCode = (ctx.formData.startingReferenceLevel || 'a').charCodeAt(0);
+      return ctx.references
+        .filter(r => r.trim())
+        .map((r, i) => `(${String.fromCharCode(startCode + i)}) ${r}`)
+        .join('\n');
+    })(),
+    enclosure: (() => {
+      const startNum = parseInt(ctx.formData.startingEnclosureNumber || '1', 10);
+      return ctx.enclosures
+        .filter(e => e.trim())
+        .map((e, i) => `(${startNum + i}) ${e}`)
+        .join('\n');
+    })(),
     supplementalInfo: ctx.paragraphs.map(p => p.content).join('\n'),
     supplementalInfoParagraphs: ctx.paragraphs,
     copyTo: ctx.copyTos.filter(c => c.trim()).join('\n'),
