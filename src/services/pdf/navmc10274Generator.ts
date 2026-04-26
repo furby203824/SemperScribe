@@ -241,38 +241,38 @@ async function drawSupplementalInfo(
     paragraphs.forEach((p, i) => {
       const { citation } = generateCitation(p, i, paragraphs);
       const level = p.level || 1;
-      // Default to level 1 indent if level > 8 or undefined
       const indents = NAVAL_INDENTS_POINTS[level] || NAVAL_INDENTS_POINTS[8] || NAVAL_INDENTS_POINTS[1];
 
       const citationX = box.left + PADDING + indents.citation;
       const textX = box.left + PADDING + indents.text;
-      
-      // Calculate available width for text body relative to where text starts
-      // Text starts at textX, and must fit within box.right (box.left + box.width) - padding
       const boxRight = box.left + box.width - PADDING;
-      const availableTextWidth = boxRight - textX;
 
-      const contentLines = wrapText(p.content, font, FONT_SIZE, availableTextWidth);
+      // First line shares space with citation so wraps at reduced width
+      const firstLineWidth = boxRight - textX;
+      // Continuation lines run full width back to the citation column
+      const continuationWidth = boxRight - citationX;
 
-      if (contentLines.length === 0) {
-        // Just citation
+      const firstLineWrapped = wrapText(p.content, font, FONT_SIZE, firstLineWidth);
+      const firstLine = firstLineWrapped[0] || '';
+      const remainingText = p.content.slice(firstLine.length).trimStart();
+      const continuationLines = remainingText
+        ? wrapText(remainingText, font, FONT_SIZE, continuationWidth)
+        : [];
+
+      if (!firstLine && continuationLines.length === 0) {
         allRows.push([{ text: citation, x: citationX }]);
       } else {
-        // First line: Citation + First Line of Text
         allRows.push([
           { text: citation, x: citationX },
-          { text: contentLines[0], x: textX }
+          { text: firstLine, x: textX }
         ]);
-        
-        // Subsequent lines: Just Text (Hanging Indent)
-        for (let j = 1; j < contentLines.length; j++) {
-          allRows.push([{ text: contentLines[j], x: textX }]);
+        for (const contLine of continuationLines) {
+          allRows.push([{ text: contLine, x: citationX }]);
         }
       }
 
-      // Add double space (empty row) between paragraphs if not the last one
       if (i < paragraphs.length - 1) {
-        allRows.push([]); // Empty row acts as spacer
+        allRows.push([]);
       }
     });
   } else {
