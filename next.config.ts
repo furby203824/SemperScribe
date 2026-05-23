@@ -28,8 +28,11 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  compiler: {
+    removeConsole: isProd ? { exclude: ['error'] } : false,
+  },
   images: {
-    unoptimized: true, 
+    unoptimized: true,
   },
 };
 
