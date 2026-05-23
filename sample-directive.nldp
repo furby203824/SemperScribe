@@ -19,9 +19,9 @@
   "data": {
     "formData": {
       "documentType": "mco",
-      "ssic_code": "1500",
+      "ssic_code": "0000",
       "consecutive_point": 1,
-      "sponsor_code": "DC-T",
+      "sponsor_code": "TD-1",
       "date_signed": "2024-08-30",
       "subj": "SAMPLE MARINE CORPS TRAINING DIRECTIVE",
       "from": "Commanding Officer, Training Demo Command",
@@ -63,18 +63,18 @@
       {
         "id": 5,
         "level": 1,
-        "content": "Questions regarding this directive should be directed to DC-T.",
+        "content": "Questions regarding this sample directive should be directed to TD-1.",
         "isMandatory": true,
         "title": "Command and Signal"
       }
     ],
     "references": [
       {
-        "text": "MCO 1553.4B, Marine Corps Training and Readiness Manual",
+        "text": "SAMPLE-REF-1, Fictional Training and Readiness Manual (sample data only)",
         "order": 1
       },
       {
-        "text": "MCRP 3-0A, Unit Training Management Guide",
+        "text": "SAMPLE-REF-2, Fictional Unit Training Management Guide (sample data only)",
         "order": 2
       }
     ],
