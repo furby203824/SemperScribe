@@ -32,6 +32,16 @@ jobs:
       - name: Build with Next.js
         run: npm run build
 
+      - name: Generate SBOM
+        run: npm run sbom
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ github.sha }}
+          path: sbom.cdx.json
+          retention-days: 90
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

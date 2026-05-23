@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "export": "next export",
-    "deploy": "next build && gh-pages -d out"
+    "deploy": "next build && gh-pages -d out",
+    "sbom": "cyclonedx-npm --output-format JSON --output-file sbom.cdx.json --omit dev"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -67,6 +68,7 @@
     }
   },
   "devDependencies": {
+    "@cyclonedx/cyclonedx-npm": "^4.2.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/file-saver": "^2.0.7",

@@ -34,3 +34,11 @@ next-env.d.ts
 # Nested Repos / Backups
 naval-letter-formatter - Copy
 semper-scribe
+
+# SBOM artifacts (generated, not committed)
+sbom.cdx.json
+sbom.spdx.json
+
+# Audit reports
+audit-report-*.json
+tsc-errors.txt
