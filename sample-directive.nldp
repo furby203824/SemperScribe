@@ -7,7 +7,7 @@
     "createdBy": "Marine Corps Directives Formatter",
     "package": {
       "title": "Sample Marine Corps Training Directive",
-      "description": "Example NLDP file demonstrating the file sharing format",
+      "description": "Example NLDP file demonstrating the file sharing format. Not a real directive. Not for official use.",
       "tags": ["training", "policy", "sample"]
     }
   },
@@ -24,7 +24,7 @@
       "sponsor_code": "DC-T",
       "date_signed": "2024-08-30",
       "subj": "SAMPLE MARINE CORPS TRAINING DIRECTIVE",
-      "from": "Commandant of the Marine Corps",
+      "from": "Commanding Officer, Training Demo Command",
       "to": "Distribution List",
       "sig": "E. M. SAMPLE",
       "distributionStatement": {
