@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { Sidebar } from './Sidebar';
 import { LivePreview } from './LivePreview';
 import { HeaderActions } from './HeaderActions';
@@ -93,6 +94,7 @@ export function ModernAppShell({
       >
         <strong className="font-bold uppercase mr-2">Warning</strong>
         Non-official Proof of Concept. Do not enter CUI, PII, or other sensitive information. Outputs constitute Federal records under 44 USC 3301 when used in official business. Route through your CDRM.
+        <Link href="/privacy" className="ml-2 underline font-semibold hover:no-underline">Privacy and Security Notice</Link>
       </div>
       {/* Top Header / Toolbar */}
       <header className="h-16 bg-secondary text-primary-foreground border-b border-secondary-foreground/10 flex items-center justify-between px-4 z-20 shrink-0 shadow-md">
@@ -199,6 +201,14 @@ export function ModernAppShell({
           )
         )}
       </div>
+
+      {/* Compliance footer. Maps to COMPLIANCE_REMEDIATION_PLAN.md Phase 4 P4-2. */}
+      <footer className="shrink-0 border-t bg-muted/40 text-muted-foreground text-xs px-4 py-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+        <span>SemperScribe non-official Proof of Concept.</span>
+        <Link href="/privacy" className="underline hover:no-underline">Privacy and Security Notice</Link>
+        <a href="https://github.com/furby203824/SemperScribe/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">Security disclosure</a>
+        <a href="https://github.com/furby203824/SemperScribe/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">License (MIT)</a>
+      </footer>
 
       {/* Mobile Preview Modal */}
       <PreviewModal

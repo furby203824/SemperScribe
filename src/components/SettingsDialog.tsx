@@ -394,6 +394,22 @@ export function SettingsDialog({
                 <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Disclaimers & Warnings</h3>
                 <div className="flex items-center justify-between rounded-md border border-border p-3">
                   <div>
+                    <p className="text-sm text-foreground">Privacy and Security Notice</p>
+                    <p className="text-xs text-muted-foreground">Canonical privacy and security notice for this Proof of Concept</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                  >
+                    <a href="/privacy" target="_self" rel="noopener noreferrer">
+                      <ShieldAlert className="w-3 h-3 mr-1" />
+                      Open
+                    </a>
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between rounded-md border border-border p-3">
+                  <div>
                     <p className="text-sm text-foreground">Security, privacy & legal info</p>
                     <p className="text-xs text-muted-foreground">Review application disclaimers and warnings</p>
                   </div>
