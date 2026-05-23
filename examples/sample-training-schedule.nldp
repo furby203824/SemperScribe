@@ -4,9 +4,9 @@
     "formatVersion": "1.0.0",
     "createdAt": "2024-08-30T14:30:00.000Z",
     "author": {
-      "name": "SSgt John Smith",
-      "unit": "1st Marine Division",
-      "email": "john.smith@usmc.mil"
+      "name": "SSgt J. Sample",
+      "unit": "Training Demo Command",
+      "email": "sample@example.com"
     },
     "package": {
       "title": "Example Training Schedule Letter Data Package",
@@ -30,24 +30,24 @@
       "referenceDate": "",
       "startingReferenceLevel": "a",
       "startingEnclosureNumber": "1",
-      "line1": "1ST MARINE DIVISION",
-      "line2": "CAMP PENDLETON, CA 92055-5019",
+      "line1": "TRAINING DEMO COMMAND",
+      "line2": "SAMPLE INSTALLATION, ST 00000-0000",
       "line3": "",
-      "ssic": "1500",
+      "ssic": "0000",
       "originatorCode": "",
       "date": "30 Aug 24",
-      "from": "Commanding Officer, 1st Marine Division",
+      "from": "Commanding Officer, Training Demo Command",
       "to": "All Subordinate Commands",
-      "subj": "TRAINING SCHEDULE FOR SEPTEMBER 2024",
-      "sig": "J. SMITH\nSSgt, USMC\nTraining NCO",
+      "subj": "SAMPLE TRAINING SCHEDULE - NOT FOR OFFICIAL USE",
+      "sig": "J. SAMPLE\nSSgt, USMC\nSample NCO",
       "delegationText": "",
       "startingPageNumber": 1,
       "previousPackagePageCount": 0
     },
     "vias": [],
     "references": [
-      "MCO 1500.61 dtd 15 Mar 20 (Marine Corps Training and Education Command Manual)",
-      "MARADMIN 234/24 dtd 10 Jul 24 (FY24 Training Requirements)"
+      "SAMPLE-REF-1 dtd 15 Mar 20 (Fictional Training and Education Manual, sample data only)",
+      "SAMPLE-ADMIN-001 dtd 10 Jul 24 (Fictional Training Requirements, sample data only)"
     ],
     "enclosures": [
       "Training Schedule Matrix",
