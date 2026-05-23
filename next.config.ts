@@ -1,7 +1,7 @@
 import type {NextConfig} from 'next';
 
 // Polyfill Promise.withResolvers for Node.js < 22 (used by react-pdf/pdfjs-dist)
-if (typeof Promise.withResolvers === 'undefined') {
+if (!('withResolvers' in Promise)) {
   // @ts-expect-error polyfill
   Promise.withResolvers = function <T>() {
     let resolve: (value: T | PromiseLike<T>) => void;
@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
   output: isProd ? 'export' : undefined,
   trailingSlash: true,
   typescript: {
-    ignoreBuildErrors: true, 
+    ignoreBuildErrors: false,
   },
   images: {
     unoptimized: true, 

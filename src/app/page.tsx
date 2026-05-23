@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
-import { ParagraphData, SavedLetter, ValidationState, FormData, AdminSubsections } from '@/types';
+import { ParagraphData, SavedLetter, ValidationState, FormData, AdminSubsections, ReportData } from '@/types';
 import { ModernAppShell } from '@/components/layout/ModernAppShell';
 import { DocumentLayout } from '@/components/document/DocumentLayout';
 import { UNITS } from '@/lib/units';
@@ -11,7 +11,7 @@ import { validateSSIC, validateSubject, validateFromTo } from '@/lib/validation-
 import { loadSavedLetters, saveLetterToStorage } from '@/lib/storage-utils';
 import { getPDFPageCount, addMultipleSignaturesToBlob, ManualSignaturePosition } from '@/lib/pdf-generator';
 import { generateDocxBlob } from '@/lib/docx-generator';
-import { SignaturePosition } from '@/components/SignaturePlacementModal';
+import { SignaturePosition } from '@/types';
 import { configureConsole, debugUserAction, debugFormChange } from '@/lib/console-utils';
 import { DOCUMENT_TYPES } from '@/lib/schemas';
 import { AMHSPreview } from '@/components/amhs/AMHSPreview';
@@ -213,7 +213,7 @@ function NavalLetterGeneratorInner() {
   useEffect(() => {
     if (DOCUMENT_TYPES[formData.documentType]?.features?.showReports) {
       let content = 'None.';
-      const validReports = formData.reports?.filter(r => r.title) || [];
+      const validReports = (formData.reports as ReportData[] | undefined)?.filter(r => r.title) || [];
 
       if (validReports.length > 0) {
         const reportTexts = validReports.map(r => {

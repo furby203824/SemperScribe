@@ -73,13 +73,13 @@ async function generateStandardPdf(ctx: PdfBuildContext): Promise<Blob> {
 async function generateNavmc10274Pdf(ctx: PdfBuildContext): Promise<Blob> {
   const data = buildNavmc10274Data(ctx);
   const pdfBytes = await generateNavmc10274(data);
-  return new Blob([pdfBytes], { type: 'application/pdf' });
+  return new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
 }
 
 async function generateNavmc11811Pdf(ctx: PdfBuildContext): Promise<Blob> {
   const data = buildNavmc11811Data(ctx);
   const pdfBytes = await generateNavmc11811(data);
-  return new Blob([pdfBytes], { type: 'application/pdf' });
+  return new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
 }
 
 function buildCoordinationPageData(ctx: PdfBuildContext): CoordinationPageData {
@@ -95,7 +95,7 @@ function buildCoordinationPageData(ctx: PdfBuildContext): CoordinationPageData {
 async function generateCoordinationPagePdf(ctx: PdfBuildContext): Promise<Blob> {
   const data = buildCoordinationPageData(ctx);
   const pdfBytes = await createCoordinationPagePdf(data);
-  return new Blob([pdfBytes], { type: 'application/pdf' });
+  return new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
 }
 
 const PIPELINE_MAP: Record<PdfPipeline, (ctx: PdfBuildContext) => Promise<Blob>> = {

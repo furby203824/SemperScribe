@@ -44,13 +44,13 @@ interface DocumentLayoutProps {
   // Paragraphs
   paragraphs: ParagraphData[];
   activeVoiceInput: number | null;
-  validateParagraphNumbering: (paragraphs: ParagraphData[]) => { id: number; message: string }[];
+  validateParagraphNumbering: (paragraphs: ParagraphData[]) => string[];
   getUiCitation: (paragraph: ParagraphData, index: number, allParagraphs: ParagraphData[]) => string;
   moveParagraphUp: (id: number) => void;
   moveParagraphDown: (id: number) => void;
   updateParagraphContent: (id: number, content: string) => void;
   toggleVoiceInput: (id: number) => void;
-  addParagraph: (type: string, afterId?: number) => void;
+  addParagraph: (type: 'main' | 'sub' | 'same' | 'up', afterId: number) => void;
   removeParagraph: (id: number) => void;
   // Signature
   handleOpenSignaturePlacement: () => void;

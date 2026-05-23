@@ -500,7 +500,7 @@ export const MCODefinition: DocumentTypeDefinition = {
          // MCOs: "To" is always Distribution List (hidden), SSIC is free-text
          ...BasicLetterDefinition.sections[0].fields.map(f =>
            f.name === 'to' ? { ...f, type: 'hidden' as const, defaultValue: 'Distribution List' } :
-           f.name === 'ssic' ? { ...f, type: 'text', placeholder: 'e.g. C5216R.3K w/ ch 1', description: 'Full SSIC with optional classification prefix, R (reserve), point number, revision letter, and change (e.g., 5216.3K, C5216R.3K w/ ch 1)' } : f
+           f.name === 'ssic' ? { ...f, type: 'text' as const, placeholder: 'e.g. C5216R.3K w/ ch 1', description: 'Full SSIC with optional classification prefix, R (reserve), point number, revision letter, and change (e.g., 5216.3K, C5216R.3K w/ ch 1)' } : f
          ),
          {
            name: 'directiveTitle',
@@ -650,7 +650,7 @@ export const BulletinDefinition: DocumentTypeDefinition = {
         // Bulletins: "To" is always Distribution List (hidden), SSIC is free-text
         ...BasicLetterDefinition.sections[0].fields.map(f =>
             f.name === 'to' ? { ...f, type: 'hidden' as const, defaultValue: 'Distribution List' } :
-            f.name === 'ssic' ? { ...f, type: 'text', placeholder: 'e.g. 1500', description: 'Full SSIC with optional classification prefix, R (reserve), point number, and revision letter' } : f
+            f.name === 'ssic' ? { ...f, type: 'text' as const, placeholder: 'e.g. 1500', description: 'Full SSIC with optional classification prefix, R (reserve), point number, and revision letter' } : f
         ),
         {
           name: 'directiveTitle',

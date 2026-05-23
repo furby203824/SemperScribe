@@ -1,5 +1,5 @@
 // Polyfill Promise.withResolvers for Node.js < 22
-if (typeof Promise.withResolvers === 'undefined') {
+if (!('withResolvers' in Promise)) {
   // @ts-expect-error polyfill
   Promise.withResolvers = function <T>() {
     let resolve: (value: T | PromiseLike<T>) => void;
